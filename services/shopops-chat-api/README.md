@@ -22,3 +22,61 @@ If a create request loses its connection before the session ID arrives, the remo
 Credentials/account access and the saved orchestrator's real tools require a separate live smoke test. Transport contract tests verify local behavior; they do not establish provider entitlement, actual agent configuration, or tool success.
 
 `/openapi.json` and `/docs` on this internal service declare Bearer authentication, JSON errors, and the `text/event-stream` event union. See the [service integration pattern](../../docs/service-integration-pattern.md) for adapter ownership, timeouts, navigation boundaries, and extension checks.
+
+## Agent Core chat adapter (T09)
+
+Select `CHAT_BACKEND=agent_core`, `CHAT_AUTH_MODE=demo_phone`, `APP_ENV=local` (or `test`).
+Set `AGENT_CORE_URL`, `AGENT_CORE_SHOP_ID=shop-a`, `AGENT_CORE_CONFIG_REVISION` and
+`SHOPOPS_API_URL`; all are validated before startup. Core mode requires no `OPENAI_API_KEY`
+or `OPENAI_ORCHESTRATOR_AGENT_ID` in this service and makes no provider calls.
+`SHOP_API_TOKEN` is used only server-side for the existing operations navigation mailbox.
+If absent, navigation returns503; it is never replaced by the browser's demo session.
+
+Exactly one public synthetic demo number, `+15550000001`, maps to existing Core fixture
+`local-alice` / `tenant-a` / `alice`, restricted here to `shop-a`. Existing Core fixtures and
+permissions are unchanged. This is labelled demo login without OTP; it does not verify phone
+ownership. Unknown numbers do not register users or shops. Demo auth is refused outside
+local/test. Tokens are random, expire after one hour, are stored only as hashes, and are kept
+only in browser memory. Lock revokes the session; reload requires login again.
+
+First successful login idempotently provisions/retrieves the shop's logical orchestrator and
+persists its ID before issuing a session. Login alone creates no OpenAI session or run. First
+message idempotently creates/reuses the conversation; Core owns provider execution/history.
+The operator must activate the intended immutable hosted registry revision in Core separately;
+selecting an adapter setting does not activate it. Existing conversations retain their revision.
+
+Browser routes: public `GET /api/chat/auth/config`, `POST /api/chat/auth/demo-phone`;
+authenticated logout, messages/history, capabilities, navigation and artifact content under
+`/api/chat/`. The additive message input accepts `client_message_id` and `output_mode=text|report`.
+OpenAPI documents optional assistant kind, sources and bounded report metadata. Legacy mode
+returns false capabilities and rejects report requests before provider I/O.
+
+The SQLite outbox saves exact message/mode and stable idempotency keys before HTTP submission.
+Lost receipts are recovered only by replaying identical application requests with the same key.
+Completed replays inspect canonical Core history; they never generate another input. Stop/disconnect
+stops viewing and polling, not the remote agent. Load history explicitly to reconcile a pending
+run before sending again. EOF, timeout, failed/cancelled and reconciling never produce `done`.
+HTTP timeout10s, total stream budget260s, poll backoff0.5–2s and SSE comments every10s bound waiting.
+History sync is bounded to100pages/30s and preserves the prior display on failure.
+
+Reports use authenticated Blob downloads, never links containing tokens or operations navigation.
+Only locally mapped artifacts in the current owner/shop/conversation namespace can be downloaded;
+content is capped at1MiB and checked against metadata size/hash/media. A410 keeps history intact.
+
+Keep `CHAT_DATA_PATH` on its own persistent volume, separate from Core's SQLite volume. Existing
+legacy tables/history/session IDs are preserved. Backend/base URL/owner/shop/revision changes use
+separate correlations; unresolved previous work blocks cutover. To roll back, reconcile pending
+Core work first, then restore `openai_agents`/`workspace_token` and its provider settings; do not
+copy Core's database or adopt old provider IDs. One Core replica/worker owns its DB.
+
+Local ports: operations8000, chat API8001, Core8002, frontend5174. Containers retain port8000.
+In CapRover, set `AGENT_CORE_URL=http://srv-captain--<core-app>:8000` and
+`SHOPOPS_API_URL=http://srv-captain--<operations-app>:8000` at runtime; never use public service
+domains or a hardcoded development app. Browser requests stay same-origin `/api/chat/...`;
+leave `VITE_API_BASE_URL` unset. The independently hosted browser/viewer stays unchanged.
+
+Offline loopback acceptance requires the sibling Core service's private Python3.14 environment:
+run `make install` there, then explicitly run `AGENT_CORE_LOOPBACK=1 .venv/bin/pytest tests/test_agent_core_integration.py -v` here. Independent `make ci` skips this cross-service acceptance; it never silently requires another service's private environment. Its test fixture starts a real Core
+application/worker with independent SQLite and an explicit fake provider; no external calls or
+hosted-execution proof are implied. Paid hosted acceptance remains UNVERIFIED until both live
+opt-ins, operator configuration and the two outstanding T08 proof gates are explicitly accepted.

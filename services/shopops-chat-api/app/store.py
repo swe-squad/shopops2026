@@ -49,6 +49,12 @@ class Store:
                     WHERE status='pending';
             """)
 
+    def ensure_legacy(self) -> None:
+        with self.connect() as db:
+            exists = db.execute("SELECT 1 FROM sqlite_master WHERE name='core_outbox'").fetchone()
+            if exists and db.execute("SELECT 1 FROM core_outbox WHERE status='pending'").fetchone():
+                raise RuntimeError("Resolve pending Core work before switching backend")
+
     def history(self) -> list[dict]:
         with self.connect() as db:
             return [
@@ -129,3 +135,155 @@ class Store:
             return dict(
                 db.execute("SELECT * FROM messages WHERE id=?", (cursor.lastrowid,)).fetchone()
             )
+
+
+class CoreStore(Store):
+    def initialize(self) -> None:
+        super().initialize()
+        with self.connect() as db:
+            db.executescript("""
+                CREATE TABLE IF NOT EXISTS demo_sessions (
+                    token_hash TEXT PRIMARY KEY, identity TEXT NOT NULL, expires REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS core_spaces (
+                    namespace TEXT PRIMARY KEY, actor TEXT NOT NULL, configuration TEXT NOT NULL,
+                    client_id TEXT NOT NULL, orchestrator TEXT, conversation TEXT
+                );
+                CREATE TABLE IF NOT EXISTS core_outbox (
+                    namespace TEXT NOT NULL, client_id TEXT NOT NULL, payload TEXT NOT NULL,
+                    run_id TEXT, message_id TEXT, status TEXT NOT NULL DEFAULT 'pending',
+                    owner TEXT, lease REAL NOT NULL DEFAULT 0,
+                    PRIMARY KEY(namespace,client_id)
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS core_one_pending ON core_outbox(namespace)
+                    WHERE status='pending';
+                CREATE TABLE IF NOT EXISTS core_artifacts (
+                    namespace TEXT NOT NULL, id TEXT NOT NULL, run_id TEXT NOT NULL,
+                    metadata TEXT NOT NULL, PRIMARY KEY(namespace,id)
+                );
+            """)
+
+    def space(self, namespace: str, actor: str, configuration: str) -> dict:
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if db.execute("SELECT 1 FROM turns WHERE status='pending'").fetchone():
+                raise BusyError("Resolve the previous workspace turn before switching backend.")
+            if db.execute(
+                "SELECT 1 FROM core_outbox o JOIN core_spaces s USING(namespace) "
+                "WHERE o.status='pending' AND s.actor=? AND s.configuration!=?",
+                (actor, configuration),
+            ).fetchone():
+                raise BusyError("Resolve the previous configuration before switching.")
+            db.execute(
+                "INSERT OR IGNORE INTO core_spaces VALUES(?,?,?,?,NULL,NULL)",
+                (namespace, actor, configuration, str(uuid.uuid4())),
+            )
+            return dict(
+                db.execute("SELECT * FROM core_spaces WHERE namespace=?", (namespace,)).fetchone()
+            )
+
+    def core_claim(
+        self, namespace: str, key: str | None, payload: str | None, owner: str
+    ) -> dict | None:
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            existing = (
+                db.execute(
+                    "SELECT * FROM core_outbox WHERE namespace=? AND client_id=?", (namespace, key)
+                ).fetchone()
+                if key
+                else None
+            )
+            if existing and existing["payload"] != payload:
+                raise ValueError("Idempotency conflict")
+            row = (
+                existing
+                or db.execute(
+                    "SELECT * FROM core_outbox WHERE namespace=? AND status='pending'", (namespace,)
+                ).fetchone()
+            )
+            if row:
+                if row["status"] != "pending":
+                    return dict(row)
+                if key and row["client_id"] != key:
+                    raise BusyError("Load history before sending another turn.")
+                if row["owner"] and row["lease"] > time.time():
+                    raise BusyError("A turn is already being inspected.")
+            elif key:
+                db.execute(
+                    "INSERT INTO core_outbox(namespace,client_id,payload) VALUES(?,?,?)",
+                    (namespace, key, payload),
+                )
+                row = db.execute(
+                    "SELECT * FROM core_outbox WHERE namespace=? AND client_id=?", (namespace, key)
+                ).fetchone()
+            else:
+                return None
+            db.execute(
+                "UPDATE core_outbox SET owner=?,lease=? WHERE namespace=? AND client_id=?",
+                (owner, time.time() + 30, namespace, row["client_id"]),
+            )
+            return dict(row) | {"owner": owner}
+
+    def core_update(self, namespace: str, key: str, owner: str, **values) -> None:
+        if not set(values) <= {"run_id", "message_id", "status"}:
+            raise ValueError("Invalid update")
+        with self.connect() as db:
+            result = db.execute(
+                "UPDATE core_outbox SET lease=?"
+                + "".join(f", {k}=?" for k in values)
+                + " WHERE namespace=? AND client_id=? AND owner=?"
+                " AND lease>?",
+                (time.time() + 30, *values.values(), namespace, key, owner, time.time()),
+            )
+            if result.rowcount != 1:
+                raise BusyError("Turn lease was lost.")
+
+    def core_release(self, namespace: str, key: str, owner: str) -> None:
+        with self.connect() as db:
+            db.execute(
+                "UPDATE core_outbox SET owner=NULL,lease=0"
+                " WHERE namespace=? AND client_id=? AND owner=?",
+                (namespace, key, owner),
+            )
+
+    def core_space_update(self, namespace: str, **values) -> None:
+        if not set(values) <= {"orchestrator", "conversation"}:
+            raise ValueError("Invalid space update")
+        with self.connect() as db:
+            db.execute(
+                "UPDATE core_spaces SET "
+                + ",".join(f"{k}=?" for k in values)
+                + " WHERE namespace=?",
+                (*values.values(), namespace),
+            )
+
+    def core_save_artifacts(self, namespace: str, run_id: str, artifacts: list[dict]) -> None:
+        import json
+
+        with self.connect() as db:
+            for artifact in artifacts:
+                db.execute(
+                    "INSERT OR REPLACE INTO core_artifacts VALUES(?,?,?,?)",
+                    (namespace, artifact["id"], run_id, json.dumps(artifact)),
+                )
+
+    def core_artifact(self, namespace: str, artifact_id: str) -> dict | None:
+        import json
+
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT metadata FROM core_artifacts WHERE namespace=? AND id=?",
+                (namespace, artifact_id),
+            ).fetchone()
+            return json.loads(row[0]) if row else None
+
+    def core_output_mode(self, namespace: str, run_id: str) -> str:
+        import json
+
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT payload FROM core_outbox WHERE namespace=? AND run_id=?",
+                (namespace, run_id),
+            ).fetchone()
+            return json.loads(row[0])["output_mode"] if row else "text"

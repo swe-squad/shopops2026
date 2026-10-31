@@ -19,6 +19,10 @@ def create_app(
     settings: Settings | None = None, transport: httpx.AsyncBaseTransport | None = None
 ) -> FastAPI:
     config = settings or Settings.from_env()
+    if config.backend == "agent_core":
+        from app.core_chat import create_core_app
+
+        return create_core_app(config, transport)
     store = Store(config.database)
     provider = AgentsProvider(config.api_key, config.agent_id, transport)
     chat = Chat(store, provider)
@@ -28,6 +32,7 @@ def create_app(
         try:
             config.validate()
             await chat.db("initialize")
+            await chat.db("ensure_legacy")
             yield
         finally:
             await provider.close()
@@ -47,6 +52,18 @@ def create_app(
             or not secrets.compare_digest(authorization.credentials.encode(), config.token.encode())
         ):
             raise HTTPException(status_code=401, detail="Unauthorized")
+
+    @app.get("/api/chat/auth/config")
+    def auth_config() -> dict[str, str]:
+        return {"mode": "workspace_token"}
+
+    @app.get("/api/chat/capabilities", dependencies=[Depends(authorize)])
+    def capabilities() -> dict[str, bool]:
+        return {"report_mode": False, "artifacts": False}
+
+    @app.post("/api/chat/auth/logout", status_code=204, dependencies=[Depends(authorize)])
+    def logout() -> None:
+        return None
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -73,6 +90,8 @@ def create_app(
         responses=STREAM_RESPONSES,
     )
     async def send(item: MessageInput) -> StreamingResponse:
+        if item.output_mode != "text":
+            raise HTTPException(status_code=422, detail="Report mode is unavailable.")
         text = item.text.strip()
         try:
             prepared = await chat.prepare(text)
