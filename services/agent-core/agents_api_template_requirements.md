@@ -1,0 +1,108 @@
+# Agents API Starter Template — Basic Requirements
+
+## 1. Objective
+
+Create a reusable template for the Agents component using **OpenAI Agents API**. The template must support development with mock data and allow integration with real services later.
+
+Initial assumption for this template: **one orchestrator per shop**, with separate conversation sessions for individual users. Confirm the provisioning owner (shop or user) with the registration team.
+
+## 2. Functional Requirements
+
+### 2.1. Orchestrator
+
+- Accept user requests and determine how to handle them.
+- Coordinate data retrieval, knowledge and memory access, and user responses.
+- Ask follow-up questions when essential information is missing.
+- Allow configuration of instructions, the model, and MCP connections.
+
+### 2.2. Memory: Sessions and History
+
+- Create and continue conversation sessions.
+- Preserve context for follow-up questions.
+- Persist conversation history and support retrieval.
+- Keep history separated by shop and user.
+- Store the mapping between application conversations and Agents API sessions.
+
+### 2.3. Domain Knowledge
+
+- Load predefined business knowledge from configuration files or documents, such as JSON or Markdown.
+- Track the version of the knowledge bundle in use.
+- Allow each orchestrator to select its knowledge bundle through configuration.
+- Provide knowledge retrieval and search through MCP.
+
+### 2.4. Multi-Agent Scenarios
+
+Support the following three scenarios:
+
+| Scenario | Responsibility |
+| --- | --- |
+| Retrieve data from the Data Mart | Call Data MCP tools and use their results to answer the request. |
+| Interact with knowledge and memory | Retrieve relevant business knowledge or conversation history. |
+| Interact with the user | Receive requests, ask for missing information, and present results. |
+
+The orchestrator owns user interaction and must support delegation to specialist agents when needed. Each request should invoke only the capabilities it needs.
+
+### 2.5. MCP Integration
+
+- Provide a **Knowledge–Memory MCP** interface for knowledge and history retrieval.
+- Include a **mock Data MCP** with deterministic sample data for independent development.
+- Make endpoints, authentication settings, and tool access configurable.
+- Use the same input and output contracts for mock and real services.
+- Return clear errors for missing data, insufficient permissions, and connection failures.
+
+### 2.6. Registration and Provisioning
+
+- Accept a request to provision an orchestrator for a shop.
+- Associate the instance with its template, knowledge bundle, and MCP configuration.
+- Return an `orchestrator_id`.
+- Handle repeated registration requests without creating duplicate orchestrators.
+- Create a separate session for each conversation.
+
+## 3. Minimum Application API
+
+| Capability | Purpose |
+| --- | --- |
+| Provision orchestrator | Create or return the orchestrator instance for a shop. |
+| Create conversation | Start a new application conversation. |
+| Send message | Submit a request or continue a conversation. |
+| Get events or results | Retrieve progress and final responses. |
+| Get history | Retrieve previous conversation messages. |
+| Health check | Check whether the service is running. |
+
+## 4. Required Configuration and Integration Inputs
+
+- **OpenAI:** API key and model.
+- **Identity:** `tenant_id`, `user_id`, and access permissions supplied by the authentication system; development fixtures may be used initially.
+- **Data MCP:** endpoint, authentication configuration, tool schemas, and sample data.
+- **Knowledge:** knowledge bundle and version.
+- **Storage:** persistence for orchestrator configuration, session mappings, and history.
+
+Secrets must be supplied through environment variables or the system's secret management mechanism.
+
+## 5. Template Deliverables
+
+- Source code organized into clear modules.
+- Sample configuration and an `.env.example` file.
+- Sample orchestrator instructions.
+- A sample domain knowledge bundle and mock Data MCP.
+- Integration contracts for the other teams.
+- A README covering local setup, demo execution, and connection to real services.
+- Basic tests for the main workflows.
+
+## 6. Acceptance Criteria
+
+The template must demonstrate that:
+
+1. Provisioning a shop returns an orchestrator; repeated requests return the same instance.
+2. A user can ask for business data and receive the expected result from the mock Data MCP.
+3. A user can ask a business question and receive an answer grounded in the sample knowledge bundle.
+4. Follow-up questions retain the relevant conversation context.
+5. History can be retrieved only within the permitted shop and user scope.
+6. Missing information and tool failures produce appropriate responses or statuses.
+7. Real MCP endpoints can be configured for new integration sessions.
+
+## 7. Initial Scope
+
+The first version covers the Agents backend and the components needed to demonstrate its workflows.
+
+The complete user interface, ETL and Data Mart implementation, phone-based authentication, and shop CRUD operations are owned by the other components of the system.

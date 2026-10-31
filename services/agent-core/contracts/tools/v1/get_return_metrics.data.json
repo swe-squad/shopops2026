@@ -1,0 +1,114 @@
+{
+  "$defs": {
+    "Counts": {
+      "additionalProperties": false,
+      "properties": {
+        "start_date": {
+          "title": "Start Date",
+          "type": "string"
+        },
+        "end_date": {
+          "title": "End Date",
+          "type": "string"
+        },
+        "orders": {
+          "minimum": 0,
+          "title": "Orders",
+          "type": "integer"
+        },
+        "returns": {
+          "minimum": 0,
+          "title": "Returns",
+          "type": "integer"
+        },
+        "return_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Return Rate"
+        }
+      },
+      "required": [
+        "start_date",
+        "end_date",
+        "orders",
+        "returns",
+        "return_rate"
+      ],
+      "title": "Counts",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "start_date": {
+      "title": "Start Date",
+      "type": "string"
+    },
+    "end_date": {
+      "title": "End Date",
+      "type": "string"
+    },
+    "orders": {
+      "minimum": 0,
+      "title": "Orders",
+      "type": "integer"
+    },
+    "returns": {
+      "minimum": 0,
+      "title": "Returns",
+      "type": "integer"
+    },
+    "return_rate": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Return Rate"
+    },
+    "sku": {
+      "title": "Sku",
+      "type": "string"
+    },
+    "timezone": {
+      "title": "Timezone",
+      "type": "string"
+    },
+    "baseline": {
+      "$ref": "#/$defs/Counts"
+    },
+    "change_percentage_points": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Change Percentage Points"
+    }
+  },
+  "required": [
+    "start_date",
+    "end_date",
+    "orders",
+    "returns",
+    "return_rate",
+    "sku",
+    "timezone",
+    "baseline",
+    "change_percentage_points"
+  ],
+  "title": "Metrics",
+  "type": "object"
+}
