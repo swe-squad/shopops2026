@@ -4,12 +4,39 @@ This is the standalone browser/operations client. The separate `shopops-chat` mo
 
 The app displays the shop interface and can preview external HTTP(S) URLs in a sandbox. Some websites refuse embedding; Open in new tab is always available. Internal shop interactions call `shopops-api`. The app polls that service's authenticated navigation mailbox to open links clicked in the separate chat app. Both apps must be unlocked for the same workspace. Tokens stay in each app's memory and clear on lock/reload.
 
+## Landing and login
+
+`/` is the public English landing page. Its login links open `/login` in the
+same app. The login form checks the workspace token with an uncached read of
+`/api/operations/incidents` before opening the workspace. Invalid tokens stay on
+the form with an error; network/server failures allow retry. Leaving the form
+cancels validation. This remains shared workspace-token access, not account
+registration or per-user authentication.
+
+Successful login opens `/shop/connections`. Visiting a `/shop/...` deep link first
+returns to that path after login, including its query and fragment. The `next`
+parameter accepts only local shop paths; unsafe or unrelated destinations fall
+back to Connections. Other application paths show a not-found page.
+
+Tokens stay in React memory. Reloading a protected route requires login again;
+**Lock workspace** clears the token and returns to `/login`. The brand link opens
+the landing page without reloading the document, so its workspace CTA can return
+using the current session. Leaving the workspace discards its tabs; switching
+between tabs inside the workspace preserves them as before. Chat remains an
+independent login. No token is stored in browser storage, URLs, or mock requests.
+
+Landing/login scroll inside their own content area, keeping the document and
+embedding viewer within the viewport. The landing describes actual manual
+operations and explicitly labels marketplace connections as a simulation.
+
 ## Browser workspace
 
-Unlocking the root page opens **Connections**. Choose **Log in to Shopee** or
+Logging in from the landing page opens **Connections**. Choose **Log in to Shopee** or
 **Log in to TikTok** to exercise the mock connection flow, then return from the
 success page to see **Connected**. Existing `/shop/...` deep links keep their target;
-new internal tabs still open Overview. Connections is also in the shop navigation.
+new internal tabs still open Overview. The initial chat navigation mailbox snapshot
+establishes a baseline without replaying an old link over the login destination;
+new events after that initial sync still open in the active tab. Connections is also in the shop navigation.
 
 The mock API lives in this service, with two flags in one Node process's RAM:
 

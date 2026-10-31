@@ -51,7 +51,7 @@ test('real streamed reply opens the active browser tab and preserves independent
   await expect(chat.getByLabel('Message', { exact: true })).toHaveValue('Draft kept across views')
   await showClient(page, 'Browser')
   await page.getByRole('button', { name: 'Reload browser app' }).click()
-  await expect(browser.getByLabel('Workspace access token')).toBeVisible()
+  await expect(browser.getByRole('heading', { name: 'Clarity in the chaos.' })).toBeVisible()
   await showClient(page, 'Chat')
   expect(page.frames()).toContain(chatFrame)
   await expect(chat.getByLabel('Message', { exact: true })).toHaveValue('Draft kept across views')

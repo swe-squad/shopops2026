@@ -10,7 +10,7 @@ export function useNavigationRequests(token: string) {
   useEffect(() => {
     const controller = new AbortController()
     let timer: ReturnType<typeof setTimeout> | undefined
-    let latestId = 0
+    let latestId: number | null = null
 
     async function poll() {
       try {
@@ -18,10 +18,12 @@ export function useNavigationRequests(token: string) {
         await checkResponse(response, 'Could not receive links from chat')
         const navigation = await response.json() as NavigationRequest | null
         if (controller.signal.aborted) return
-        if (navigation && typeof navigation.id === 'number' && typeof navigation.url === 'string' && navigation.id > latestId) {
+        if (navigation && typeof navigation.id === 'number' && typeof navigation.url === 'string' && navigation.id > (latestId ?? 0)) {
+          // The first snapshot is history, not a new request to replace the login destination.
+          if (latestId !== null) setRequest({ url: navigation.url, sequence: navigation.id })
           latestId = navigation.id
-          setRequest({ url: navigation.url, sequence: navigation.id })
         }
+        latestId ??= 0
         setError('')
       } catch {
         if (!controller.signal.aborted) setError('Could not receive links from chat. Reconnecting…')
