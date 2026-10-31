@@ -126,11 +126,21 @@ class RunWorker:
             )
             environment = snapshot.environment
             expired = (
+                previous_environment is not None
+                and previous_environment.error == "environment_timeout"
+            ) or (
                 setup_pending
                 and environment.state in ("provisioning", "connected")
                 and self.clock() >= self._setup_deadline(run)
             )
-            await self.repo.save_runtime(c.scope, c.id, environment)
+            # Timeout is a durable decision, even while cancellation is unresolved.
+            # A later connected snapshot must not turn that failed setup into success.
+            saved_environment = (
+                environment.model_copy(update={"state": "failed", "error": "environment_timeout"})
+                if expired
+                else environment
+            )
+            await self.repo.save_runtime(c.scope, c.id, saved_environment)
             if environment.state in ("failed", "unavailable") or expired:
                 if snapshot.root_status not in ("completed", "failed", "cancelled"):
                     snapshot = await self._cancel(run, snapshot)

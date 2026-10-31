@@ -457,3 +457,64 @@ def test_connected_environment_has_no_second_setup_deadline(repo, scope, registr
         assert result.error is None
 
     asyncio.run(scenario())
+
+
+def test_late_connection_timeout_survives_pending_cancel_and_restart(repo, scope, registry):
+    from datetime import timedelta
+
+    from app.contracts.models import ApplicationResponse
+    from app.contracts.provider import ProviderSnapshot
+    from app.contracts.runtime import ProviderEnvironment
+    from app.runs.worker import RunWorker
+    from app.storage.repositories import SQLiteRepository, utcnow
+
+    async def scenario():
+        hosted(registry)
+        clock = [utcnow()]
+        repo.clock = lambda: clock[0]
+        c = await create(repo, scope, "hosted-test")
+        await repo.enqueue_message(scope, c.id, "m", "hello")
+        run = await repo.claim_next_run()
+        await repo.mark_submission(run.id, "session_creating")
+        await repo.save_session_mapping(run.id, "session", input_submitted=True)
+        await repo.mark_submission(run.id, "submitted", "root")
+        await repo.save_runtime(scope, c.id, ProviderEnvironment(id="env", state="provisioning"))
+
+        class Provider:
+            completed = False
+            cancellations = 0
+
+            async def cancel_turn(self, session_id, turn_id):
+                self.cancellations += 1
+
+            async def inspect_session(self, session_id):
+                return ProviderSnapshot(
+                    session_id=session_id,
+                    root_turn_id="root",
+                    root_status="completed" if self.completed else "running",
+                    input_run_id=run.id,
+                    item_id="item" if self.completed else None,
+                    environment=ProviderEnvironment(id="env", state="connected"),
+                    response=ApplicationResponse(kind="clarification", text="Need a date")
+                    if self.completed
+                    else None,
+                )
+
+            async def list_artifacts(self, session_id, turn_id):
+                return ()
+
+        provider = Provider()
+        clock[0] += timedelta(seconds=65)
+        await RunWorker(repo, provider, None, clock=lambda: clock[0]).reconcile(run)
+        assert (await repo.get_run(scope, run.id)).state == "reconciling"
+        assert provider.cancellations == 1
+        reopened = SQLiteRepository(repo.database, registry, clock=lambda: clock[0])
+        provider.completed = True
+        await RunWorker(reopened, provider, None, clock=lambda: clock[0]).reconcile(run)
+        result = await reopened.get_run(scope, run.id)
+        assert result.state == "failed"
+        assert result.error == "environment_timeout"
+        assert (await reopened.get_conversation(scope, c.id)).status == "blocked"
+        assert (await reopened.get_runtime(scope, c.id)).id == "env"
+
+    asyncio.run(scenario())
