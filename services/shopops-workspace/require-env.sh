@@ -48,4 +48,3 @@ validate_origin() {
 browser_origin=$(validate_origin "$BROWSER_APP_URL") || { echo 'BROWSER_APP_URL must be an HTTPS hostname origin, or HTTP localhost/127.0.0.1 with an optional valid port.' >&2; exit 1; }
 chat_origin=$(validate_origin "$CHAT_APP_URL") || { echo 'CHAT_APP_URL must be an HTTPS hostname origin, or HTTP localhost/127.0.0.1 with an optional valid port.' >&2; exit 1; }
 [ "$browser_origin" != "$chat_origin" ] || { echo 'Browser and chat apps must have different origins.' >&2; exit 1; }
-

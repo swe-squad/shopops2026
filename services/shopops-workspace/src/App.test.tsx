@@ -92,4 +92,3 @@ describe('independent app viewer', () => {
     expect(document.querySelector('iframe')).toBeNull()
   })
 })
-

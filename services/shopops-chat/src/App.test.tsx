@@ -176,4 +176,3 @@ describe('standalone Telegram-style chat', () => {
     expect(screen.queryByText('Check my shop')).not.toBeInTheDocument()
   })
 })
-

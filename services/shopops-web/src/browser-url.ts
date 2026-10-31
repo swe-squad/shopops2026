@@ -13,4 +13,3 @@ export function browserUrl(value: string, origin = window.location.origin): stri
 export function isLocalShop(url: URL) {
   return url.origin === window.location.origin && (url.pathname === '/shop' || url.pathname.startsWith('/shop/'))
 }
-
