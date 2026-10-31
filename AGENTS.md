@@ -1,7 +1,20 @@
-# test-codex-env
+# ShopOps
 
 Monorepo of services deployed to CapRover. Each service lives in `services/<name>/` and has its own
 `AGENTS.md` with stack-specific commands, conventions and review checks; read it before working on that service.
+
+## Agent design alignment
+
+- When resuming agent engineering or changing registration, provisioning, session routing, streaming,
+  MCP access, or agent-core contracts, first read [agent integration](docs/agent-integration.md)
+  and [system architecture](docs/system-architecture.md). Compare the affected code with the target;
+  fix drift within the assigned scope and report remaining gaps before claiming completion.
+- Keep `agent-core` as the reusable agents-service boilerplate. The product server owns registration
+  and requests on-demand per-user teams in OpenAI-hosted environments; do not build one local
+  agent-core deployment per user or reuse a shop-shared live team across users.
+- Reconcile affected contracts, consumers, and focused checks together. Offline fixtures do not prove
+  live hosted provisioning, streaming, or MCP access. Do not treat an older starter spec as authority
+  to reverse the confirmed product design.
 
 ## Layout
 

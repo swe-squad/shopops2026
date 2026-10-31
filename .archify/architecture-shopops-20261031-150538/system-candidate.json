@@ -1,0 +1,415 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ShopOps — System Architecture (Target Design)",
+    "output": ".archify/architecture-shopops-20261031-150538/shopops-system.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/swe-squad/shopops2026",
+      "revision": "b43f461aa25826a3541a0eb23537e1cd5cc81e35"
+    },
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "seller",
+      "type": "external",
+      "label": "Shopee seller",
+      "sublabel": "Ask · review · approve",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        190,
+        76
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 11,
+          "end_line": 20
+        },
+        {
+          "path": "README.md",
+          "line": 40,
+          "end_line": 54
+        }
+      ]
+    },
+    {
+      "id": "clients",
+      "type": "frontend",
+      "label": "Telegram / Web App",
+      "sublabel": "Chat Client · Shop view · BI",
+      "pos": [
+        400,
+        40
+      ],
+      "size": [
+        210,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 68,
+          "end_line": 90
+        },
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 113,
+          "end_line": 138
+        },
+        {
+          "path": "services/agent-core/agents_api_template_requirements.md",
+          "line": 72,
+          "end_line": 80
+        }
+      ],
+      "tag": "Future integration"
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "agent-core",
+      "sublabel": "API · worker · MCP · memory",
+      "pos": [
+        750,
+        40
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 13,
+          "end_line": 44
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 48,
+          "end_line": 65
+        },
+        {
+          "path": ".github/workflows/_build-deploy.yml",
+          "line": 110,
+          "end_line": 131
+        }
+      ],
+      "tag": "Proposed MVP · :8000"
+    },
+    {
+      "id": "openai",
+      "type": "cloud",
+      "label": "OpenAI Agents API",
+      "sublabel": "Orchestrator · session",
+      "pos": [
+        1120,
+        40
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 15,
+          "end_line": 27
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 59,
+          "end_line": 63
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 98,
+          "end_line": 102
+        }
+      ]
+    },
+    {
+      "id": "interaction",
+      "type": "backend",
+      "label": "Shop interaction",
+      "sublabel": "Execute · log · optional rollback",
+      "pos": [
+        400,
+        440
+      ],
+      "size": [
+        230,
+        86
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 115,
+          "end_line": 126
+        },
+        {
+          "path": "README.md",
+          "line": 48,
+          "end_line": 59
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 40,
+          "end_line": 44
+        }
+      ],
+      "tag": "Later phase · approval required"
+    },
+    {
+      "id": "shopee",
+      "type": "external",
+      "label": "Shopee / mock",
+      "sublabel": "Data source · action target",
+      "pos": [
+        40,
+        440
+      ],
+      "size": [
+        200,
+        86
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 18,
+          "end_line": 28
+        },
+        {
+          "path": "README.md",
+          "line": 48,
+          "end_line": 59
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "type": "backend",
+      "label": "Data MCP",
+      "sublabel": "Authorized data queries",
+      "pos": [
+        750,
+        440
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 26,
+          "end_line": 46
+        },
+        {
+          "path": "services/agent-core/agents_api_template_requirements.md",
+          "line": 45,
+          "end_line": 51
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 181,
+          "end_line": 196
+        }
+      ],
+      "tag": "MVP mock → real endpoint"
+    },
+    {
+      "id": "pull",
+      "type": "backend",
+      "label": "Pull Data / Connectors",
+      "sublabel": "Data ingestion · processing",
+      "pos": [
+        40,
+        690
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 26,
+          "end_line": 46
+        },
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 115,
+          "end_line": 126
+        }
+      ]
+    },
+    {
+      "id": "raw",
+      "type": "database",
+      "label": "Raw Data",
+      "sublabel": "Source data → processing",
+      "pos": [
+        400,
+        690
+      ],
+      "size": [
+        230,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 26,
+          "end_line": 46
+        },
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 119,
+          "end_line": 121
+        }
+      ]
+    },
+    {
+      "id": "mart",
+      "type": "database",
+      "label": "Data Mart",
+      "sublabel": "Data for analytics",
+      "pos": [
+        750,
+        690
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/imported_sketches_description.md",
+          "line": 26,
+          "end_line": 46
+        },
+        {
+          "path": "services/agent-core/agents_api_template_requirements.md",
+          "line": 35,
+          "end_line": 43
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "seller-client",
+      "from": "seller",
+      "to": "clients",
+      "label": "Ask / approve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "client-core",
+      "from": "clients",
+      "to": "core",
+      "label": "API + polling",
+      "variant": "emphasis"
+    },
+    {
+      "id": "core-ai",
+      "from": "core",
+      "to": "openai",
+      "label": "Sessions",
+      "variant": "default"
+    },
+    {
+      "id": "core-data",
+      "from": "core",
+      "to": "data",
+      "label": "MCP + scope",
+      "variant": "emphasis"
+    },
+    {
+      "id": "data-mart",
+      "from": "data",
+      "to": "mart",
+      "label": "Read data",
+      "variant": "default"
+    },
+    {
+      "id": "core-action",
+      "from": "core",
+      "to": "interaction",
+      "label": "After approval",
+      "variant": "dashed"
+    },
+    {
+      "id": "action-shop",
+      "from": "interaction",
+      "to": "shopee",
+      "label": "API / mock",
+      "variant": "dashed"
+    },
+    {
+      "id": "source-pull",
+      "from": "shopee",
+      "to": "pull",
+      "label": "Collect",
+      "variant": "default"
+    },
+    {
+      "id": "pull-raw",
+      "from": "pull",
+      "to": "raw",
+      "label": "Ingest",
+      "variant": "default"
+    },
+    {
+      "id": "raw-mart",
+      "from": "raw",
+      "to": "mart",
+      "label": "Process / ETL",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Status & scope",
+      "items": [
+        "Target architecture based on the README and sketch descriptions; business services have no implementation yet.",
+        "Blocks represent logical responsibilities; deployment boundaries outside agent-core are not yet finalized.",
+        "The sketches include Chat Client, Web App, Shop interaction, Pull Data, Raw Data, Data Mart, and Data MCP."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "agent-core MVP",
+      "items": [
+        "Conversation API with polling; asynchronous worker; OpenAI Agents API; SQLite on a persistent volume.",
+        "Knowledge–Memory MCP and mock Data MCP run within the same service; a real endpoint can replace the mock Data MCP.",
+        "One orchestrator configuration per shop; separate sessions for each conversation and user."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Integration & execution permissions",
+      "items": [
+        "Authentication, registration, and shop CRUD belong to components outside agent-core; the identity contract needs confirmation.",
+        "The Shop interaction arrow represents the target flow from the README, rather than a defined integration API.",
+        "Detect → Classify → Plan → Approve → Execute → Verify → Learn is the product direction; proactive monitoring and real shop actions are outside the MVP."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Monorepo deployment",
+      "items": [
+        "Existing pipeline: GitHub Actions → GHCR → CapRover.",
+        "Proposed agent-core deployment: one replica, one application worker, port 8000, and a /data volume.",
+        "Internal integrations use the cluster network and runtime URLs; deployment resources are not confirmed to exist."
+      ]
+    }
+  ]
+}

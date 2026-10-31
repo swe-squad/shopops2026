@@ -1,0 +1,6 @@
+{
+  "name": "shopops-analysis",
+  "version": "1.0.0",
+  "description": "Grounded ShopOps returns analysis and versioned knowledge review.",
+  "skills": "./skills/"
+}

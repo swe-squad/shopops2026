@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "f2b823d1-7862-42bf-8a2f-8a87a01f656f",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/agent-core-candidate.json",
+  "output": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/agent-core.html",
+  "specification": {
+    "sha256": "1f71f113abb1319038615d35519472cbf0a6c393d275e10f5dde2e422ac19ee1",
+    "bytes": 12096
+  },
+  "artifact": {
+    "sha256": "e1ee59a0a2ce657db9160bd499fbd1816388b729da75e2e4a9e170e912a5a7a4",
+    "bytes": 863008
+  }
+}

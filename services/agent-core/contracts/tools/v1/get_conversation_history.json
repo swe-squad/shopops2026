@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "before_sequence": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Before Sequence"
+    },
+    "limit": {
+      "default": 20,
+      "maximum": 20,
+      "minimum": 1,
+      "title": "Limit",
+      "type": "integer"
+    }
+  },
+  "title": "HistoryArgs",
+  "type": "object"
+}

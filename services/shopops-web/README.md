@@ -1,0 +1,85 @@
+# ShopOps browser app
+
+This is the standalone browser/operations client. The separate `shopops-chat` mobile app runs in its own window and deployment. No chat client is mounted here.
+
+The app displays the shop interface and can preview external HTTP(S) URLs in a sandbox. Some websites refuse embedding; Open in new tab is always available. Internal shop interactions call `shopops-api`. The app polls that service's authenticated navigation mailbox to open links clicked in the separate chat app. Both apps must be unlocked for the same workspace. Tokens stay in each app's memory and clear on lock/reload.
+
+## Browser workspace
+
+Unlocking the root page opens **Connections**. Choose **Log in to Shopee** or
+**Log in to TikTok** to exercise the mock connection flow, then return from the
+success page to see **Connected**. Existing `/shop/...` deep links keep their target;
+new internal tabs still open Overview. Connections is also in the shop navigation.
+
+The mock API lives in this service, with two flags in one Node process's RAM:
+
+| Endpoint | Result |
+| --- | --- |
+| `GET /api/mock/connectors` | `{connections: [{platform, connected, mock: true}, ...]}` for Shopee and TikTok |
+| `PUT /api/mock/connectors/shopee` or `/tiktok` | No body; idempotently set that flag and return `{platform, connected: true, mock: true}` |
+
+These public demo flags are shared by every browser using this service instance.
+They survive browser refresh, closing a browser, and locking/unlocking the UI.
+Restarting the mock process/container or redeploying resets both flags. Run one
+replica for a consistent demo; replicas do not share RAM. No database, browser
+storage, account identity, or real platform credentials are involved. The mock
+does not authenticate users or grant access to operations data. It never contacts
+Shopee/TikTok, imports records, or changes the manual-incidents behavior.
+
+Responses are uncached. Invalid platforms return 400, unknown paths 404, unsupported
+methods 405, and cross-origin mutations 403. The UI checks the API on entry,
+reload, and unlock; it shows checking/saving/errors and only opens success after
+a successful write. Reopen Connections or use **Reload page** to see changes from
+another browser. Requests carry no workspace token or cookies.
+
+Use **New browser tab** to open another overview. Each tab retains its own back/forward history,
+address draft, incident form, content scroll, and external iframe while switching. Selecting a tab
+does not reload it. New navigation events from chat open in the active tab; repeated mailbox events
+are ignored. **Reload page** refreshes the selected tab's data or external preview. Closing the last
+tab opens a fresh overview.
+
+The tab strip supports Left/Right arrows (including wraparound), Home, End, and Delete to close.
+The document and browser controls stay within one viewport; shop content scrolls in `.shop-page`
+and a long tab strip scrolls horizontally. On small screens, the same controls remain available.
+
+The current access model is one workspace, and incidents are manually entered until shop ingestion
+is connected. Each tab loads its own incident view; use **Refresh** to see records added elsewhere.
+Failed saves keep the form draft. Closing a tab or locking cancels its pending requests; a write
+already accepted by the server may still complete, so refresh records before retrying it.
+Incident timestamps without an offset are treated as UTC, matching the API's SQLite storage;
+the browser displays them in the seller's local timezone.
+
+## Brand
+
+Follow the canonical [ShopOps design guidelines](../../docs/brand/design-guidelines.md) and
+[brand direction](../../docs/brand/brand-direction.md). Warm ivory, charcoal, the ShopOps mark, and
+accessible action orange replace the original Notion/blue template. `index.html` loads the vendored
+tokens and icons from `public/brand/`; the app stays independently buildable.
+
+After changing canonical assets, run `node scripts/sync-brand-assets.mjs` at the repository root.
+Validate the generated copies with `node scripts/sync-brand-assets.mjs --check`.
+
+## Local
+
+Run `shopops-api` on port 8000, then `npm ci` and `npm run dev -- --port 5173 --strictPort` here. Open the separate chat app on port 5174 beside this window. Run `make ci` for lint/tests/build.
+
+Vite mounts the same mock handler as the container. Restarting the dev server
+resets its RAM flags. Tests include real HTTP calls and supervised-process lifecycle
+checks; the workspace Playwright suite also covers mock connection/relogin flows.
+
+## Deploy
+
+Container port 80. Set `API_URL=http://srv-captain--shopops-api-dev:8000` (production uses `shopops-api`). Startup fails without it. Keep the backend internal and enable HTTPS on this frontend. Leave `VITE_API_BASE_URL` unset.
+
+The image adds Node 24 alongside nginx. The Node entrypoint binds the mock server
+to `127.0.0.1:3001` and starts the standard nginx entrypoint; nginx exposes
+`/api/mock/` on port 80 and strips Authorization/Cookie headers before forwarding.
+CapRover's forwarded HTTPS scheme is retained for same-origin checks. The existing
+`/api/operations/` proxy, static assets, SPA fallback, viewer CSP and `/health`
+remain in nginx. No new runtime variables or volumes are needed. If nginx exits
+or the mock listener fails, the supervising process exits; SIGTERM stops both.
+Use `make docker` to build the image. Reverting the feature image needs no migration.
+
+To display this standalone app inside the optional `shopops-workspace` viewer, set `WORKSPACE_VIEWER_URL` to that viewer's exact HTTPS origin. Blank permits self framing only. The viewer loads this app as an independent document; tokens and business state remain here. Vite permits the local viewer on port 5175.
+
+See [standalone client architecture](../../docs/client-workspace.md) and the API README for persistent volume requirements.

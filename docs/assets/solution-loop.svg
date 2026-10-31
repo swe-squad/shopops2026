@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 830" role="img" aria-labelledby="title desc">
+<title id="title">ShopOps solution from signal to verified outcome</title>
+<desc id="desc">Target product journey. Detect, classify, plan, seller chooses, execute, verify, and learn. Seller and agent triage together through chat. Verified changes appear in the web client. Learning feeds future detection and bounded autonomy.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" fill="none" stroke="#1C1B1A" stroke-width="1.3"/></marker></defs>
+<style>text{font-family:Inter,Arial,sans-serif;fill:#1C1B1A}.title{font-size:32px;font-weight:700}.head{font-size:25px;font-weight:600}.body{font-size:20px}.small{font-size:18px;fill:#555960}.arrow{fill:none;stroke:#1C1B1A;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect width="1440" height="830" fill="#F9F6F0"/>
+<text x="48" y="58" class="title">shopops<tspan fill="#F4511E">.</tspan> Your next move, made clear.</text>
+<text x="48" y="94" class="body">Shopee seller operations + OpenAI managed Codex agents · Target product journey</text>
+
+<rect x="48" y="144" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="68" y="183" class="head">1  Detect</text>
+<text x="68" y="221" class="body">Reviews, margins, stock,</text>
+<text x="68" y="249" class="body">payouts, penalties, SLAs</text>
+<rect x="390" y="144" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="410" y="183" class="head">2  Classify</text>
+<text x="410" y="221" class="body">Group related signals;</text>
+<text x="410" y="249" class="body">explain cause + evidence</text>
+<rect x="732" y="144" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="752" y="183" class="head">3  Plan</text>
+<text x="752" y="221" class="body">2–3 options: impact,</text>
+<text x="752" y="249" class="body">cost, risk, reversibility</text>
+<rect x="1074" y="144" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#B5310B" stroke-width="2"/>
+<text x="1094" y="183" class="head">4  Seller Chooses</text>
+<text x="1094" y="221" class="body">Approve, adjust, or reject</text>
+<text x="1094" y="249" class="body">the exact proposed action</text>
+<path d="M342 229H383" class="arrow"/>
+<path d="M684 229H725" class="arrow"/>
+<path d="M1026 229H1067" class="arrow"/>
+<rect x="48" y="355" width="1258" height="70" rx="8" fill="#DCE5F5"/>
+<text x="70" y="397" class="head">Seller ↔ Codex agent triage</text>
+<text x="488" y="397" class="body">Telegram-first chat · Discuss evidence · Choose the next step</text>
+<path d="M1368 229H1404V535H1375" class="arrow"/>
+<rect x="1074" y="450" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="1094" y="489" class="head">5  Execute</text>
+<text x="1094" y="527" class="body">Scoped MCP operation;</text>
+<text x="1094" y="555" class="body">Shopee API or mock server</text>
+<rect x="732" y="450" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="752" y="489" class="head">6  Verify</text>
+<text x="752" y="527" class="body">Check state + metrics</text>
+<text x="752" y="555" class="body">against the baseline</text>
+<rect x="390" y="450" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="410" y="489" class="head">7  Learn</text>
+<text x="410" y="527" class="body">Use verified outcomes;</text>
+<text x="410" y="555" class="body">earn trust per issue/action</text>
+<path d="M1074 535H1033" class="arrow"/>
+<path d="M732 535H691" class="arrow"/>
+<rect x="48" y="450" width="294" height="170" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="68" y="489" class="head">Web client</text>
+<text x="68" y="527" class="body">Business intelligence +</text>
+<text x="68" y="555" class="body">confirmed shop changes</text>
+<path d="M1221 450V438H195V443" class="arrow"/>
+
+<path d="M537 620V704H24V229H41" class="arrow"/>
+<text x="70" y="696" class="small">Learning informs future detection and recommendations</text>
+<rect x="48" y="746" width="1320" height="52" rx="8" fill="#FFFFFF" stroke="#DCD6CF"/>
+<text x="68" y="779" class="body">Trust: suggest only → notify + rollback where possible → silent execution within pre-authorized limits</text>
+</svg>
