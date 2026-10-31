@@ -26,6 +26,11 @@ hay cả dev + prod?"). Do not ask about anything else up front.
 
 ## Steps
 
+0. **Choose a branch**: suggest creating a feature branch from up-to-date `develop` before scaffolding.
+   Offer an optional separate worktree for isolation. Inspect the current branch, worktrees, and working
+   changes first; preserve existing user changes and reuse an appropriate feature branch or worktree when
+   already provided. Follow the user's choice and repository branch conventions.
+
 1. **Scaffold**
    ```bash
    scripts/new-service.sh <template> <name>
@@ -60,7 +65,11 @@ hay cả dev + prod?"). Do not ask about anything else up front.
      directly, which fails on CORS ("Failed to fetch").
    - Never echo tokens back or write them to files.
 
-4. **Commit and deploy**: commit `services/<name>` (ask before pushing). Pushing to `develop`, or a PR
+4. **Commit and deploy**: always commit the agent's completed work to protect the results, including any
+   related files changed outside `services/<name>`. Stage only the agent's changes; preserve unrelated user
+   changes and never commit secrets. Separate commits by concern and use concise conventional messages in
+   the repository's required `type(scope): message` format. Ask before pushing unless already authorized.
+   Pushing to `develop`, or a PR
    merged into it, deploys every changed service; `/deploy` on a PR deploys the PR's services. With `both`, run
    *Deploy* manually on `main` once for the first production deploy.
 
