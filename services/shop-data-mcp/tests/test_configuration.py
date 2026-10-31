@@ -10,6 +10,19 @@ from app.check import main
 from app.main import create_app
 from app.settings import Catalog, ConfigurationError, Settings
 
+DEMO_ADMIN_PHONES = {
+    "+84900000001",
+    "+84900000002",
+    "+84900000003",
+    "+84900000004",
+    "+84900000005",
+    "+84900000006",
+    "+84900000007",
+    "+84900000008",
+    "+84900000009",
+    "+84900000010",
+}
+
 
 @pytest.fixture(autouse=True)
 def clean_config_environment(monkeypatch):
@@ -18,6 +31,9 @@ def clean_config_environment(monkeypatch):
         "MCP_CONFIG_JSON",
         "MCP_CATALOG_FILE",
         "MCP_CATALOG_JSON",
+        "MCP_CONTROL_DSN",
+        "MCP_MEMBERSHIP_DSN",
+        "MCP_SHOPS_JSON",
         "MCP_INTERNAL_URL",
         "CRONJOB_SERVER_URL",
         "INGESTION_TOKEN",
@@ -64,6 +80,66 @@ def test_split_catalog_loads_metadata_without_overriding_shop_access(split_confi
     assert "issuer" not in Settings.model_fields
 
 
+def test_container_config_loads_runtime_credentials_and_starts_app(split_config, monkeypatch):
+    config, catalog, _, _ = split_config
+    monkeypatch.setenv("MCP_CONFIG_FILE", str(Path("config.container.json").resolve()))
+    monkeypatch.setenv("MCP_CONTROL_DSN", config["control_dsn"])
+    monkeypatch.setenv("MCP_MEMBERSHIP_DSN", config["membership_dsn"])
+    monkeypatch.setenv("MCP_SHOPS_JSON", json.dumps(config["shops"]))
+    monkeypatch.setenv("CRONJOB_SERVER_URL", "http://srv-captain--cronjob-server-dev:8000")
+    monkeypatch.setenv("INGESTION_TOKEN", "test-runtime-only-token")
+    settings = Settings.load()
+    assert settings.control_dsn.get_secret_value() == config["control_dsn"]
+    assert settings.membership_dsn.get_secret_value() == config["membership_dsn"]
+    assert set(settings.shops) == set(config["shops"])
+    assert settings.datasets == Catalog.model_validate(catalog).datasets
+    assert settings.cronjob_admin_phones == DEMO_ADMIN_PHONES
+    assert settings.scopes == {"data:read", "cronjob:read", "cronjob:write"}
+    with TestClient(create_app()) as client:
+        assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_container_config_requires_real_runtime_database_configuration(split_config, monkeypatch):
+    monkeypatch.setenv("MCP_CONFIG_FILE", str(Path("config.container.json").resolve()))
+    with pytest.raises(ConfigurationError) as error:
+        Settings.load()
+    for field in ("control_dsn", "membership_dsn", "shops"):
+        assert f"{field} (missing)" in str(error.value)
+
+
+def test_runtime_database_overrides_replace_config_values(split_config, monkeypatch):
+    config, _, _, _ = split_config
+    dsn = config["membership_dsn"]
+    monkeypatch.setenv("MCP_CONTROL_DSN", dsn)
+    monkeypatch.setenv(
+        "MCP_SHOPS_JSON", json.dumps({"runtime-shop": next(iter(config["shops"].values()))})
+    )
+    settings = Settings.load()
+    assert settings.control_dsn.get_secret_value() == dsn
+    assert set(settings.shops) == {"runtime-shop"}
+
+
+@pytest.mark.parametrize("key", ["MCP_CONTROL_DSN", "MCP_MEMBERSHIP_DSN"])
+@pytest.mark.parametrize(
+    "value", ["", "host=localhost password=private-test-password sslmode=disable"]
+)
+def test_runtime_database_overrides_cannot_disable_verified_tls(
+    split_config, monkeypatch, key, value
+):
+    monkeypatch.setenv(key, value)
+    with pytest.raises(ConfigurationError) as error:
+        Settings.load()
+    assert "private-test-password" not in str(error.value)
+
+
+@pytest.mark.parametrize("value", ["", '{"secret":"private-test-value"', "[]", "null"])
+def test_invalid_runtime_shop_configuration_does_not_leak_values(split_config, monkeypatch, value):
+    monkeypatch.setenv("MCP_SHOPS_JSON", value)
+    with pytest.raises(ConfigurationError) as error:
+        Settings.load()
+    assert "private-test-value" not in str(error.value)
+
+
 def test_environment_json_and_token_enable_cronjob_without_json_mounts(split_config, monkeypatch):
     config, catalog, operator_file, catalog_file = split_config
     config["scopes"] = ["data:read", "cronjob:read", "cronjob:write"]
@@ -80,7 +156,7 @@ def test_environment_json_and_token_enable_cronjob_without_json_mounts(split_con
     assert settings.scopes == {"data:read", "cronjob:read", "cronjob:write"}
     assert settings.ingestion_token.get_secret_value() == "environment-service-token"
     assert settings.datasets == Catalog.model_validate(catalog).datasets
-    assert settings.cronjob_admin_phones == set()
+    assert settings.cronjob_admin_phones == DEMO_ADMIN_PHONES
     assert set(settings.shops) == set(config["shops"])
     with TestClient(create_app()) as client:
         assert client.get("/health").json() == {"status": "ok"}
@@ -169,6 +245,21 @@ def test_invalid_server_capabilities_fail_startup(split_config, scopes):
     operator_file.write_text(json.dumps(config))
     with pytest.raises(ConfigurationError):
         Settings.load()
+
+
+@pytest.mark.parametrize("override", [None, [], ["+84900000002"]])
+def test_demo_admin_default_can_be_disabled_or_replaced(split_config, override):
+    config, _, operator_file, _ = split_config
+    if override is None:
+        config.pop("cronjob_admin_phones")
+    else:
+        config["cronjob_admin_phones"] = override
+    operator_file.write_text(json.dumps(config))
+    settings = Settings.load()
+    assert settings.cronjob_admin_phones == (
+        DEMO_ADMIN_PHONES if override is None else set(override)
+    )
+    assert settings.scopes == {"data:read"}
 
 
 def test_cronjob_capabilities_require_integration_and_admin_allowlist_is_validated(split_config):

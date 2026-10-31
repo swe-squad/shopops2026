@@ -10,8 +10,10 @@ from urllib.parse import parse_qs, urlsplit
 
 import httpx
 import pytest
+from mcp.server.mcpserver.exceptions import ToolError
 
-from app.auth import Identity
+from app.auth import Identity, principal
+from app.cronjob import authorize
 from app.service import DataService
 from app.settings import Settings, Shop
 from tests.test_protocol import sdk_session, tool_payload
@@ -46,6 +48,41 @@ def settings() -> Settings:
 
 def identity(*scopes: str) -> Identity:
     return Identity(subject=PHONE, shops={"shop-a"}, scopes={"data:read", *scopes})
+
+
+@pytest.mark.parametrize("write", [False, True])
+@pytest.mark.parametrize("has_scope", [False, True])
+@pytest.mark.parametrize(
+    "phone,is_admin",
+    [
+        ("+84900000001", True),
+        ("+84900000002", True),
+        ("+84900000003", True),
+        ("+84900000004", True),
+        ("+84900000005", True),
+        ("+84900000006", True),
+        ("+84900000007", True),
+        ("+84900000008", True),
+        ("+84900000009", True),
+        ("+84900000010", True),
+        ("+84900000011", False),
+    ],
+)
+def test_default_demo_admin_still_requires_scope_and_matching_phone(
+    settings, write, phone, is_admin, has_scope
+):
+    scopes = {"data:read"}
+    if has_scope:
+        scopes.add("cronjob:write" if write else "cronjob:read")
+    context = principal.set(Identity(subject=phone, shops={"shop-a"}, scopes=scopes))
+    try:
+        if is_admin and has_scope:
+            authorize(DataService(settings), write=write, admin=True)
+        else:
+            with pytest.raises(ToolError):
+                authorize(DataService(settings), write=write, admin=True)
+    finally:
+        principal.reset(context)
 
 
 def test_all_crud_tools_have_typed_schemas_and_annotations(settings):
@@ -200,6 +237,8 @@ def test_product_crud_forwards_identity_keys_payload_and_receipt(settings):
     ],
 )
 def test_invalid_or_unauthorized_calls_never_reach_cronjob(settings, tool, args, scopes):
+    # Explicitly disable admin access, including for the default demo admin.
+    settings.cronjob_admin_phones = set()
     service = DataService(settings)
     service.cronjob = AsyncMock()
 

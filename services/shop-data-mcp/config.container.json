@@ -1,0 +1,16 @@
+{
+  "public_url": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
+  "scopes": ["data:read", "cronjob:read", "cronjob:write"],
+  "cronjob_admin_phones": [
+    "+84900000001",
+    "+84900000002",
+    "+84900000003",
+    "+84900000004",
+    "+84900000005",
+    "+84900000006",
+    "+84900000007",
+    "+84900000008",
+    "+84900000009",
+    "+84900000010"
+  ]
+}
