@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
@@ -64,7 +64,7 @@ describe('standalone Telegram-style chat', () => {
     await act(async () => { stream.controller.enqueue(bytes.slice(17)) })
     expect(await screen.findByRole('table')).toHaveTextContent('Late')
     expect(screen.getByText('shipment_id').tagName).toBe('CODE')
-    expect(document.querySelector('script, img, iframe')).toBeNull()
+    expect(screen.getByRole('log').querySelector('script, img, iframe')).toBeNull()
     await act(async () => { stream.controller.enqueue(frame({ type: 'done', message: { id: 9, role: 'assistant', text, created_at: timestamp } })) })
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Stop response' })).not.toBeInTheDocument())
     fireEvent.click(screen.getByRole('link', { name: 'incidents' }))
@@ -90,6 +90,8 @@ describe('standalone Telegram-style chat', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry opening link' }))
     await screen.findByText('Link sent. Keep your shop browser open and unlocked to view it.')
     expect(stream.fetchMock.mock.calls.filter(([url, options]) => url === '/api/chat/messages' && options?.method === 'POST')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss link notice' }))
+    expect(screen.queryByRole('complementary', { name: 'Link delivery' })).not.toBeInTheDocument()
   })
 
   it('stops a response and requires a history reload without silently resending', async () => {
@@ -104,9 +106,61 @@ describe('standalone Telegram-style chat', () => {
     expect(stream.cancel).toHaveBeenCalled()
     expect(screen.getByLabelText('Message')).toBeDisabled()
     expect(screen.getByText('Checking shipments…')).toBeInTheDocument()
-    fireEvent.click(screen.getAllByRole('button', { name: 'Load conversation' })[0])
+    fireEvent.click(within(screen.getByRole('group', { name: 'Conversation recovery' })).getByRole('button', { name: 'Load conversation' }))
     await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled())
     expect(stream.fetchMock.mock.calls.filter(([, options]) => options?.method === 'POST')).toHaveLength(1)
+  })
+
+  it('follows streaming at the bottom, leaves readers in place, and resumes on request', async () => {
+    const stream = setupStream()
+    render(<App />)
+    unlock()
+    await send('Review shipments')
+    const conversation = screen.getByRole('log', { name: 'Conversation' })
+    let height = 1000
+    let top = 700
+    Object.defineProperties(conversation, {
+      scrollHeight: { configurable: true, get: () => height },
+      clientHeight: { configurable: true, value: 300 },
+      scrollTop: { configurable: true, get: () => top, set: value => { top = Math.max(0, Math.min(value, height - 300)) } },
+    })
+    fireEvent.scroll(conversation)
+    height = 1200
+    await act(async () => { stream.controller.enqueue(frame({ type: 'delta', text: 'First update. ' })) })
+    expect(conversation.scrollTop).toBe(900)
+
+    conversation.scrollTop = 240
+    fireEvent.scroll(conversation)
+    expect(screen.getByRole('button', { name: 'Jump to latest' })).toBeInTheDocument()
+    height = 1400
+    await act(async () => { stream.controller.enqueue(frame({ type: 'delta', text: 'More evidence arrived.' })) })
+    expect(conversation.scrollTop).toBe(240)
+    fireEvent.click(screen.getByRole('button', { name: 'New reply · Jump to latest' }))
+    expect(conversation.scrollTop).toBe(1100)
+    expect(conversation).toHaveFocus()
+    expect(screen.queryByRole('button', { name: /Jump to latest/ })).not.toBeInTheDocument()
+
+    height = 1500
+    await act(async () => { stream.controller.enqueue(frame({ type: 'delta', text: ' Final detail.' })) })
+    expect(conversation.scrollTop).toBe(1200)
+    fireEvent.click(screen.getByRole('button', { name: 'Stop response' }))
+    await screen.findByText('Response stopped. Load the conversation before sending again.')
+  })
+
+  it('keeps a queued draft while rejecting duplicate submissions during streaming', async () => {
+    const stream = setupStream()
+    render(<App />)
+    unlock()
+    await send('First question')
+    const composer = screen.getByRole('textbox', { name: 'Message' })
+    fireEvent.change(composer, { target: { value: 'My follow-up' } })
+    fireEvent.keyDown(composer, { key: 'Enter' })
+    fireEvent.keyDown(composer, { key: 'Enter' })
+    expect(composer).toHaveValue('My follow-up')
+    expect(screen.getByRole('button', { name: 'Send message' })).toBeDisabled()
+    expect(stream.fetchMock.mock.calls.filter(([url, options]) => url === '/api/chat/messages' && options?.method === 'POST')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Stop response' }))
+    await screen.findByText('Response stopped. Load the conversation before sending again.')
   })
 
   it('aborts in-flight streaming and clears its own token when locked', async () => {
@@ -114,7 +168,8 @@ describe('standalone Telegram-style chat', () => {
     render(<App />)
     unlock()
     await send('Check my shop')
-    fireEvent.click(screen.getByRole('button', { name: 'Lock' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Chat menu' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Lock' }))
     expect(screen.getByRole('heading', { name: 'Open your agent chat' })).toBeInTheDocument()
     expect(stream.getSignal()?.aborted).toBe(true)
     expect(screen.getByLabelText('Workspace access token')).toHaveValue('')

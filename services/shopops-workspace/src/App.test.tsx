@@ -44,6 +44,22 @@ describe('independent app viewer', () => {
     expect(screen.getByTitle('Shop browser app')).toBe(browserAfter)
   })
 
+  it('switches narrow views without replacing either document or refetching config', async () => {
+    const fetchMock = vi.fn(async () => json(config))
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+    const browser = await screen.findByTitle('Shop browser app')
+    const chat = screen.getByTitle('Agent chat app')
+    fireEvent.click(screen.getByRole('button', { name: 'Chat' }))
+    expect(screen.getByRole('button', { name: 'Chat' })).toHaveAttribute('aria-pressed', 'true')
+    expect(chat.parentElement?.closest('[data-active-client]')).toHaveAttribute('data-active-client', 'chat')
+    fireEvent.click(screen.getByRole('button', { name: 'Browser' }))
+    expect(screen.getByRole('button', { name: 'Browser' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTitle('Shop browser app')).toBe(browser)
+    expect(screen.getByTitle('Agent chat app')).toBe(chat)
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
   it('keeps invalid config out of frames and retries only the config request', async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(json({ browser_url: 'https://same.example.com', chat_url: 'https://same.example.com' })).mockResolvedValueOnce(json(config))
     vi.stubGlobal('fetch', fetchMock)

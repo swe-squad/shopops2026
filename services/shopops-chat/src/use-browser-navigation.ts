@@ -16,7 +16,7 @@ export function useBrowserNavigation(token: string) {
     lastUrl.current = url
     const controller = new AbortController()
     current.current = controller
-    setNotice('Opening link in your shop browser…')
+    setNotice('Sending link to your shop browser…')
     setFailed(false)
     try {
       const response = await fetch('/api/operations/navigation', {
@@ -33,5 +33,5 @@ export function useBrowserNavigation(token: string) {
     } finally { if (current.current === controller) current.current = null }
   }
 
-  return { notice, failed, navigate: (url: string) => { void navigate(url) }, retry: () => { void navigate(lastUrl.current) } }
+  return { notice, failed, dismiss: () => setNotice(''), navigate: (url: string) => { void navigate(url) }, retry: () => { void navigate(lastUrl.current) } }
 }

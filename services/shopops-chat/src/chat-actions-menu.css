@@ -1,0 +1,8 @@
+.chat-actions-menu { position: relative; flex: none; }
+.chat-menu-trigger { border-radius: var(--radius-pill); }
+.chat-menu-trigger svg circle { fill: currentColor; stroke: none; }
+.chat-menu { position: absolute; top: calc(100% + var(--s1)); right: 0; z-index: 2; width: max-content; min-width: calc(var(--s8) * 6); max-width: calc(100vw - var(--s8)); padding: var(--s1); border: 1px solid var(--line); border-radius: var(--radius-large); background: var(--surface); box-shadow: 0 var(--s2) var(--s6) color-mix(in srgb, var(--ink) 14%, transparent); }
+.chat-menu button { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: var(--control-size); padding: var(--s2) var(--s3); border: 0; border-radius: var(--radius); background: transparent; color: var(--ink); text-align: left; font-size: var(--text-small); }
+.chat-menu button:hover:not(:disabled), .chat-menu button:focus-visible { background: var(--paper); }
+.chat-menu button:focus-visible { outline-offset: calc(-1 * var(--focus-width)); }
+.chat-menu button svg { width: var(--s4); height: var(--s4); flex: none; color: var(--muted); }
