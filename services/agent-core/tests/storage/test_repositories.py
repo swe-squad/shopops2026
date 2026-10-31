@@ -182,3 +182,50 @@ def test_worker_uses_durable_message_permission_snapshot(repo, scope):
         assert "history:read" not in context.scope.permissions
 
     run(execute())
+
+
+def test_atomic_session_receipt_and_mapping_are_persisted_together(repo, scope):
+    async def exercise():
+        c = await conversation(repo, scope)
+        message = await repo.enqueue_message(scope, c.id, "atomic-map", "hello")
+        await repo.claim_next_run()
+        await repo.mark_submission(message.run.id, "session_creating")
+        await repo.save_session_mapping(message.run.id, "new-session", input_submitted=True)
+        assert (await repo.get_run(scope, message.run.id)).submission_marker == "submitted"
+        assert (await repo.get_conversation(scope, c.id)).provider_session_id == "new-session"
+
+    asyncio.run(exercise())
+
+
+def test_live_source_loader_filters_session_turn_and_failed_results(repo, scope):
+    from app.contracts.models import Source
+    from app.contracts.tools import PendingToolCall, ToolResult
+
+    async def exercise():
+        c = await conversation(repo, scope)
+        message = await repo.enqueue_message(scope, c.id, "sources", "hello")
+        await repo.claim_next_run()
+        await repo.save_session_mapping(message.run.id, "s")
+        await repo.mark_submission(message.run.id, "submitted", "t")
+        known = Source(type="knowledge", reference="fixture:known")
+        for n, result in enumerate(
+            [
+                ToolResult(data={"ok": True}, sources=(known,)),
+                ToolResult(data={"ok": True}, sources=(known,)),
+                ToolResult(error="timeout", sources=(Source(type="data", reference="untrusted"),)),
+            ]
+        ):
+            call = PendingToolCall(
+                session_id="s",
+                turn_id="t",
+                call_id=str(n),
+                name="search_knowledge",
+                arguments={"query": "policy"},
+            )
+            await repo.begin_tool_call(message.run.id, call, 8)
+            await repo.record_tool_result(message.run.id, call, result)
+        assert await repo.load_sources("s", "t") == (known,)
+        assert await repo.load_sources("other", "t") == ()
+        assert await repo.load_sources("s", "other") == ()
+
+    asyncio.run(exercise())

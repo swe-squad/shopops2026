@@ -4,8 +4,8 @@ FastAPI/Python 3.14 foundation for a durable, scoped ShopOps agent service on po
 T01 supplies contracts, configuration, SQLite storage, scheduling/recovery, lifecycle and packaging.
 T02 supplies auth/API routes, T03 supplies fake/live Agents API adapters, and T04 supplies MCP/tools.
 All four module branches are integrated for offline execution. Default startup mounts the scoped
-MCP apps and configures their bridge with the shared repository. Local/test fake-provider mode can
-be ready; OpenAI live execution still awaits the initial-input session contract amendment.
+MCP apps and configures their bridge with the shared repository. Local/test fake-provider mode and configured live-provider mode can be ready. The live
+provider now supports atomic session creation with initial input and has passed synthetic AC13.
 
 ## Development
 
@@ -62,8 +62,8 @@ MCP URLs. Bootstrap URL env vars are supplied to T04's server/bridge factory; th
 persisted revisions or conversations. To use a new endpoint/model, publish a NEW registry revision
 containing the configured values, activate it administratively, and create a new conversation.
 The sample registry's `fixture-only` model is offline configuration; a live revision must specify
-the account's supported `OPENAI_MODEL`. SDK verification/pinning is owned by T03; no unverified
-Agents SDK or Responses loop is included as a substitute.
+the account's supported `OPENAI_MODEL`. The official `openai==3.42.0` runtime SDK is pinned and exercised by both mocked wire tests
+and synthetic live acceptance. Agents SDK/Responses loops are not substituted.
 
 ## Composition and shared contracts
 
@@ -93,7 +93,8 @@ permits one nonterminal run per conversation. The user message/run/lock commit b
 Replay precedes busy checking; payload/key conflicts are explicit. Cursors identify an existing
 message/event inside the authorized resource and paginate by monotonic sequence, never offset.
 
-Subscribe before submitting input. Session creation/input submission markers persist before external
+Subscribe before submitting follow-up input. Initial input is submitted atomically at creation;
+its session mapping and accepted receipt persist together. Creation/input markers precede external
 mutations. Inspect provider root state after stream loss; a subagent event or stream closure never
 unlocks the conversation. Persist tool results before delivery, and replay only a call currently
 pending at the provider. Tool/source deduplication uses session/turn/call and provider item IDs.
@@ -154,11 +155,11 @@ After T02–T04 handoffs, compose the factories above and run:
 .venv/bin/python -m scripts.demo_offline --fixture-token FIXTURE_TOKEN --shop shop-a
 ```
 
-This loopback-only client provisions, creates a conversation, submits a synthetic returns question,
-polls it and asks a policy follow-up. It needs T02's fixture token and T04's absolute-date fixture
-compatibility. The script is supplied but the full scenario remains UNVERIFIED until those handoffs.
-A test-only provider double cannot replace actual loopback MCP evidence. Live AC13 is separately
-UNVERIFIED and belongs to T03; no credentials were read or copied for this task.
+This loopback-only client provisions, creates a conversation, submits synthetic questions and polls
+results. The default fake provider asks for clarification; configured fake scenarios in integration
+tests exercise deterministic data/knowledge/history calls over real loopback MCP. For real model
+selection of tools, use the explicit live smoke below. AC13 has passed with synthetic fixture data;
+this does not establish real shop or production deployment acceptance.
 
 ## Container / CapRover
 
@@ -203,9 +204,45 @@ synthetic test inputs, not evidence of live model reasoning. The default fake pr
 clarification unless scenarios are supplied explicitly; its in-memory provider sessions do not
 survive a process restart, while SQLite history and receipts remain durable.
 
-`AGENT_PROVIDER=openai_agents` still cannot start a complete live workflow: shared initial-input
-session creation, the SDK runtime pin, live provider composition and AC13 are pending. It never
-falls back to simulated responses. Runtime config is read from process environment; the original
-checkout's root `.env` is not implicitly loaded.
+## Live OpenAI validation
 
-Run `.venv/bin/pytest` and `make ci` from this service directory. Live tests remain explicitly opt-in.
+`AGENT_PROVIDER=openai_agents` selects the official SDK adapter. It creates a session with
+`environment.type=none` and the first input together, persists the session and accepted-input
+receipt atomically, and reconciles the saved root turn without resending that first message.
+Initial run correlation uses session metadata; follow-up submission keys and persisted root IDs
+support recovery. Unknown creation outcomes still block rather than creating replacement sessions.
+Only successful persisted tool results from that session/turn can authorize response citations.
+The application closes its SDK client during shutdown. Definite request rejection is reported as
+`provider_request_rejected` without leaking the upstream error body.
+
+For a local synthetic live smoke, supply `OPENAI_API_KEY` and `OPENAI_MODEL` in the process environment
+or explicitly select an ignored credentials file. The runner reads only those two settings from
+that file; it does not copy the file or implicitly search the original checkout's root `.env`.
+Run from this service directory:
+
+```bash
+.venv/bin/python -m scripts.demo_live --live --credentials-file .env --evidence .evidence/live-smoke.json
+```
+
+`--model` can explicitly override the model setting. The smoke creates a temporary SQLite database
+and HTTP server with fixture identity and real scoped MCP transport, makes three synthetic turns
+(metrics, same-session follow-up, knowledge), then stops the worker and cleans up every known remote
+session independently of local deletion. If remote deletion cannot be confirmed, it preserves
+recovery state and reports its location. The three-turn count and run/request timeouts bound this
+smoke; no monetary cap is promised. The tested API deployment rejected the optional `spend_control`
+field, so this integration does not send it.
+
+For the opt-in pytest gate, export the key/model into the environment first:
+
+```bash
+AGENT_CORE_LIVE=1 .venv/bin/pytest -v tests/live/test_agents_api.py
+```
+
+Live-marked tests may access OpenAI only with that explicit opt-in. Other tests retain the offline
+network guard even when the flag is set. Default `make ci` skips live acceptance and performs no
+real API calls. The official SDK compatibility test uses MockTransport and now runs in default CI.
+
+AC13 was verified with `gpt-6-astra`: three completed turns, 5%/15% metrics and 10-point change,
+source-grounded knowledge, follow-up in one session, and confirmed remote/local cleanup. This is
+synthetic local integration evidence; real shop data, external Data MCP/JWT deployment settings,
+and CapRover deployment still require their own configuration and checks.

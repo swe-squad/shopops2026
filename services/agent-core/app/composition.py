@@ -1,4 +1,4 @@
-"""Compose delivered T02/T03 modules while keeping live wiring explicit."""
+"""Compose scoped API, configured agent providers and MCP modules."""
 
 from collections.abc import Awaitable, Callable
 
@@ -32,13 +32,22 @@ def build_configured_router(
     return build_api_router(repository, authenticator.authenticate, readiness)
 
 
-def build_offline_provider(settings: Settings) -> AgentProvider | None:
-    # Live session creation is blocked on the shared contract amendment.
-    # No automatic fallback from a requested live provider to simulated responses.
+def build_configured_provider(
+    settings: Settings, repository: Repository | None = None
+) -> AgentProvider | None:
+    # Explicit configuration selects the provider; live never falls back to fake.
     if settings.agent_provider == "fake":
         if settings.app_env not in {"local", "test"}:
             raise ValueError("AGENT_PROVIDER=fake requires APP_ENV=local|test")
         return FakeProvider()
+    if repository is not None:
+        from app.providers.openai_agents import build_live_provider
+
+        return build_live_provider(
+            repository.load_sources,
+            api_key=settings.openai_api_key,
+            model=settings.openai_model,
+        )
     return None
 
 

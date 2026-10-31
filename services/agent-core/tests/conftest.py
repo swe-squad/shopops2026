@@ -1,11 +1,14 @@
 import ipaddress
+import os
 import socket
 
 import pytest
 
 
 @pytest.fixture(autouse=True)
-def offline_network(monkeypatch):
+def offline_network(monkeypatch, request):
+    if request.node.get_closest_marker("live") and os.environ.get("AGENT_CORE_LIVE") == "1":
+        return
     original = socket.socket.connect
 
     def connect(sock, address):

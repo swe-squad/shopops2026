@@ -10,7 +10,7 @@
 
 **Spec:** [Agent Core Template Spec](../../agents_api_template_spec.md), sections 1–6 and 8–12.
 
-**Tracker and global constraints:** [Task list](../task_list.md). Owner: integration lead. Status: **Ready for integration**.
+**Tracker and global constraints:** [Task list](../task_list.md). Owner: integration lead. Status: **Done** (starter integration and synthetic live acceptance verified).
 
 **Difficulty:** D5 — Very hard. This task combines contract ownership, atomic persistence, concurrency, uncertain provider outcomes, restart recovery and final integration. Its foundation must ship as a small first commit so the other three workstreams can start.
 
@@ -60,8 +60,8 @@ Choose precise argument and return types in `app/contracts/` and publish them in
 - [x] **Worker tests first:** Add `test_only_one_active_run_per_conversation`, `test_restart_resumes_queued_run`, `test_replayed_tool_result_not_executed_again`, and `test_unknown_submission_blocks_conversation` in `tests/runs/test_recovery.py`. Use a controllable clock and T03 fake provider; assert no automatic input resubmission after an uncertain provider outcome.
 - [x] **Worker implementation:** Coordinate `queued`, `running`, `waiting_tool`, `reconciling`, and terminal states. Enforce 180-second run deadlines, 8 calls/run and 4 concurrent runs. Confirm provider cancellation/root-turn completion before unlocking; persist result before tool-result delivery.
 - [x] **Runtime guards:** Test that missing required configuration fails without exposing values and that fake provider/fixture auth fail outside local/test. Implement readiness from DB/config/worker heartbeat and safe status metrics/logs.
-- [ ] **Offline integration:** Wire T02–T04 through the app factory. Add `tests/integration/test_offline_workflow.py`: provision → create conversation → submit → poll → MCP data/knowledge → history/follow-up. Use real loopback MCP transport and fake provider.
-- [ ] **Recovery and configuration integration:** Add tests for lost streams, duplicated provider events, source validation, endpoint revision pinning, worker restart and uncertain cancellation. Record a documented admin procedure for changing the active revision while preserving existing conversations.
+- [x] **Offline integration:** Wire T02–T04 through the app factory. Use `tests/integration/test_task_integration.py` and `test_mcp_workflow.py`: provision → create conversation → submit → poll → MCP data/knowledge → history/follow-up. Use real loopback MCP transport and fake provider.
+- [x] **Recovery and configuration integration:** Add tests for lost streams, duplicated provider events, source validation, endpoint revision pinning, worker restart and uncertain cancellation. Record a documented admin procedure for changing the active revision while preserving existing conversations.
 - [x] **Packaging:** Copy config/knowledge/fixtures into the image, make `/data` writable for the non-root user, and document single-instance deployment with no overlapping DB users. Verify persistence after container restart with a volume. Do not deploy or configure external secrets as part of this task without authorization.
 - [x] **Cleanup and handoff:** Implement scoped conversation/provider-session cleanup and history/event retention. Keep failed provider deletion visible. Complete README, `.env.example`, offline demo and validation evidence.
 
@@ -146,7 +146,7 @@ Record the actual worktree path, branch, reviewed baseline/foundation SHA, resul
 T01 remains **Ready for integration**, rather than Done, until the missing handoffs are composed and
 full offline flow/security/recovery checks pass. Preserve other owners' branches/worktrees.
 
-### Current integration follow-up
+### Offline integration follow-up before the live amendment
 
 T02, T03 and T04 module commits are now merged on `feat/agent-core-template`. API/auth,
 SQLite, worker, fake provider and real loopback MCP data/knowledge/history run together.
@@ -154,3 +154,13 @@ SQLite, worker, fake provider and real loopback MCP data/knowledge/history run t
 and the two-container volume persistence check pass. Remaining work is T03 live-session
 contract amendment/SDK pin/composition and AC13; the original missing module handoffs
 above are historical and no longer block offline integration.
+
+### Live acceptance completion
+
+The previously recorded live blockers are resolved in the integration branch: atomic create
+with initial input, accepted receipt persistence, source loading, live composition and
+`openai==3.42.0` pin. The live gate now executes real calls rather than failing intentionally.
+AC13 pytest passed with gpt-6-astra: three turns, source-grounded metrics and knowledge,
+same-session follow-up, numeric checks and confirmed remote/local cleanup. Stream-silence
+and busy-conversation cleanup defects have failing-then-passing regressions. No production
+deployment or real shop data acceptance is implied.

@@ -31,6 +31,7 @@ from app.contracts.models import (
     Run,
     RunEvent,
     RunState,
+    Source,
 )
 from app.contracts.tools import PendingToolCall, ToolResult
 from app.runs.state import TRANSITIONS
@@ -481,12 +482,17 @@ class SQLiteRepository:
 
         return await self.database.transaction(operation)
 
-    async def save_session_mapping(self, run_id: str, session_id: str) -> None:
+    async def save_session_mapping(
+        self, run_id: str, session_id: str, *, input_submitted: bool = False
+    ) -> None:
         def operation(db: sqlite3.Connection) -> None:
             c = self._conversation(db, self._run(db, run_id).conversation_id)
             if c.provider_session_id not in (None, session_id):
                 raise IdempotencyConflict()
             self._save_conversation(db, c.model_copy(update={"provider_session_id": session_id}))
+            if input_submitted:
+                run = self._run(db, run_id)
+                self._save_run(db, run.model_copy(update={"submission_marker": "submitted"}))
 
         await self.database.transaction(operation)
 
@@ -729,5 +735,22 @@ class SQLiteRepository:
                 db.executemany(f"DELETE FROM {table} WHERE id=?", ((i,) for i in ids))
                 counts.append(len(ids))
             return counts[0], counts[1]
+
+        return await self.database.transaction(operation)
+
+    async def load_sources(self, session_id: str, turn_id: str) -> tuple[Source, ...]:
+        def operation(db: sqlite3.Connection) -> tuple[Source, ...]:
+            rows = db.execute(
+                "SELECT result FROM tool_calls WHERE session_id=? AND turn_id=? "
+                "AND result IS NOT NULL",
+                (session_id, turn_id),
+            ).fetchall()
+            sources = {}
+            for row in rows:
+                result = ToolResult.model_validate_json(row[0])
+                if result.error is None:
+                    for source in result.sources:
+                        sources[(source.type, source.reference)] = source
+            return tuple(sources.values())
 
         return await self.database.transaction(operation)

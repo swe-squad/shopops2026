@@ -8,6 +8,7 @@ from app.contracts.tools import PendingToolCall, ToolResult
 
 class ProviderSession(Record):
     id: str
+    input_submitted: bool = False
 
 
 class ProviderItem(Record):
@@ -43,7 +44,7 @@ class ProviderEventStream(Protocol):
 
 class AgentProvider(Protocol):
     async def create_session(
-        self, config: ConfigSnapshot, correlation_id: str
+        self, config: ConfigSnapshot, correlation_id: str, *, initial_input: str | None = None
     ) -> ProviderSession: ...
     async def inspect_session(self, session_id: str) -> ProviderSnapshot: ...
     async def submit_input(self, session_id: str, content: str, run_id: str) -> str: ...

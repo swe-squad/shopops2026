@@ -1,15 +1,16 @@
-"""Async official Agents API boundary; mutations are never automatically retried.
+"""Official Agents API boundary: initial input is submitted atomically with creation."""
 
-Creation is deliberately gated: foundation v1 cannot supply the initial input
-required by environment=none. T01 must publish a coordinated contract amendment.
-Existing session operations are available for offline compatibility verification.
-"""
-
+import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any
 
-from app.contracts.errors import ConfigurationConflict, IdempotencyConflict, InvalidTransition
+from app.contracts.errors import (
+    ConfigurationConflict,
+    IdempotencyConflict,
+    InvalidTransition,
+    ProviderRequestRejected,
+)
 from app.contracts.errors import ProviderOutcomeUnknown as Unknown
 from app.contracts.models import ApplicationResponse, ConfigSnapshot, Source
 from app.contracts.provider import ProviderEvent, ProviderItem, ProviderSession, ProviderSnapshot
@@ -90,14 +91,66 @@ class OpenAIAgentsProvider:
     def __init__(self, client: Any, source_loader: SourceLoader | None = None) -> None:
         if hasattr(client, "with_options"):
             client = client.with_options(max_retries=0)
+        self.client = client
+        self.created_sessions: list[str] = []
+        self.last_http_status: int | None = None
+        self.last_error_fields: dict[str, str] = {}
         self.sessions = client.beta.agents.sessions
         self.deliveries: dict[tuple[str, str, str], tuple[PendingToolCall, ToolResult]] = {}
         self.source_loader = source_loader
         # Optimization only. Restart loses correlation, and recovery then blocks safely.
         self.correlations: dict[tuple[str, str], str] = {}
 
-    async def create_session(self, config: ConfigSnapshot, correlation_id: str) -> ProviderSession:
-        raise ConfigurationConflict()
+    async def create_session(
+        self, config: ConfigSnapshot, correlation_id: str, *, initial_input: str | None = None
+    ) -> ProviderSession:
+        if initial_input is None or not initial_input.strip():
+            raise ConfigurationConflict()
+        from app.agents.capabilities import select_tools
+        from app.agents.instructions import build_instructions
+        from app.tools.validation import definitions
+
+        tools = select_tools(config, definitions())
+        try:
+            session = _dict(
+                await self.sessions.create(
+                    agent={
+                        "model": config.model,
+                        "instructions": build_instructions(config),
+                        "tools": [
+                            {
+                                "type": "function",
+                                "name": t.name,
+                                "description": t.description,
+                                "parameters": t.input_schema,
+                            }
+                            for t in tools
+                        ],
+                    },
+                    environment={"type": "none"},
+                    input=initial_input,
+                    metadata={"initial_run_id": correlation_id},
+                    output_type=ApplicationResponse,
+                )
+            )
+            self.created_sessions.append(session["id"])
+            return ProviderSession(id=session["id"], input_submitted=True)
+        except Exception as error:
+            status = getattr(error, "status_code", None)
+            if status in {400, 401, 403, 404, 422}:
+                self.last_http_status = status
+                body = getattr(error, "body", None)
+                if isinstance(body, dict):
+                    for name in ("code", "param"):
+                        value = body.get(name)
+                        if isinstance(value, str) and len(value) <= 128:
+                            self.last_error_fields[name] = value
+                raise ProviderRequestRejected() from None
+            raise Unknown() from None
+
+    async def aclose(self) -> None:
+        if hasattr(self.client, "close"):
+            await self.client.close()
 
     async def _roots(self, session_id: str) -> list[dict]:
         roots = []
@@ -155,7 +208,8 @@ class OpenAIAgentsProvider:
             session_id=session_id,
             root_turn_id=turn["id"],
             root_status=status,
-            input_run_id=self.correlations.get((session_id, turn["id"])),
+            input_run_id=self.correlations.get((session_id, turn["id"]))
+            or (session.get("metadata", {}).get("initial_run_id") if len(roots) == 1 else None),
             pending_calls=tuple(calls),
             response=response,
             item_id=item_id,
@@ -178,9 +232,14 @@ class OpenAIAgentsProvider:
                     }
                 ],
             )
-            roots = await self._roots(session_id)
-            if not roots or roots[0]["id"] == before.root_turn_id:
-                raise Unknown()
+            deadline = asyncio.get_running_loop().time() + 5
+            while True:
+                roots = await self._roots(session_id)
+                if roots and roots[0]["id"] != before.root_turn_id:
+                    break
+                if asyncio.get_running_loop().time() >= deadline:
+                    raise Unknown()
+                await asyncio.sleep(0.1)
             turn_id = roots[0]["id"]
             self.correlations[(session_id, turn_id)] = run_id
             return turn_id
@@ -289,18 +348,30 @@ class OpenAIAgentsProvider:
     async def delete_session(self, session_id: str) -> None:
         try:
             await self.sessions.delete(session_id)
-        except Exception:
+        except Exception as error:
+            if getattr(error, "status_code", None) == 404:
+                return  # Known session is already absent; cleanup is idempotent.
             raise Unknown() from None
 
 
-def build_live_provider(source_loader: SourceLoader | None = None) -> OpenAIAgentsProvider:
-    """No SDK import/network at module import. T01 must pin openai==3.42.0."""
+def build_live_provider(
+    source_loader: SourceLoader | None = None,
+    *,
+    api_key: str | None = None,
+    model: str | None = None,
+) -> OpenAIAgentsProvider:
+    """Create a client without network work; credentials stay in the application."""
     import os
 
-    if not os.environ.get("OPENAI_API_KEY") or not os.environ.get("OPENAI_MODEL", "").strip():
+    key = api_key or os.environ.get("OPENAI_API_KEY")
+    chosen_model = model or os.environ.get("OPENAI_MODEL", "")
+    if not key or not chosen_model.strip():
         raise ConfigurationConflict()
     try:
         from openai import AsyncOpenAI
     except ImportError:
         raise ConfigurationConflict() from None
-    return OpenAIAgentsProvider(AsyncOpenAI(max_retries=0), source_loader)
+    provider = OpenAIAgentsProvider(
+        AsyncOpenAI(api_key=key, max_retries=0, timeout=20), source_loader
+    )
+    return provider

@@ -144,7 +144,7 @@ def test_timeout_submit_is_uncertain():
     asyncio.run(exercise())
 
 
-def test_live_create_reports_contract_blocker(config):
+def test_live_create_requires_initial_input(config):
     async def exercise():
         p, s = adapter()
         with pytest.raises(ConfigurationConflict):
@@ -313,5 +313,45 @@ def test_bad_historical_output_does_not_block_new_input():
             }
         )
         assert (await p.inspect_session("session")).response.text == "SKU nào?"
+
+    asyncio.run(exercise())
+
+
+def test_create_session_submits_initial_input_atomically(config):
+    from unittest.mock import AsyncMock
+
+    async def exercise():
+        p, sessions = adapter()
+        sessions.create = AsyncMock(
+            return_value={"id": "session", "metadata": {"initial_run_id": "run"}}
+        )
+        created = await p.create_session(config, "run", initial_input="synthetic first message")
+        assert created.id == "session" and created.input_submitted
+        args = sessions.create.call_args.kwargs
+        assert args["input"] == "synthetic first message"
+        assert args["environment"] == {"type": "none"}
+        assert args["metadata"]["initial_run_id"] == "run"
+        assert args["agent"]["model"] == config.model
+        assert args["agent"]["tools"][0]["type"] == "function"
+        assert sessions.sent == []
+
+    asyncio.run(exercise())
+
+
+def test_definitive_create_rejection_is_sanitized(config):
+    from unittest.mock import AsyncMock
+
+    from app.contracts.errors import ProviderRequestRejected
+
+    class Rejected(Exception):
+        status_code = 403
+
+    async def exercise():
+        provider, sessions = adapter()
+        sessions.create = AsyncMock(side_effect=Rejected("sensitive upstream body"))
+        with pytest.raises(ProviderRequestRejected) as error:
+            await provider.create_session(config, "run", initial_input="hello")
+        assert str(error.value) == "provider_request_rejected"
+        assert sessions.create.call_count == 1
 
     asyncio.run(exercise())

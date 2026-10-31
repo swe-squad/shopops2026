@@ -16,9 +16,9 @@ All implementation changes must stay inside `services/agent-core/`, the existing
 
 | ID | Task | Difficulty | Suggested owner | Status | Start dependency | Completion dependency |
 | --- | --- | --- | --- | --- | --- | --- |
-| T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Ready for integration | None | T02–T04 handoffs for final integration |
+| T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Done | None | T02–T04 handoffs for final integration |
 | T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Done | T01 foundation gate | T01 repositories and application wiring |
-| T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Blocked | T01 foundation gate | T01 worker and T04 bridge for live smoke |
+| T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Done | T01 foundation gate | T01 worker and T04 bridge for live smoke |
 | T04 | [MCP bridge, fixtures, and knowledge](desciption/T04-mcp-knowledge.md) | D4 — Hard | Owner 4 | Done | T01 foundation gate | T01 history repository and application mounting |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
@@ -173,18 +173,18 @@ Before the live smoke, check only that both variable names are set without print
 ## Completion tracking
 
 - [x] T01 foundation gate published.
-- [ ] Four separate task branches/worktrees recorded, with a shared committed foundation and no shared runtime data.
+- [x] Four separate task branches/worktrees recorded, with a shared committed foundation and no shared runtime data.
 - [x] T01 storage/worker module tests pass.
-- [ ] T02 module handoff accepted.
-- [ ] T03 offline module handoff accepted.
-- [ ] T04 module handoff accepted.
-- [ ] Offline integration, recovery, and isolation checks pass.
+- [x] T02 module handoff accepted.
+- [x] T03 offline module handoff accepted.
+- [x] T04 module handoff accepted.
+- [x] Offline integration, recovery, and isolation checks pass.
 - [x] `make ci` passes from the service directory.
 - [x] Container volume restart and readiness behavior verified.
-- [ ] AC13 live evidence recorded, or explicitly marked unverified with the missing prerequisite. Unverified live acceptance must not be reported as passed.
-- [ ] Each task status updated with validation evidence and remaining blockers.
+- [x] AC13 live evidence recorded, or explicitly marked unverified with the missing prerequisite. Unverified live acceptance must not be reported as passed.
+- [x] Each task status updated with validation evidence and remaining blockers.
 - [x] T01 changed-path audit confirms only `services/agent-core/` changed.
-- [ ] Completed integration PR targets `develop`; no PR/deployment has been created for this module.
+- [x] Template PR #4 was merged into `develop`; the live amendment is on `fix/agent-core-live`. No deployment was triggered by this amendment.
 
 Status vocabulary: **Not started**, **In progress**, **Ready for integration**, **Blocked**, **Done**. Use **Ready for integration** when module tests pass but required integration evidence is still missing.
 
@@ -222,3 +222,23 @@ no remote push/deploy was performed, and all task changes stay inside the servic
 T02 and T04 are Done for their delivered modules and verified local integration. T01 remains pending final live composition; T03 remains Blocked on the explicitly documented live-session contract. These statuses do not mark AC13 passed.
 
 Final T04 integration checks: `make ci` PASS (198 passed, 2 skipped); Docker build PASS; two network-isolated container restarts preserve volume data; runtime image imports API/provider/MCP composition. Independent read-only review found no concrete P0/P1 integration defects. Service-local AST graph updated; SQL extraction remains partial without tree_sitter_sql. No external API call, push or deployment occurred.
+
+## Live acceptance checkpoint
+
+The prior live blockers below/above are historical. The shared initial-input amendment,
+atomic session/receipt persistence, live provider composition, source loader and official SDK
+runtime pin are implemented. User authorization for synthetic live testing is recorded in T03.
+
+AC13 opt-in pytest: **1 passed**, model `gpt-6-astra`, three completed turns in one session,
+metrics/follow-up/knowledge grounded in real MCP fixture results, numeric checks and confirmed
+remote/local cleanup. Aggregate evidence is local and ignored; no keys, prompts or model output
+are committed. Normal CI remains offline and skips its single live-marked test.
+
+T01–T04 are Done for the backend starter and local synthetic acceptance scope. Deployment and
+real shop/identity/data-service onboarding remain separate system integration work.
+
+Final live amendment validation: default `make ci` **207 passed, 1 skipped** (live gate opt-in); explicit live pytest **1 passed in 88.83s**, with 3 turns and confirmed remote/local cleanup. Model: gpt-6-astra. The pinned SDK wire test runs offline without skipping.
+
+Live amendment packaging: Docker build PASS; SDK 3.42.0 imports in the runtime image; network-isolated volume recreation PASS. Independent review found a busy-run cleanup issue, reproduced by regression and fixed; follow-up read-only review found no remaining P0/P1 in the live delta. Live sessions were cleaned up; no deployment was performed.
+
+Delivery note: template PR #4 was merged and its remote branch removed while live work was in progress. The live amendment is based on the updated origin/develop on branch `fix/agent-core-live`; the service tree is preserved by cherry-picking the verified amendment.

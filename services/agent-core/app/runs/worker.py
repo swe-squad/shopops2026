@@ -7,7 +7,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
 
-from app.contracts.errors import InvalidOutput, ProviderOutcomeUnknown
+from app.contracts.errors import InvalidOutput, ProviderOutcomeUnknown, ProviderRequestRejected
 from app.contracts.models import TERMINAL, Run
 from app.contracts.provider import AgentProvider, ProviderSnapshot
 from app.contracts.repository import Repository
@@ -216,9 +216,18 @@ class RunWorker:
                 async with asyncio.timeout(
                     max(0.01, (run.deadline - self.clock()).total_seconds())
                 ):
-                    session = await self.provider.create_session(run.config, run.id)
+                    session = await self.provider.create_session(
+                        run.config, run.id, initial_input=message.content
+                    )
                 session_id = session.id
-                await self.repo.save_session_mapping(run.id, session_id)
+                await self.repo.save_session_mapping(
+                    run.id, session_id, input_submitted=session.input_submitted
+                )
+                if session.input_submitted:
+                    # Persist the accepted input before inspecting any remote turn. No re-send.
+                    await self.repo.mark_submission(run.id, "submitted")
+                    await self.reconcile(await self._current(run))
+                    return
                 await self.repo.mark_submission(run.id, "none")
             snapshot = await self._inspect(run, session_id)
             if snapshot.root_status not in ("idle", "completed", "failed", "cancelled"):
@@ -232,7 +241,13 @@ class RunWorker:
                     run = await self._current(run)
                     if await self._consume(run, await self._inspect(run, session_id)):
                         return
-                    async for event in stream:
+                    iterator = stream.__aiter__()
+                    while True:
+                        try:
+                            async with asyncio.timeout(0.5):
+                                event = await anext(iterator)
+                        except TimeoutError, StopAsyncIteration:
+                            break
                         if (
                             event.is_root
                             and event.session_id == session_id
@@ -243,7 +258,14 @@ class RunWorker:
                             )
                             if await self._consume(run, await self._inspect(run, session_id)):
                                 return
+                        elif event.kind == "tool_pending":
+                            await self.reconcile(await self._current(run))
+                            return
             await self.reconcile(run)
+        except ProviderRequestRejected:
+            await self.repo.transition_run(
+                run.id, ACTIVE, "failed", error="provider_request_rejected"
+            )
         except asyncio.CancelledError:
             await self._uncertain(run)
             raise

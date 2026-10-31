@@ -10,9 +10,9 @@ from starlette.types import ASGIApp
 
 from app.composition import (
     MCPExactEndpoint,
+    build_configured_provider,
     build_configured_router,
     build_mcp_components,
-    build_offline_provider,
 )
 from app.config.registry import Registry
 from app.config.settings import Settings
@@ -66,8 +66,10 @@ def create_app(
             )
             app.state.settings = config
             app.state.repository = repository
-            selected_provider = provider or build_offline_provider(config)
+            selected_provider = provider or build_configured_provider(config, repository)
             app.state.provider = selected_provider
+            if provider is None and hasattr(selected_provider, "aclose"):
+                resources.push_async_callback(selected_provider.aclose)
             mounts = mcp_factory(repository, config) if mcp_factory else (mcp_apps or {})
             selected_bridge = bridge
             if bridge is None and mcp_factory is None and mcp_apps is None:

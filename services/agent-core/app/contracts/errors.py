@@ -44,3 +44,7 @@ class ProviderOutcomeUnknown(CoreError):
 
 class InvalidOutput(CoreError):
     code = "invalid_output"
+
+
+class ProviderRequestRejected(CoreError):
+    code = "provider_request_rejected"
