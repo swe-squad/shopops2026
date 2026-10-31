@@ -7,7 +7,7 @@ install:
 	python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 
 run:
-	.venv/bin/uvicorn app.main:app --reload --port 8000
+	.venv/bin/uvicorn app.main:app --reload --no-access-log --port 8000
 
 test:
 	.venv/bin/python scripts/test_db.py $(TEST_ARGS)

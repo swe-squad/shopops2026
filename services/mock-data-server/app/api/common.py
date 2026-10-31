@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from psycopg import IntegrityError, OperationalError
+from psycopg import DataError, IntegrityError, OperationalError
+from starlette.exceptions import HTTPException
 
 
 class APIError(Exception):
@@ -37,4 +38,19 @@ def install_errors(app: FastAPI) -> None:
         return JSONResponse(
             status_code=503,
             content={"error": {"code": "DATABASE_UNAVAILABLE", "message": "Database unavailable"}},
+        )
+
+    @app.exception_handler(DataError)
+    def data_error(request: Request, exc: DataError) -> JSONResponse:
+        return JSONResponse(
+            status_code=422,
+            content={"error": {"code": "VALIDATION_ERROR", "message": "Invalid request"}},
+        )
+
+    @app.exception_handler(HTTPException)
+    def http_error(request: Request, exc: HTTPException) -> JSONResponse:
+        code = {404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED"}.get(exc.status_code, "HTTP_ERROR")
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": {"code": code, "message": code.replace("_", " ").capitalize()}},
         )

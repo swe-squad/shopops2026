@@ -7,6 +7,7 @@ import sys
 import time
 import uuid
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import psycopg
 
@@ -82,7 +83,12 @@ def main() -> int:
                     raise RuntimeError("Test PostgreSQL did not become ready") from None
                 time.sleep(0.2)
         args = sys.argv[1:] or ["tests", "-q"]
-        return subprocess.call([sys.executable, "-m", "pytest", *args], cwd=ROOT, env=env)
+        with TemporaryDirectory(prefix="shopops-pytest-") as cache:
+            return subprocess.call(
+                [sys.executable, "-m", "pytest", "-o", f"cache_dir={cache}", *args],
+                cwd=ROOT,
+                env=env,
+            )
     except subprocess.CalledProcessError as exc:
         print(
             f"Test container operation failed (exit {exc.returncode}); check Docker.",

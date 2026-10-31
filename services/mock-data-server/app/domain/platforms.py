@@ -54,13 +54,17 @@ def validate(conn, table: str, value: dict) -> None:
             states = {LAZADA.get(part, "unknown") for part in original.split(",")}
             expected = next(iter(states)) if len(states) == 1 else "mixed"
             existing = conn.execute(
-                "SELECT status FROM mock.order_items WHERE shop_key=%s AND order_id=%s "
+                "SELECT status,native_status FROM mock.order_items "
+                "WHERE shop_key=%s AND order_id=%s "
                 "AND deleted_at IS NULL",
                 (value["shop_key"], value["order_id"]),
             ).fetchall()
             if existing:
                 states = {r["status"] for r in existing}
                 expected = next(iter(states)) if len(states) == 1 else "mixed"
+                native = {r["native_status"] or LAZADA_NATIVE[r["status"]] for r in existing}
+                if set(original.split(",")) != native:
+                    raise APIError(422, "STATUS_MISMATCH")
         if status != expected:
             raise APIError(422, "STATUS_MISMATCH")
     else:

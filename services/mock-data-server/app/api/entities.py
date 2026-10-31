@@ -6,7 +6,7 @@ from app.api.common import APIError
 from app.domain.entities import RESOURCES, Record, Resource
 from app.storage import entities as store
 from app.storage.db import connect
-from app.storage.mutations import mutate
+from app.storage.mutations import Change, mutate
 
 
 class Result[T](BaseModel):
@@ -103,9 +103,9 @@ def register_resource(app: FastAPI, resource: Resource) -> None:
         with connect() as conn:
             store.authorize(conn, resource, identity, data)
 
-        def operation(conn, revision):
+        def operation(conn, revision) -> Change:
             store.authorize(conn, resource, identity, data)
-            return store.save(conn, resource, data)
+            return Change(store.save(conn, resource, data))
 
         return mutate(
             identity,
@@ -125,14 +125,16 @@ def register_resource(app: FastAPI, resource: Resource) -> None:
                 previous = store.row(conn, resource, key, include_deleted=True)
                 store.authorize(conn, resource, identity, previous)
 
-        def operation(conn, revision):
+        def operation(conn, revision) -> Change:
             previous = store.row(conn, resource, key)
             store.authorize(conn, resource, identity, previous)
             try:
                 value = model.model_validate(previous | body.model_dump(exclude_unset=True))
             except ValidationError:
                 raise APIError(422, "VALIDATION_ERROR") from None
-            return store.save(conn, resource, value.model_dump(), key)
+            if value.model_dump() == previous:
+                return Change(value.model_dump(mode="json"), effective=False)
+            return Change(store.save(conn, resource, value.model_dump(), key))
 
         return mutate(
             identity,
@@ -153,10 +155,10 @@ def register_resource(app: FastAPI, resource: Resource) -> None:
                 previous = store.row(conn, resource, key, include_deleted=True)
                 store.authorize(conn, resource, identity, previous)
 
-        def operation(conn, revision):
+        def operation(conn, revision) -> Change:
             value = store.row(conn, resource, key)
             store.authorize(conn, resource, identity, value)
-            return store.delete(conn, resource, key, revision)
+            return Change(store.delete(conn, resource, key, revision))
 
         return mutate(
             identity,

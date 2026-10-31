@@ -100,3 +100,18 @@ def test_native_item_status_and_parent_transition(database):
         )
         result = client.get("/v1/entities/order-items/record", params=item_key, headers=headers())
         assert result.json()["data"]["status"] == "shipped"
+
+
+def test_lazada_parent_cannot_disagree_with_native_item_states(database):
+    from app.storage.seed import seed
+
+    migrate()
+    seed()
+    with TestClient(create_app()) as client:
+        response = client.patch(
+            "/v1/entities/orders/record",
+            params={"shop_key": "lazada:1001", "order_id": "100000"},
+            json={"original_status": "canceled"},
+            headers=headers(),
+        )
+        assert response.status_code == 422

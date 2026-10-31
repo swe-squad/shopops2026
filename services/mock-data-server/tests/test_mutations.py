@@ -6,7 +6,29 @@ import pytest
 from app.api.common import APIError
 from app.storage.db import connect
 from app.storage.migrations import migrate
-from app.storage.mutations import mutate
+from app.storage.mutations import Change, mutate
+
+
+def test_ineffective_patch_keeps_revision_and_records_receipt(database):
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    migrate()
+    with TestClient(create_app()) as client:
+        created = client.post(
+            "/v1/admin/entities/users",
+            json={"user_id": "+84900000001", "display_name": "Demo"},
+            headers={"Idempotency-Key": "create"},
+        ).json()
+        first = client.patch(
+            "/v1/admin/entities/users/record",
+            params={"user_id": "+84900000001"},
+            json={"display_name": "Demo"},
+            headers={"Idempotency-Key": "unchanged"},
+        )
+        assert first.status_code == 200
+        assert first.json()["source_revision"] == created["source_revision"]
 
 
 def create_user(conn, revision):
@@ -14,7 +36,7 @@ def create_user(conn, revision):
         "INSERT INTO mock.users (user_id,display_name) VALUES (%s,%s)",
         ("+84900000001", "Demo"),
     )
-    return {"user_id": "+84900000001"}
+    return Change({"user_id": "+84900000001"})
 
 
 def test_receipt_replays_and_changed_intent_conflicts(database):
