@@ -91,3 +91,21 @@ The follow-up shared-contract commit adds optional Scope.permissions (empty by d
 Run.scope (trusted enqueue-time grants) and Run.message_receipt. Consumers must import this
 commit before integration. Existing three-identity construction remains valid but grants no
 MCP permissions. No previously verified permissions are inferred from configuration or prompts.
+
+## Live initial-input amendment
+
+`AgentProvider.create_session(config, correlation_id, *, initial_input=None)` now returns
+`ProviderSession(id, input_submitted)`. Live creation requires nonblank initial input and
+submits it in the create request with `environment.type=none`; no extra first-message event
+is sent. `save_session_mapping(..., input_submitted=True)` stores the mapping and accepted
+receipt in one transaction. Poll saved root state after creation because that first work can
+start before a separate stream is attached. `initial_run_id` metadata binds the first root
+after restart; unknown outcomes are never blindly resubmitted.
+
+Fake providers accept the same input; legacy test doubles may return input_submitted=False
+to exercise the separate send path. Follow-up streams yield to saved-state reconciliation
+after 0.5s without an event; pending-action hints are never taken as proof of root identity.
+`Repository.load_sources(session_id, turn_id)` returns deduplicated references from successful
+persisted tool results only, with strict session/turn filtering.
+
+Reference: [OpenAI session lifecycle](https://developers.openai.com/api/docs/guides/agents-api/sessions).
