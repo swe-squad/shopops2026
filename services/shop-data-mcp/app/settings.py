@@ -224,10 +224,15 @@ class Settings(StrictConfiguration):
                 ):
                     raise ValueError("Invalid internal MCP URL")
 
+            import re
+
             from psycopg.conninfo import conninfo_to_dict
 
             if urlparse(settings.public_url).scheme != "https":
                 raise ValueError("HTTPS public MCP endpoint required")
+            insecure = os.environ.get("MCP_ALLOW_INSECURE_POSTGRES", "false")
+            if insecure not in {"true", "false"}:
+                raise ConfigurationError("MCP_ALLOW_INSECURE_POSTGRES must be true or false")
             dsns = [
                 settings.control_dsn,
                 settings.membership_dsn,
@@ -235,8 +240,24 @@ class Settings(StrictConfiguration):
             ]
             for dsn in dsns:
                 opts = conninfo_to_dict(dsn.get_secret_value())
-                if opts.get("sslmode") != "verify-full" or not opts.get("sslrootcert"):
-                    raise ValueError("Verified PostgreSQL TLS required")
+                if opts.get("sslmode") == "verify-full" and opts.get("sslrootcert"):
+                    continue
+                if (
+                    insecure == "true"
+                    and opts.get("sslmode") == "disable"
+                    and re.fullmatch(
+                        r"srv-captain--[a-z0-9](?:[a-z0-9-]*[a-z0-9])?-dev", opts.get("host", "")
+                    )
+                    # libpq hostaddr/service settings could override the named destination.
+                    and not any(opts.get(key) for key in ("hostaddr", "service"))
+                    and not any(os.environ.get(key) for key in ("PGHOSTADDR", "PGSERVICE"))
+                ):
+                    continue
+                raise ConfigurationError(
+                    "Verified PostgreSQL TLS required; sslmode=disable is allowed only with "
+                    "MCP_ALLOW_INSECURE_POSTGRES=true and a single srv-captain--<app>-dev host "
+                    "without hostaddr or service overrides"
+                )
             ids = [d.id for d in settings.datasets]
             if len(ids) != len(set(ids)) or any(
                 not set(s.datasets).issubset(ids) for s in settings.shops.values()
