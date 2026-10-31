@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export const platforms = { shopee: 'Shopee', tiktok: 'TikTok' } as const
+export const platforms = { shopee: 'Shopee', shopify: 'Shopify', lazada: 'Lazada' } as const
 export type Platform = keyof typeof platforms
 type Connection = { platform: Platform; connected: boolean; mock: true }
 type State = { connections: Connection[] | null; pending: 'checking' | Platform | null; error: string }
@@ -8,7 +8,7 @@ type State = { connections: Connection[] | null; pending: 'checking' | Platform 
 function isConnection(value: unknown): value is Connection {
   if (!value || typeof value !== 'object') return false
   const item = value as Partial<Connection>
-  return (item.platform === 'shopee' || item.platform === 'tiktok') && typeof item.connected === 'boolean' && item.mock === true
+  return (item.platform === 'shopee' || item.platform === 'shopify' || item.platform === 'lazada') && typeof item.connected === 'boolean' && item.mock === true
 }
 
 export function useMockConnectors() {
@@ -34,7 +34,7 @@ export function useMockConnectors() {
         connections = [body]
       } else {
         const items = (body as { connections?: unknown } | null)?.connections
-        if (!Array.isArray(items) || items.length !== 2 || !items.every(isConnection) || !Object.keys(platforms).every(key => items.some(item => item.platform === key))) {
+        if (!Array.isArray(items) || items.length !== Object.keys(platforms).length || !items.every(isConnection) || !Object.keys(platforms).every(key => items.some(item => item.platform === key))) {
           throw new Error('Invalid mock connections response.')
         }
         connections = items

@@ -28,7 +28,7 @@ export function ConnectionsPage({ page, data, active, reload, onNavigate }: {
       <div className="connector-grid">{(Object.keys(platforms) as Platform[]).map(platform => {
         const item = data.connections?.find(connection => connection.platform === platform)
         return <section className="connector-card" key={platform} aria-labelledby={`${prefix}-${platform}`}>
-          <div className="connector-card-heading"><span className={`platform-mark platform-${platform}`} aria-hidden="true">{platform === 'shopee' ? 'S' : 'T'}</span><h2 id={`${prefix}-${platform}`}>{platforms[platform]}</h2></div>
+          <div className="connector-card-heading"><span className={`platform-mark platform-${platform}`} aria-hidden="true">{platforms[platform][0]}</span><h2 id={`${prefix}-${platform}`}>{platforms[platform]}</h2></div>
           <p className={item?.connected ? 'connector-status is-connected' : 'connector-status'}>{item?.connected && <BrowserIcon name="check" />}{!item ? 'Not checked' : item.connected ? 'Connected' : 'Not connected'}</p>
           <button type="button" className={item?.connected ? 'secondary-button' : 'primary-button'} disabled={!!data.pending || !item} onClick={() => item?.connected ? onNavigate(`/shop/connections/${platform}/success`) : void connect(platform)}>
             {data.pending === platform ? 'Connecting…' : item?.connected ? `View ${platforms[platform]} connection` : `Log in to ${platforms[platform]}`}<BrowserIcon name="arrow" />

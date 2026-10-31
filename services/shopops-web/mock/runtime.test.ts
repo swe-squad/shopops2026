@@ -30,15 +30,15 @@ it('keeps RAM across real HTTP calls, stops both processes, and resets on restar
   await expect.poll(runtime.output).toMatch(/child:\d+/)
   const nginxPid = Number(/child:(\d+)/.exec(runtime.output())![1])
   expect((await fetch(`${runtime.url}/shopee`, { method: 'PUT' })).status).toBe(200)
-  expect(await (await fetch(runtime.url)).json()).toMatchObject({ connections: [{ connected: true }, { connected: false }] })
+  expect(await (await fetch(runtime.url)).json()).toMatchObject({ connections: [{ connected: true }, { connected: false }, { connected: false }] })
   expect(await (await fetch(`${runtime.url}/shopee`, { method: 'DELETE' })).json()).toEqual({ platform: 'shopee', connected: false, mock: true })
-  expect(await (await fetch(runtime.url)).json()).toMatchObject({ connections: [{ connected: false }, { connected: false }] })
+  expect(await (await fetch(runtime.url)).json()).toMatchObject({ connections: [{ connected: false }, { connected: false }, { connected: false }] })
   expect((await fetch(`${runtime.url}/shopee`, { method: 'PUT' })).status).toBe(200)
   runtime.child.kill('SIGTERM')
   expect((await runtime.exited)[0]).toBe(0)
   expect(() => process.kill(nginxPid, 0)).toThrow()
   const fresh = await start()
-  expect(await (await fetch(fresh.url)).json()).toMatchObject({ connections: [{ connected: false }, { connected: false }] })
+  expect(await (await fetch(fresh.url)).json()).toMatchObject({ connections: [{ connected: false }, { connected: false }, { connected: false }] })
 })
 
 it('terminates the runtime if nginx exits or cannot start', async () => {

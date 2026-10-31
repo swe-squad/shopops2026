@@ -14,9 +14,10 @@ export function isLocalShop(url: URL) {
   return url.origin === window.location.origin && (url.pathname === '/shop' || url.pathname.startsWith('/shop/'))
 }
 
-export function connectionPage(path: string): 'list' | 'shopee' | 'tiktok' | null {
+export function connectionPage(path: string): 'list' | 'shopee' | 'shopify' | 'lazada' | null {
   if (path === '/shop/connections') return 'list'
   if (path === '/shop/connections/shopee/success') return 'shopee'
-  if (path === '/shop/connections/tiktok/success') return 'tiktok'
+  if (path === '/shop/connections/shopify/success') return 'shopify'
+  if (path === '/shop/connections/lazada/success') return 'lazada'
   return null
 }

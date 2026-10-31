@@ -22,7 +22,7 @@ describe('standalone shop browser', () => {
       if (url.endsWith('/navigation')) return json(null)
       if (!url.startsWith('/api/mock/')) return json([])
       if (options?.method === 'PUT') { connected = true; return json({ platform: 'shopee', connected, mock: true }) }
-      return json({ connections: [{ platform: 'shopee', connected, mock: true }, { platform: 'tiktok', connected: false, mock: true }] })
+      return json({ connections: [{ platform: 'shopee', connected, mock: true }, { platform: 'shopify', connected: false, mock: true }, { platform: 'lazada', connected: false, mock: true }] })
     }))
     render(<App />)
     await unlock()
@@ -35,7 +35,7 @@ describe('standalone shop browser', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Connections' }))
     const panel = within(screen.getByRole('tabpanel'))
     await panel.findByRole('button', { name: 'View Shopee connection' })
-    expect(panel.getByRole('button', { name: 'Log in to TikTok' })).toBeEnabled()
+    expect(panel.getByRole('button', { name: 'Log in to Shopify' })).toBeEnabled()
     fireEvent.click(screen.getByRole('link', { name: 'Overview' }))
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Keep my draft')
     fireEvent.click(screen.getByRole('tab', { name: 'Connections — tab 1' }))

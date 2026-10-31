@@ -6,7 +6,7 @@ import { connectionPage } from './browser-url'
 import { useMockConnectors } from './use-mock-connectors'
 
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status })
-const list = (shopee = false, tiktok = false) => ({ connections: [{ platform: 'shopee', connected: shopee, mock: true }, { platform: 'tiktok', connected: tiktok, mock: true }] })
+const list = (shopee = false, shopify = false, lazada = false) => ({ connections: [{ platform: 'shopee', connected: shopee, mock: true }, { platform: 'shopify', connected: shopify, mock: true }, { platform: 'lazada', connected: lazada, mock: true }] })
 function Demo({ initial = '/shop/connections' }: { initial?: string }) {
   const data = useMockConnectors()
   const [path, navigate] = useState(initial)
@@ -14,21 +14,29 @@ function Demo({ initial = '/shop/connections' }: { initial?: string }) {
 }
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
-it('connects each platform and returns to the list with independent status', async () => {
-  let shopee = false
-  vi.stubGlobal('fetch', vi.fn(async (_url: string, options?: RequestInit) => {
-    if (options?.method === 'PUT') { shopee = true; return json({ platform: 'shopee', connected: true, mock: true }) }
-    return json(list(shopee))
-  }))
+it.each(['Shopee', 'Shopify', 'Lazada'])('connects %s and returns to the list with independent status', async name => {
+  const platform = name.toLowerCase()
+  let connected = false
+  const fetchMock = vi.fn(async (_url: string, options?: RequestInit) => {
+    if (options?.method === 'PUT') { connected = true; return json({ platform, connected: true, mock: true }) }
+    return json(list(connected && platform === 'shopee', connected && platform === 'shopify', connected && platform === 'lazada'))
+  })
+  vi.stubGlobal('fetch', fetchMock)
   render(<Demo />)
   await screen.findAllByText('Not connected')
-  fireEvent.click(screen.getByRole('button', { name: 'Log in to Shopee' }))
+  expect(screen.getAllByRole('region').map(region => within(region).getByRole('heading').textContent)).toEqual(['Shopee', 'Shopify', 'Lazada'])
+  expect(screen.queryByRole('region', { name: 'TikTok' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: `Log in to ${name}` }))
   await screen.findByRole('heading', { name: 'Connection successful' })
-  expect(screen.getByRole('heading', { name: 'Shopee connection' })).toHaveFocus()
+  expect(screen.getByRole('heading', { name: `${name} connection` })).toHaveFocus()
+  expect(fetchMock).toHaveBeenCalledWith(`/api/mock/connectors/${platform}`, expect.objectContaining({ method: 'PUT' }))
   fireEvent.click(screen.getByRole('button', { name: 'Back to connections' }))
-  await screen.findByRole('button', { name: 'View Shopee connection' })
-  expect(within(screen.getByRole('region', { name: 'Shopee' })).getByText('Connected')).toBeInTheDocument()
-  expect(within(screen.getByRole('region', { name: 'TikTok' })).getByText('Not connected')).toBeInTheDocument()
+  await screen.findByRole('button', { name: `View ${name} connection` })
+  for (const other of ['Shopee', 'Shopify', 'Lazada']) {
+    expect(within(screen.getByRole('region', { name: other })).getByText(other === name ? 'Connected' : 'Not connected')).toBeInTheDocument()
+  }
+  fireEvent.click(screen.getByRole('button', { name: `View ${name} connection` }))
+  await screen.findByRole('heading', { name: 'Connection successful' })
 })
 
 it('shows save failure without success and can check again after a lost response', async () => {
@@ -46,7 +54,7 @@ it('shows save failure without success and can check again after a lost response
 it('does not connect from a direct success URL or navigate on a response after unmount', async () => {
   const fetchMock = vi.fn().mockResolvedValue(json(list()))
   vi.stubGlobal('fetch', fetchMock)
-  const view = render(<Demo initial="/shop/connections/tiktok/success" />)
+  const view = render(<Demo initial="/shop/connections/shopify/success" />)
   await screen.findByRole('heading', { name: 'Not connected yet' })
   expect(fetchMock).toHaveBeenCalledTimes(1)
   expect(fetchMock.mock.calls[0][1].method).toBe('GET')
@@ -55,10 +63,10 @@ it('does not connect from a direct success URL or navigate on a response after u
   fetchMock.mockResolvedValueOnce(json(list())).mockImplementationOnce(() => new Promise<Response>(resolve => { resolveSave = resolve }))
   const second = render(<Demo />)
   await screen.findAllByText('Not connected')
-  fireEvent.click(screen.getByRole('button', { name: 'Log in to TikTok' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Log in to Shopify' }))
   expect(screen.getByRole('button', { name: /Connecting/ })).toBeDisabled()
   second.unmount()
-  await act(async () => resolveSave(json({ platform: 'tiktok', connected: true, mock: true })))
+  await act(async () => resolveSave(json({ platform: 'shopify', connected: true, mock: true })))
   expect(screen.queryByText('Connection successful')).not.toBeInTheDocument()
   expect(connectionPage('/shop/connections/unknown/success')).toBeNull()
 })
