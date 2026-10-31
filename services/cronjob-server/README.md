@@ -53,6 +53,11 @@ serializes work if another process starts accidentally. Keep the apps private.
 
 ## MCP-facing contract
 
+Product source/facade/core contracts include optional HTTPS `image_url` values.
+Migration `007_product_images.sql` adds the nullable `core.products` column;
+snapshots populate it. Deploy this processor before the updated source and
+follow the [product image backfill](../mock-data-server/PRODUCT_IMAGES.md).
+
 `/docs` and `/openapi.json` expose concrete models, required headers and composite
 keys. User routes require `X-Demo-User-Id: +84900000001`. This is a trusted internal
 phone convention, not authentication. Admin routes trust the private backend.
