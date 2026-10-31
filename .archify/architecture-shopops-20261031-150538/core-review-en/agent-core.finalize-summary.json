@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/agent-core-candidate.json",
+    "sha256": "1f71f113abb1319038615d35519472cbf0a6c393d275e10f5dde2e422ac19ee1",
+    "bytes": 12096
+  },
+  "artifact": {
+    "path": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/agent-core.html",
+    "sha256": "e1ee59a0a2ce657db9160bd499fbd1816388b729da75e2e4a9e170e912a5a7a4",
+    "bytes": 863008
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/core-review-en/agent-core.finalize.json",
+    "summaryReceipt": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/core-review-en/agent-core.finalize-summary.json",
+    "browserCheckReceipt": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/core-review-en/agent-core.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-31T08:08:14.966Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4254,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}
