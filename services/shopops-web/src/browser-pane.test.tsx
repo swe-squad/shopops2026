@@ -18,10 +18,10 @@ async function addTab() {
 }
 
 beforeEach(() => {
-  window.history.replaceState(null, '', '/')
+  window.history.replaceState(null, '', '/shop/overview')
   vi.stubGlobal('fetch', vi.fn(async () => json([])))
 })
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); window.history.replaceState(null, '', '/') })
 
 describe('browser tabs', () => {
   it('keeps independent history, address drafts, and incident drafts when switching tabs', async () => {

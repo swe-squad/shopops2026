@@ -13,3 +13,10 @@ export function browserUrl(value: string, origin = window.location.origin): stri
 export function isLocalShop(url: URL) {
   return url.origin === window.location.origin && (url.pathname === '/shop' || url.pathname.startsWith('/shop/'))
 }
+
+export function connectionPage(path: string): 'list' | 'shopee' | 'tiktok' | null {
+  if (path === '/shop/connections') return 'list'
+  if (path === '/shop/connections/shopee/success') return 'shopee'
+  if (path === '/shop/connections/tiktok/success') return 'tiktok'
+  return null
+}
