@@ -105,7 +105,7 @@ def create_app(
                 if router_factory
                 else api_router
                 if api_router is not None
-                else build_configured_router(repository, config, ready)
+                else build_configured_router(repository, config, ready, provider=selected_provider)
             )
             if router is not None:
                 app.include_router(router)

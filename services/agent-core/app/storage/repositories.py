@@ -3,6 +3,7 @@ import json
 import sqlite3
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import uuid4
 
 from app.config.registry import Registry
@@ -286,12 +287,22 @@ class SQLiteRepository:
         return await self.database.transaction(operation)
 
     async def enqueue_message(
-        self, scope: Scope, conversation_id: str, client_message_id: str, content: str
+        self,
+        scope: Scope,
+        conversation_id: str,
+        client_message_id: str,
+        content: str,
+        *,
+        output_mode: Literal["text", "report"] = "text",
     ) -> EnqueueResult:
         content = content.strip()
         if not 1 <= len(content) <= 8000 or not 1 <= len(client_message_id) <= 128:
             raise InvalidInput()
-        digest = hashlib.sha256(content.encode()).hexdigest()
+        if output_mode not in ("text", "report"):
+            raise InvalidInput()
+        digest = hashlib.sha256(
+            (content if output_mode == "text" else "report\0" + content).encode()
+        ).hexdigest()
 
         def operation(db: sqlite3.Connection) -> EnqueueResult:
             c = self._conversation(db, conversation_id, scope)
@@ -301,7 +312,7 @@ class SQLiteRepository:
             ).fetchone()
             if row is not None:
                 run = Run.model_validate_json(row[0])
-                if run.request_hash != digest:
+                if run.request_hash != digest or run.output_mode != output_mode:
                     raise IdempotencyConflict()
                 message_row = db.execute(
                     "SELECT body FROM messages WHERE run_id=? AND provider_item_id IS NULL",
@@ -330,8 +341,11 @@ class SQLiteRepository:
             ).fetchone()
             if c.status != "active" or busy:
                 raise ConversationBusy()
+            if output_mode == "report" and c.config.runtime_profile.environment_type == "none":
+                raise InvalidInput()
             now = self.clock()
             run = Run(
+                output_mode=output_mode,
                 id=new_id(),
                 conversation_id=conversation_id,
                 client_message_id=client_message_id,
@@ -344,8 +358,8 @@ class SQLiteRepository:
                 created_at=now,
             )
             db.execute(
-                "INSERT INTO runs(id,conversation_id,client_key,state,created_at,body) "
-                "VALUES(?,?,?,?,?,?)",
+                "INSERT INTO runs(id,conversation_id,client_key,state,created_at,body,output_mode) "
+                "VALUES(?,?,?,?,?,?,?)",
                 (
                     run.id,
                     conversation_id,
@@ -353,6 +367,7 @@ class SQLiteRepository:
                     run.state,
                     now.isoformat(),
                     run.model_dump_json(),
+                    output_mode,
                 ),
             )
             message = self._message(db, run, "user", content)
@@ -510,6 +525,9 @@ class SQLiteRepository:
                 run.model_copy(
                     update={
                         "submission_marker": marker,
+                        "runtime_setup_started_at": (run.runtime_setup_started_at or self.clock())
+                        if marker == "session_creating"
+                        else run.runtime_setup_started_at,
                         "provider_turn_id": turn_id or run.provider_turn_id,
                     }
                 ),
@@ -832,6 +850,8 @@ class SQLiteRepository:
                     ),
                 )
 
+            self._save_run(db, run.model_copy(update={"artifacts_finalized": True}))
+
         await self.database.transaction(operation)
 
     async def list_artifacts(
@@ -885,3 +905,22 @@ class SQLiteRepository:
                 ).fetchall()
             )
         )
+
+    async def get_saved_artifacts(
+        self, scope: Scope, run_id: str
+    ) -> tuple[ArtifactRecord, ...] | None:
+        """Internal recovery loader; public listing still requires completed root state."""
+
+        def operation(db: sqlite3.Connection) -> tuple[ArtifactRecord, ...] | None:
+            run = self._run(db, run_id)
+            self._conversation(db, run.conversation_id, scope)
+            if not run.artifacts_finalized:
+                return None
+            return tuple(
+                ArtifactRecord.model_validate_json(r[0])
+                for r in db.execute(
+                    "SELECT body FROM artifacts WHERE run_id=? ORDER BY id", (run_id,)
+                ).fetchall()
+            )
+
+        return await self.database.transaction(operation)

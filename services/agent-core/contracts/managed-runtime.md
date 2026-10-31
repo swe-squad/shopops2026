@@ -52,3 +52,13 @@ SDK audit (offline, 3.42.0): sessions.create accepts EnvironmentParamOpenAIHoste
 plugins/disabled network/small container. sessions.artifacts exposes list/retrieve/content/delete;
 T06 must filter list results to the authoritative root turn and bound streaming reads. No SDK
 upgrade is needed for these surfaces. Account capability/live behavior remains unverified.
+
+Recovery amendment: `Run.artifacts_finalized` is persisted atomically with artifact metadata,
+including an empty validated set. Internal async `get_saved_artifacts(scope: Scope, run_id: str)
+-> tuple[ArtifactRecord, ...] | None` distinguishes not-yet-validated from validated-empty.
+Recovery reuses this set without remote downloads; public listing still requires completed root
+state. No failed download rewrites completed history. `enqueue_message` adds keyword-only
+`output_mode: Literal["text", "report"] = "text"`; replay compares both digest and stored mode.
+Hosted execution passes an application output-format directive on each provider input; baseline
+provider inputs remain unchanged. Source validation requires the cited data reference to identify
+the ToolResult whose metrics match, not another result within the same root turn.

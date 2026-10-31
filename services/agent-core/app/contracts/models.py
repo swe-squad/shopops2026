@@ -28,6 +28,11 @@ class ConfigSnapshot(Record):
     knowledge_mcp_url: str
     capabilities: tuple[str, ...]
 
+    @field_validator("runtime_profile", mode="before")
+    @classmethod
+    def legacy_runtime(cls, value: object) -> object:
+        return RuntimeProfile() if value is None else value
+
     @field_validator("capabilities")
     @classmethod
     def unique(cls, values: tuple[str, ...]) -> tuple[str, ...]:
@@ -84,6 +89,8 @@ class MessageReceipt(Record):
 
 
 class Run(Record):
+    artifacts_finalized: bool = False
+    runtime_setup_started_at: datetime | None = None
     output_mode: Literal["text", "report"] = "text"
     id: str
     conversation_id: str

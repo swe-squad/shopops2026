@@ -5,17 +5,37 @@ import time
 from collections import Counter
 from collections.abc import Callable
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from app.contracts.errors import InvalidOutput, ProviderOutcomeUnknown, ProviderRequestRejected
-from app.contracts.models import TERMINAL, Run
+from app.contracts.errors import (
+    ArtifactInvalid,
+    ArtifactUnavailable,
+    InvalidOutput,
+    ProviderOutcomeUnknown,
+    ProviderRequestRejected,
+)
+from app.contracts.models import TERMINAL, ConfigSnapshot, Run
 from app.contracts.provider import AgentProvider, ProviderSnapshot
 from app.contracts.repository import Repository
 from app.contracts.tools import ToolBridge, ToolResult
+from app.runs.artifacts import finalize_artifacts
 from app.runs.recovery import matches_root
 from app.storage.repositories import utcnow
 
 ACTIVE = ("running", "waiting_tool", "reconciling")
+
+
+def provider_input(config: ConfigSnapshot, output_mode: str, content: str) -> str:
+    if config.runtime_profile.environment_type == "none":
+        return content
+    directive = (
+        "For an answer, use approved skills and write the canonical Vietnamese report to "
+        "/workspace/outputs/report.json using the registered report schema and root-turn "
+        "metrics/knowledge evidence. Clarification or cannot_answer needs no report."
+        if output_mode == "report"
+        else "Return a Vietnamese text response. No report artifact is required for this turn."
+    )
+    return content + "\n\n[Application output format for this turn]\n" + directive
 
 
 class RunWorker:
@@ -90,6 +110,36 @@ class RunWorker:
         run = await self._current(run)
         if run.state in TERMINAL:
             return True
+        if snapshot.environment is not None:
+            c, _ = await self.repo.execution_context(run.id)
+            await self.repo.save_runtime(c.scope, c.id, snapshot.environment)
+            environment = snapshot.environment
+            expired = environment.state == "provisioning" and self.clock() >= min(
+                run.deadline,
+                (run.runtime_setup_started_at or run.created_at)
+                + timedelta(seconds=run.config.runtime_profile.setup_timeout_seconds),
+            )
+            if environment.state in ("failed", "unavailable") or expired:
+                if snapshot.root_status not in ("completed", "failed", "cancelled"):
+                    snapshot = await self._cancel(run, snapshot)
+                    if snapshot.root_status not in ("completed", "failed", "cancelled"):
+                        raise ProviderOutcomeUnknown()
+                error = (
+                    "environment_timeout"
+                    if expired
+                    else "environment_unavailable"
+                    if environment.state == "unavailable"
+                    else "environment_failed"
+                )
+                await self.repo.transition_run(run.id, ACTIVE, "failed", error=error, block=True)
+                return True
+            if environment.state == "provisioning":
+                await self.repo.append_event(
+                    run.id,
+                    "environment.provisioning",
+                    provider_event_id="environment:" + environment.id,
+                )
+                return False
         if not matches_root(run, snapshot):
             await self._uncertain(run)
             return False
@@ -110,7 +160,21 @@ class RunWorker:
                     if len(matches) != 1:
                         raise InvalidOutput()
                     response, item_id = matches[0].response, matches[0].id
+                remaining = (run.deadline - self.clock()).total_seconds()
+                async with asyncio.timeout(max(0.01, remaining)):
+                    await finalize_artifacts(
+                        self.repo,
+                        self.provider,
+                        run,
+                        snapshot.session_id,
+                        snapshot.root_turn_id,
+                        response,
+                    )
                 await self.repo.complete_run(run.id, snapshot.root_turn_id, item_id, response)
+            except ArtifactInvalid, ArtifactUnavailable:
+                await self.repo.transition_run(run.id, ACTIVE, "failed", error="artifact_invalid")
+            except TimeoutError:
+                await self.repo.transition_run(run.id, ACTIVE, "failed", error="run_timeout")
             except InvalidOutput:
                 await self.repo.transition_run(run.id, ACTIVE, "failed", error="invalid_output")
             return True
@@ -217,12 +281,16 @@ class RunWorker:
                     max(0.01, (run.deadline - self.clock()).total_seconds())
                 ):
                     session = await self.provider.create_session(
-                        run.config, run.id, initial_input=message.content
+                        run.config,
+                        run.id,
+                        initial_input=provider_input(run.config, run.output_mode, message.content),
                     )
                 session_id = session.id
                 await self.repo.save_session_mapping(
                     run.id, session_id, input_submitted=session.input_submitted
                 )
+                if session.environment is not None:
+                    await self.repo.save_runtime(c.scope, c.id, session.environment)
                 if session.input_submitted:
                     # Persist the accepted input before inspecting any remote turn. No re-send.
                     await self.repo.mark_submission(run.id, "submitted")
@@ -236,7 +304,11 @@ class RunWorker:
                 async with self.provider.stream_events(session_id) as stream:
                     await stream.wait_ready()
                     await self.repo.mark_submission(run.id, "submitting")
-                    turn_id = await self.provider.submit_input(session_id, message.content, run.id)
+                    turn_id = await self.provider.submit_input(
+                        session_id,
+                        provider_input(run.config, run.output_mode, message.content),
+                        run.id,
+                    )
                     await self.repo.mark_submission(run.id, "submitted", turn_id)
                     run = await self._current(run)
                     if await self._consume(run, await self._inspect(run, session_id)):

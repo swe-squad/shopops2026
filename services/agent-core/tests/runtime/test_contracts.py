@@ -37,3 +37,8 @@ def test_closed_hosted_profile():
     ):
         with pytest.raises(ValidationError):
             RuntimeProfile.model_validate(profile.model_dump() | updates)
+
+
+def test_explicit_null_profile_normalizes_to_legacy(registry):
+    data = registry.snapshots()[0].model_dump() | {"runtime_profile": None}
+    assert ConfigSnapshot.model_validate(data).runtime_profile.environment_type == "none"

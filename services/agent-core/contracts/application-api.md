@@ -99,3 +99,14 @@ verify real SQLite transactions for provisioning/conversation uniqueness, replay
 before busy, payload conflicts and tenant/shop/owner isolation, then mount this
 router with real readiness/auth configuration. T04 should align its synthetic IDs
 with identities.json. Live JWT issuer connectivity is intentionally unverified.
+
+## T05 runtime extension
+
+`build_api_router` also accepts keyword-only `artifact_provider: AgentProvider | None`.
+Messages accept optional `output_mode: text|report`, default text, with legacy report rejection
+(422 invalid_input) and replay/conflict detection. Run response fields remain unchanged.
+`GET /runs/{run_id}/artifacts` accepts the standard after/limit pagination, uses history:read
+and returns items with local id, run_id, filename, media_type, size, sha256 and availability.
+`GET /artifacts/{artifact_id}/content` resolves local scoped ownership before provider access;
+foreign IDs are 404, unavailable content 410, invalid payload 502, transient I/O 503. Responses
+use attachment disposition and nosniff; no provider redirect or user-selected path is accepted.

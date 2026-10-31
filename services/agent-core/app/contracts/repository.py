@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Protocol
+from typing import Literal, Protocol
 
 from app.contracts.identity import Scope
 from app.contracts.models import (
@@ -33,6 +33,9 @@ class Repository(Protocol):
     async def list_artifacts(
         self, scope: Scope, run_id: str, after: str | None = None, limit: int = 50
     ) -> Page[ArtifactRecord]: ...
+    async def get_saved_artifacts(
+        self, scope: Scope, run_id: str
+    ) -> tuple[ArtifactRecord, ...] | None: ...
     async def get_artifact(self, scope: Scope, artifact_id: str) -> ArtifactRecord: ...
     async def load_tool_results(self, session_id: str, turn_id: str) -> tuple[ToolResult, ...]: ...
 
@@ -43,7 +46,13 @@ class Repository(Protocol):
         self, scope: Scope, orchestrator_id: str, client_conversation_id: str
     ) -> IdempotentResult[Conversation]: ...
     async def enqueue_message(
-        self, scope: Scope, conversation_id: str, client_message_id: str, content: str
+        self,
+        scope: Scope,
+        conversation_id: str,
+        client_message_id: str,
+        content: str,
+        *,
+        output_mode: Literal["text", "report"] = "text",
     ) -> EnqueueResult: ...
     async def get_conversation(self, scope: Scope, conversation_id: str) -> Conversation: ...
     async def get_run(self, scope: Scope, run_id: str) -> Run: ...

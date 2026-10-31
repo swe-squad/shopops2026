@@ -50,6 +50,7 @@ class Settings:
     max_tool_calls_per_run: int = 8
     max_concurrent_runs: int = 4
     history_retention_days: int = 30
+    runtime_bundle_path: str = "runtime-bundles"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
@@ -99,6 +100,7 @@ class Settings:
         if len(signing_key.encode()) < 32:
             raise ValueError("Invalid MCP_TOKEN_SIGNING_KEY")
         return cls(
+            runtime_bundle_path=env.get("RUNTIME_BUNDLE_PATH", "runtime-bundles"),
             app_env=app_env,
             agent_provider=provider,
             auth_mode=auth_mode,

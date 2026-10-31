@@ -248,3 +248,24 @@ AC13 was verified with `gpt-6-astra`: three completed turns, 5%/15% metrics and 
 source-grounded knowledge, follow-up in one session, and confirmed remote/local cleanup. This is
 synthetic local integration evidence; real shop data, external Data MCP/JWT deployment settings,
 and CapRover deployment still require their own configuration and checks.
+
+## Hosted runtime foundation (T05)
+
+Runtime profiles are immutable registry revision data. Legacy snapshots normalize to
+`conversation-v1` / `none` independently of the active revision. `RUNTIME_BUNDLE_PATH` defaults to
+`runtime-bundles`; it is an operator-controlled service-local directory, never a request parameter.
+`config/registry-hosted.example.json` illustrates a new administrative revision; its digest is a
+placeholder until T07 publishes the actual bundle. Do not activate it as supplied. T06/T07 builder
+stubs intentionally reject hosted startup until their verified handoffs are integrated.
+
+Message submission accepts `output_mode=text|report` (default text). Report is invalid for legacy
+profiles and participates in replay/conflict checks. Hosted report answers need a validated root
+report; clarification/cannot_answer can finish without a report. Artifacts are listed at
+`GET /api/v1/runs/{run_id}/artifacts` and downloaded as attachments at
+`GET /api/v1/artifacts/{artifact_id}/content`, using `history:read` and the existing identity scope.
+Provider IDs, bundle payloads and paths are never public inputs.
+
+Schema migration 002 preserves existing rows, adds runtime ownership and artifact metadata, and
+keeps one SQLite owner. Unknown remote outcomes retain blocking/recovery mappings. Hosted live
+acceptance, cleanup behavior from T06, bundle packaging from T07 and final T08 evidence are pending;
+o hosted result is inferred from offline tests. See `contracts/managed-runtime.md`.

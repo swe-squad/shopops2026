@@ -10,9 +10,13 @@ from starlette.exceptions import HTTPException
 from app.auth.dependencies import Unauthorized
 from app.contracts.errors import CoreError, InvalidCursor
 from app.contracts.identity import AuthContext
+from app.contracts.provider import AgentProvider
 from app.contracts.repository import Repository
 
 STATUS = {
+    "artifact_unavailable": 410,
+    "artifact_invalid": 502,
+    "artifact_upstream_unavailable": 503,
     "unauthorized": 401,
     "permission_denied": 403,
     "not_found": 404,
@@ -81,7 +85,10 @@ def build_api_router(
     repository: Repository,
     authenticate: Callable[[str], Awaitable[AuthContext]],
     readiness: Callable[[], Awaitable[bool]],
+    *,
+    artifact_provider: AgentProvider | None = None,
 ) -> APIRouter:
+    from app.api.artifacts import add_artifacts
     from app.api.conversations import add_conversations
     from app.api.health import add_health
     from app.api.orchestrators import add_orchestrators
@@ -98,5 +105,6 @@ def build_api_router(
     add_orchestrators(router, repository, identity)
     add_conversations(router, repository, identity)
     add_runs(router, repository, identity)
+    add_artifacts(router, repository, identity, artifact_provider)
     add_health(router, readiness)
     return router
