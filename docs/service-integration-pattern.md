@@ -1,5 +1,7 @@
 # Service integration pattern
 
+The [system architecture](system-architecture.md) and [data/MCP design](data-and-mcp.md) define the confirmed target. This guide describes the existing foundation; its shared-workspace access does not implement the target per-user isolation.
+
 Use this guide when adding a real ShopOps feature. [Client workspace](client-workspace.md) owns topology and deployment setup; each service README owns its commands and environment. The two backends remain independent applications with independent databases. No shop-platform ingestion, Telegram Bot API, production identity, or new external integration is connected by this foundation.
 
 ## Ownership and extension points

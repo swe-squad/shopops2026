@@ -9,6 +9,18 @@ All four module branches are integrated for offline execution. Default startup m
 MCP apps and configures their bridge with the shared repository. Local/test fake-provider mode and configured live-provider mode can be ready. The live
 provider now supports atomic session creation with initial input and has passed synthetic AC13.
 
+## Intended product role
+
+`agent-core` is the reusable **agents-service boilerplate**: team configuration, managed-provider
+adapters, session/event integration, and scoped MCP capabilities. The product server owns new-user
+registration and requests on-demand provisioning through this service boundary. The resulting
+agents run in OpenAI-hosted environments, not one CapRover agent-core container per user.
+
+The target assigns each user one logical team (one orchestrator and 2–3 specialists). The current
+shop-shared configuration and offline foundation do not yet establish that target. Before resuming
+integration, follow the [alignment checklist](../../docs/agent-integration.md); existing setup and
+contracts below describe implementation evidence, not completed hosted provisioning.
+
 ## Development
 
 Run all commands from `services/agent-core/` in the task worktree:
