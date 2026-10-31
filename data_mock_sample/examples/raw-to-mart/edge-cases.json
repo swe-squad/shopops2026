@@ -1,0 +1,189 @@
+[
+  {
+    "case": "mixed_order_state",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.orders SET status='mixed' WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "inspection_sql": "SELECT shop_key,order_id,status,cogs,financials_complete,contribution_margin,payout_variance FROM mart.order_economics WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "order_id": "100000",
+        "status": "mixed",
+        "cogs": "260000.00",
+        "financials_complete": false,
+        "contribution_margin": null,
+        "payout_variance": null
+      }
+    ]
+  },
+  {
+    "case": "unknown_order_state",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.orders SET status='unknown' WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "inspection_sql": "SELECT shop_key,order_id,status,cogs,financials_complete,contribution_margin,payout_variance FROM mart.order_economics WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "order_id": "100000",
+        "status": "unknown",
+        "cogs": "260000.00",
+        "financials_complete": false,
+        "contribution_margin": null,
+        "payout_variance": null
+      }
+    ]
+  },
+  {
+    "case": "shipped_order_state",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.orders SET status='shipped' WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "inspection_sql": "SELECT shop_key,order_id,status,cogs,financials_complete,contribution_margin,payout_variance FROM mart.order_economics WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "order_id": "100000",
+        "status": "shipped",
+        "cogs": "260000.00",
+        "financials_complete": true,
+        "contribution_margin": "92000.00",
+        "payout_variance": "0.00"
+      }
+    ]
+  },
+  {
+    "case": "missing_product_cost",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.products SET unit_cost=NULL WHERE shop_key='lazada:1001' AND sku='SHIRT-M'",
+    "inspection_sql": "SELECT shop_key,order_id,status,cogs,financials_complete,contribution_margin,payout_variance FROM mart.order_economics WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "order_id": "100000",
+        "status": "completed",
+        "cogs": null,
+        "financials_complete": false,
+        "contribution_margin": null,
+        "payout_variance": null
+      }
+    ]
+  },
+  {
+    "case": "missing_fee",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.settlements SET fee_amount=NULL WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "inspection_sql": "SELECT shop_key,order_id,status,cogs,financials_complete,contribution_margin,payout_variance FROM mart.order_economics WHERE shop_key='lazada:1001' AND order_id='100000'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "order_id": "100000",
+        "status": "completed",
+        "cogs": "260000.00",
+        "financials_complete": false,
+        "contribution_margin": null,
+        "payout_variance": null
+      }
+    ]
+  },
+  {
+    "case": "unknown_stock",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.inventory SET available=NULL WHERE shop_key='lazada:1001' AND sku='SHIRT-M'",
+    "inspection_sql": "SELECT i.*, (SELECT count(*)::int FROM mart.issue_candidates c WHERE c.shop_key=i.shop_key AND c.issue_type='low_stock' AND c.entity_key=i.sku) AS stock_alerts FROM mart.inventory_risk i WHERE i.shop_key='lazada:1001' AND i.sku='SHIRT-M'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "sku": "SHIRT-M",
+        "available": null,
+        "oldest_location_observation": "2026-10-30T16:00:00.000Z",
+        "source_documents": [
+          "lazada/1001/supplement"
+        ],
+        "daily_units": "9.1428571428571429",
+        "days_of_cover": null,
+        "stock_alerts": 0
+      }
+    ]
+  },
+  {
+    "case": "out_of_stock",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.inventory SET available=0 WHERE shop_key='lazada:1001' AND sku='SHIRT-M'",
+    "inspection_sql": "SELECT i.*, (SELECT count(*)::int FROM mart.issue_candidates c WHERE c.shop_key=i.shop_key AND c.issue_type='low_stock' AND c.entity_key=i.sku) AS stock_alerts FROM mart.inventory_risk i WHERE i.shop_key='lazada:1001' AND i.sku='SHIRT-M'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "sku": "SHIRT-M",
+        "available": 0,
+        "oldest_location_observation": "2026-10-30T16:00:00.000Z",
+        "source_documents": [
+          "lazada/1001/supplement"
+        ],
+        "daily_units": "9.1428571428571429",
+        "days_of_cover": "0.00000000000000000000",
+        "stock_alerts": 1
+      }
+    ]
+  },
+  {
+    "case": "stale_stock",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE mart.settings SET as_of=as_of+interval '2 days'",
+    "inspection_sql": "SELECT i.*, (SELECT count(*)::int FROM mart.issue_candidates c WHERE c.shop_key=i.shop_key AND c.issue_type='low_stock' AND c.entity_key=i.sku) AS stock_alerts FROM mart.inventory_risk i WHERE i.shop_key='lazada:1001' AND i.sku='SHIRT-M'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "sku": "SHIRT-M",
+        "available": 2,
+        "oldest_location_observation": "2026-10-30T16:00:00.000Z",
+        "source_documents": [
+          "lazada/1001/supplement"
+        ],
+        "daily_units": "6.2857142857142857",
+        "days_of_cover": "0.31818181818181818254",
+        "stock_alerts": 0
+      }
+    ]
+  },
+  {
+    "case": "no_observed_demand",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.order_items SET status='cancelled' WHERE shop_key='lazada:1001' AND sku='SHIRT-M'",
+    "inspection_sql": "SELECT i.*, (SELECT count(*)::int FROM mart.issue_candidates c WHERE c.shop_key=i.shop_key AND c.issue_type='low_stock' AND c.entity_key=i.sku) AS stock_alerts FROM mart.inventory_risk i WHERE i.shop_key='lazada:1001' AND i.sku='SHIRT-M'",
+    "observed": [
+      {
+        "shop_key": "lazada:1001",
+        "sku": "SHIRT-M",
+        "available": 2,
+        "oldest_location_observation": "2026-10-30T16:00:00.000Z",
+        "source_documents": [
+          "lazada/1001/supplement"
+        ],
+        "daily_units": null,
+        "days_of_cover": null,
+        "stock_alerts": 0
+      }
+    ]
+  },
+  {
+    "case": "expired_penalty",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "UPDATE core.account_health SET expires_at='2026-10-30T23:00:00+07:00' WHERE shop_key='lazada:1001'",
+    "inspection_sql": "SELECT count(*)::int AS health_alerts FROM mart.issue_candidates WHERE shop_key='lazada:1001' AND issue_type='account_health'",
+    "observed": [
+      {
+        "health_alerts": 0
+      }
+    ]
+  },
+  {
+    "case": "insufficient_review_sample",
+    "scope": "Isolated core mutation, rolled back after sampling. Not a native API fixture or permanent change.",
+    "mutation_sql": "DELETE FROM core.reviews WHERE shop_key='lazada:1001' AND reviewed_at>='2026-10-29T00:00:00+07:00' AND review_id NOT IN (SELECT review_id FROM core.reviews WHERE shop_key='lazada:1001' AND sku='SHIRT-M' AND reviewed_at>='2026-10-29T00:00:00+07:00' ORDER BY review_id LIMIT 2)",
+    "inspection_sql": "SELECT count(*)::int AS review_alerts FROM mart.issue_candidates WHERE shop_key='lazada:1001' AND issue_type='product_reviews'",
+    "observed": [
+      {
+        "review_alerts": 0
+      }
+    ]
+  }
+]

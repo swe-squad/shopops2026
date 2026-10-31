@@ -1,0 +1,153 @@
+{
+  "manifest": {
+    "schema_version": "1.0",
+    "as_of": "2026-10-31T00:00:00+07:00",
+    "recent_days": 2,
+    "baseline_days": 12,
+    "currency": "VND",
+    "days": 14,
+    "orders_per_shop_per_day": 24,
+    "shops": 4,
+    "synthetic": true,
+    "time_compression": "Same-day shipping/reviews/refunds/payouts for demo only"
+  },
+  "validation_report": {
+    "engine": "PostgreSQL 17.5 on aarch64-unknown-linux-gnu, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+    "checks": 19,
+    "orders": 1344,
+    "order_lines": 1400,
+    "issue_candidates": 29,
+    "counts": [
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "account_health",
+        "count": 1
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "cancellation_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "fee_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "low_stock",
+        "count": 1
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "payout_mismatch",
+        "count": 2
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "product_reviews",
+        "count": 1
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "promotion_loss",
+        "count": 1
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "return_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "lazada:1001",
+        "issue_type": "shipment_risk",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "account_health",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "cancellation_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "fee_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "low_stock",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "payout_mismatch",
+        "count": 2
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "product_reviews",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "promotion_loss",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "return_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "shopee-open-platform:1001",
+        "issue_type": "shipment_risk",
+        "count": 1
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "cancellation_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "fee_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "low_stock",
+        "count": 1
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "payout_mismatch",
+        "count": 2
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "product_reviews",
+        "count": 1
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "promotion_loss",
+        "count": 1
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "return_spike",
+        "count": 1
+      },
+      {
+        "shop_key": "shopify:1001",
+        "issue_type": "shipment_risk",
+        "count": 1
+      }
+    ]
+  }
+}

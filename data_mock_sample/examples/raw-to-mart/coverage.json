@@ -1,0 +1,695 @@
+{
+  "scope": "All current dictionary sample rows and exported database fields, nine implemented issue types, healthy control, unsupported Shopify health, and the isolated edge cases listed here. No claim about every possible production input.",
+  "dictionary_sample_tables": 32,
+  "dictionary_sample_rows": 286,
+  "dictionary_examples_copied_verbatim": true,
+  "raw_documents": 9,
+  "core_tables": 11,
+  "mart_views": 8,
+  "column_coverage": [
+    {
+      "relation": "raw.documents",
+      "rows": 9,
+      "fields": [
+        "document_id",
+        "platform",
+        "shop_id",
+        "resource",
+        "source_kind",
+        "captured_at",
+        "payload"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.shops",
+      "rows": 4,
+      "fields": [
+        "shop_key",
+        "platform",
+        "source_shop_id",
+        "name",
+        "currency",
+        "timezone",
+        "capabilities",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.products",
+      "rows": 12,
+      "fields": [
+        "shop_key",
+        "sku",
+        "name",
+        "unit_cost",
+        "cost_basis",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.orders",
+      "rows": 1344,
+      "fields": [
+        "shop_key",
+        "order_id",
+        "ordered_at",
+        "updated_at",
+        "currency",
+        "status",
+        "original_status",
+        "seller_discount",
+        "platform_discount",
+        "promotion_id",
+        "enrichment_source_document_id",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.order_items",
+      "rows": 1400,
+      "fields": [
+        "shop_key",
+        "order_id",
+        "line_id",
+        "sku",
+        "quantity",
+        "unit_price",
+        "status",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.reviews",
+      "rows": 1246,
+      "fields": [
+        "shop_key",
+        "review_id",
+        "order_id",
+        "sku",
+        "reviewed_at",
+        "rating",
+        "body",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.returns",
+      "rows": 34,
+      "fields": [
+        "shop_key",
+        "return_id",
+        "order_id",
+        "requested_at",
+        "reason",
+        "status",
+        "refund_amount",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.inventory",
+      "rows": 24,
+      "fields": [
+        "shop_key",
+        "sku",
+        "location_id",
+        "observed_at",
+        "available",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.promotions",
+      "rows": 4,
+      "fields": [
+        "shop_key",
+        "promotion_id",
+        "name",
+        "funding",
+        "starts_at",
+        "ends_at",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.settlements",
+      "rows": 1246,
+      "fields": [
+        "shop_key",
+        "order_id",
+        "fee_amount",
+        "seller_shipping_cost",
+        "refund_amount",
+        "actual_payout",
+        "paid_at",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.fulfillment",
+      "rows": 1344,
+      "fields": [
+        "shop_key",
+        "order_id",
+        "ship_by",
+        "shipped_at",
+        "deadline_basis",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "core.account_health",
+      "rows": 2,
+      "fields": [
+        "shop_key",
+        "event_id",
+        "occurred_at",
+        "expires_at",
+        "penalty_points",
+        "reason",
+        "source_document_id"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.settings",
+      "rows": 1,
+      "fields": [
+        "singleton",
+        "as_of",
+        "recent_days",
+        "baseline_days"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.order_economics",
+      "rows": 1344,
+      "fields": [
+        "shop_key",
+        "order_id",
+        "ordered_at",
+        "updated_at",
+        "currency",
+        "status",
+        "original_status",
+        "seller_discount",
+        "platform_discount",
+        "promotion_id",
+        "enrichment_source_document_id",
+        "source_document_id",
+        "gross_sales",
+        "cogs",
+        "units",
+        "fee_amount",
+        "seller_shipping_cost",
+        "refund_amount",
+        "actual_payout",
+        "paid_at",
+        "finance_source_document_id",
+        "expected_payout",
+        "financials_complete",
+        "contribution_margin",
+        "payout_variance"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.shop_daily",
+      "rows": 56,
+      "fields": [
+        "shop_key",
+        "business_date",
+        "currency",
+        "orders",
+        "cancelled_orders",
+        "unmapped_or_mixed_orders",
+        "finance_complete_orders",
+        "contribution_margin",
+        "fulfilled_gross_sales"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.shop_window_metrics",
+      "rows": 8,
+      "fields": [
+        "shop_key",
+        "period",
+        "currency",
+        "orders",
+        "cancelled_orders",
+        "cancellation_rate",
+        "fulfilled_orders",
+        "returned_orders",
+        "return_rate",
+        "settled_orders",
+        "effective_fee_rate"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.product_review_metrics",
+      "rows": 24,
+      "fields": [
+        "shop_key",
+        "sku",
+        "period",
+        "reviews",
+        "negative_reviews",
+        "negative_rate",
+        "sizing_mentions",
+        "negative_evidence"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.inventory_risk",
+      "rows": 12,
+      "fields": [
+        "shop_key",
+        "sku",
+        "available",
+        "oldest_location_observation",
+        "source_documents",
+        "daily_units",
+        "days_of_cover"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.promotion_performance",
+      "rows": 3,
+      "fields": [
+        "shop_key",
+        "promotion_id",
+        "currency",
+        "orders",
+        "finance_complete_orders",
+        "loss_orders",
+        "seller_discount",
+        "contribution_margin",
+        "evidence"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.issue_candidates",
+      "rows": 29,
+      "fields": [
+        "shop_key",
+        "issue_key",
+        "issue_type",
+        "entity_key",
+        "severity",
+        "metrics",
+        "evidence"
+      ],
+      "missing_fields": [],
+      "export_shape": "Full relational rows."
+    },
+    {
+      "relation": "mart.agent_context",
+      "rows": 29,
+      "fields": [
+        "shop_key",
+        "issue_key",
+        "context"
+      ],
+      "missing_fields": [],
+      "export_shape": "JSON file exports context objects; SQL wrapper is shown in the README complete-record example."
+    }
+  ],
+  "issue_types": [
+    {
+      "issue_type": "product_reviews",
+      "candidates": 3,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "promotion_loss",
+      "candidates": 3,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "cancellation_spike",
+      "candidates": 3,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "return_spike",
+      "candidates": 3,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "fee_spike",
+      "candidates": 3,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "payout_mismatch",
+      "candidates": 6,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "low_stock",
+      "candidates": 3,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "shipment_risk",
+      "candidates": 3,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform",
+        "shopify"
+      ]
+    },
+    {
+      "issue_type": "account_health",
+      "candidates": 2,
+      "platforms": [
+        "lazada",
+        "shopee-open-platform"
+      ]
+    }
+  ],
+  "healthy_control": {
+    "shop_key": "shopee-open-platform:1002",
+    "candidates": 0
+  },
+  "unsupported_data": {
+    "shop_key": "shopify:1001",
+    "capability": "account_health",
+    "value": "unsupported",
+    "candidates": 0
+  },
+  "edge_cases": [
+    {
+      "case": "mixed_order_state",
+      "passed": true
+    },
+    {
+      "case": "unknown_order_state",
+      "passed": true
+    },
+    {
+      "case": "shipped_order_state",
+      "passed": true
+    },
+    {
+      "case": "missing_product_cost",
+      "passed": true
+    },
+    {
+      "case": "missing_fee",
+      "passed": true
+    },
+    {
+      "case": "unknown_stock",
+      "passed": true
+    },
+    {
+      "case": "out_of_stock",
+      "passed": true
+    },
+    {
+      "case": "stale_stock",
+      "passed": true
+    },
+    {
+      "case": "no_observed_demand",
+      "passed": true
+    },
+    {
+      "case": "expired_penalty",
+      "passed": true
+    },
+    {
+      "case": "insufficient_review_sample",
+      "passed": true
+    }
+  ],
+  "illustrative_future_tables": [
+    "agent.issues",
+    "agent.action_proposals",
+    "agent.approvals",
+    "agent.executions",
+    "agent.verifications",
+    "agent.trust"
+  ],
+  "use_case_guides": {
+    "guides": [
+      {
+        "use_case": "product_reviews",
+        "file": "use-cases/product_reviews.md",
+        "marts": [
+          "product_review_metrics",
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "promotion_loss",
+        "file": "use-cases/promotion_loss.md",
+        "marts": [
+          "order_economics",
+          "promotion_performance",
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 2,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "cancellation_spike",
+        "file": "use-cases/cancellation_spike.md",
+        "marts": [
+          "shop_window_metrics",
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "return_spike",
+        "file": "use-cases/return_spike.md",
+        "marts": [
+          "shop_window_metrics",
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "fee_spike",
+        "file": "use-cases/fee_spike.md",
+        "marts": [
+          "order_economics",
+          "shop_window_metrics",
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "payout_mismatch",
+        "file": "use-cases/payout_mismatch.md",
+        "marts": [
+          "order_economics",
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "low_stock",
+        "file": "use-cases/low_stock.md",
+        "marts": [
+          "inventory_risk",
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "shipment_risk",
+        "file": "use-cases/shipment_risk.md",
+        "marts": [
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "account_health",
+        "file": "use-cases/account_health.md",
+        "marts": [
+          "issue_candidates",
+          "agent_context"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "agent_input",
+          "seller_action_example",
+          "verification_inputs"
+        ]
+      },
+      {
+        "use_case": "daily_summary",
+        "file": "use-cases/daily_summary.md",
+        "marts": [
+          "shop_daily",
+          "order_economics"
+        ],
+        "sql_queries_checked": 1,
+        "stages": [
+          "raw",
+          "core",
+          "mart",
+          "report_input",
+          "seller_use",
+          "verification_inputs"
+        ]
+      }
+    ],
+    "controls": "use-cases/controls.md",
+    "covered_marts": [
+      "agent_context",
+      "inventory_risk",
+      "issue_candidates",
+      "order_economics",
+      "product_review_metrics",
+      "promotion_performance",
+      "shop_daily",
+      "shop_window_metrics"
+    ],
+    "all_marts_covered": true,
+    "all_issue_types_covered": true
+  }
+}
