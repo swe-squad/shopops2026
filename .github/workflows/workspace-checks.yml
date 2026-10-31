@@ -1,0 +1,59 @@
+name: Workspace integration
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/workspace-checks.yml'
+      - 'docs/brand/assets/**'
+      - 'scripts/sync-brand-assets.mjs'
+      - 'tests/workspace/**'
+      - 'services/shopops-workspace/**'
+      - 'services/shopops-web/**'
+      - 'services/shopops-chat/**'
+      - 'services/shopops-api/**'
+      - 'services/shopops-chat-api/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            services/shopops-workspace/package-lock.json
+            services/shopops-web/package-lock.json
+            services/shopops-chat/package-lock.json
+            tests/workspace/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: |
+            services/shopops-api/requirements*.txt
+            services/shopops-chat-api/requirements*.txt
+      - name: Verify canonical and vendored brand assets
+        run: node scripts/sync-brand-assets.mjs --check
+      - name: Install independent clients
+        run: |
+          for service in shopops-web shopops-chat shopops-workspace; do
+            npm ci --prefix "services/${service}"
+          done
+          npm ci --prefix tests/workspace
+      - name: Install backend test environments
+        run: |
+          make -C services/shopops-api install
+          make -C services/shopops-chat-api install
+      - name: Install Chromium
+        working-directory: tests/workspace
+        run: npx playwright install --with-deps chromium
+      - name: Verify independent app interactions
+        working-directory: tests/workspace
+        run: npm test
