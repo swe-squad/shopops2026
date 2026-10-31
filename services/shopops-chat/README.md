@@ -42,3 +42,17 @@ Use corresponding app names without `-dev` in production. Keep backend services 
 Set optional `WORKSPACE_VIEWER_URL` to the viewer's exact HTTPS origin to permit embedding through CSP `frame-ancestors`. Blank permits self framing only. Vite permits the local viewer on port 5175. Unlock remains local to this client, whether opened directly or embedded.
 
 See [workspace architecture](../../docs/client-workspace.md) for the two-app boundary and full setup. No deployment or live provider credentials are configured by this change.
+
+## Core demo chat
+
+The API's public auth config selects the existing workspace-token form or one demo phone login
+without OTP. The synthetic number is configured server-side; browser input cannot select an
+owner, shop, Core token or provider. Sessions stay in memory and clear on lock/reload.
+Report mode and attachment controls appear only when authenticated capabilities support them.
+Downloads fetch with the session token into a bounded, hash-checked Blob and revoke its URL;
+attachments never pass through the shop-browser navigation mailbox.
+
+In Core demo mode, normal shop links use authenticated `/api/chat/navigation`; the chat backend
+holds the operations workspace credential. The shop browser still unlocks independently.
+Stop means stop viewing: Core may continue running. Load history explicitly before another
+message after interruption; reload never silently resends input. Legacy chat remains supported.

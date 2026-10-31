@@ -143,3 +143,7 @@ textarea::placeholder { color: var(--muted); opacity: 1; }
   .chat-welcome { padding-bottom: var(--s6); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+
+.report-choice { display: flex; align-items: center; gap: .5rem; font-size: .875rem; }
+.report-choice select { min-height: 44px; padding: .5rem; border-radius: .5rem; }
+.report-attachment button { min-height: 44px; }

@@ -25,7 +25,7 @@ export function useChatController(token: string) {
 
   useEffect(() => () => { activeStream.current?.abort(); activeStream.current = null; activeLoad.current?.abort(); activeLoad.current = null }, [])
 
-  async function send(text: string) {
+  async function send(text: string, outputMode: 'text' | 'report' = 'text') {
     if (activeStream.current || loading || stopped || !text.trim()) return false
     const controller = new AbortController()
     activeStream.current = controller
@@ -40,7 +40,7 @@ export function useChatController(token: string) {
         if (controller.signal.aborted) return
         if (event.type === 'delta') setMessages(items => items.map(item => item.id === assistantId ? { ...item, text: item.text + event.text } : item))
         if (event.type === 'done') setMessages(items => items.map(item => item.id === assistantId ? event.message : item))
-      })
+      }, outputMode, crypto.randomUUID())
     } catch (reason) {
       if (activeStream.current === controller) {
         setStopped(true)
