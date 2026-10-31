@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0f225091-0e6b-4c38-8945-2249ef544094",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/system-candidate.json",
+  "output": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/shopops-system.html",
+  "specification": {
+    "sha256": "b9b3e72c5ce0f9e53841dae54c25b0fec3e883b5f3bb461756dabd42c8df4771",
+    "bytes": 9827
+  },
+  "artifact": {
+    "sha256": "43bb90a640284c9706b04e186f29d8abf1cada301fd3fc3fc1e853bdfa64c1ff",
+    "bytes": 855748
+  }
+}

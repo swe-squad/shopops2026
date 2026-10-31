@@ -1,0 +1,485 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "agent-core — Internal MVP Architecture (Specification)",
+    "output": ".archify/architecture-shopops-20261031-150538/agent-core.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/swe-squad/shopops2026",
+      "revision": "b43f461aa25826a3541a0eb23537e1cd5cc81e35"
+    },
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Client backend",
+      "sublabel": "Telegram / Web · future integration",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 40,
+          "end_line": 44
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 104,
+          "end_line": 117
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 265,
+          "end_line": 267
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Auth adapter",
+      "sublabel": "JWT/JWKS · tenant/shop/user",
+      "pos": [
+        350,
+        40
+      ],
+      "size": [
+        230,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 67,
+          "end_line": 82
+        }
+      ],
+      "tag": "Fixtures: local/test only"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI /api/v1",
+      "sublabel": "Provision · conversations · polling",
+      "pos": [
+        710,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 104,
+          "end_line": 123
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 155,
+          "end_line": 167
+        }
+      ],
+      "tag": "202 after commit"
+    },
+    {
+      "id": "bundle",
+      "type": "database",
+      "label": "Knowledge bundles",
+      "sublabel": "Markdown / JSON · immutable",
+      "pos": [
+        40,
+        240
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 21,
+          "end_line": 23
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 198,
+          "end_line": 198
+        }
+      ]
+    },
+    {
+      "id": "memory",
+      "type": "backend",
+      "label": "Knowledge–Memory MCP",
+      "sublabel": "search_knowledge · history",
+      "pos": [
+        350,
+        240
+      ],
+      "size": [
+        230,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 59,
+          "end_line": 61
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 181,
+          "end_line": 198
+        }
+      ],
+      "tag": "Internal module"
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "SQLite /data",
+      "sublabel": "Config · history · runs · tools",
+      "pos": [
+        710,
+        240
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 84,
+          "end_line": 102
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 161,
+          "end_line": 171
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 261,
+          "end_line": 265
+        }
+      ],
+      "tag": "Volume · WAL · one replica"
+    },
+    {
+      "id": "data",
+      "type": "backend",
+      "label": "Data MCP",
+      "sublabel": "Shared contract · signed scope",
+      "pos": [
+        40,
+        450
+      ],
+      "size": [
+        200,
+        86
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 59,
+          "end_line": 65
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 80,
+          "end_line": 80
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 181,
+          "end_line": 196
+        }
+      ],
+      "tag": "Internal mock / remote"
+    },
+    {
+      "id": "bridge",
+      "type": "security",
+      "label": "Function → MCP bridge",
+      "sublabel": "Allowlist · validate args/scope",
+      "pos": [
+        350,
+        450
+      ],
+      "size": [
+        230,
+        86
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 59,
+          "end_line": 65
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 80,
+          "end_line": 80
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 181,
+          "end_line": 194
+        }
+      ],
+      "tag": "Scoped credentials"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Durable run worker",
+      "sublabel": "Claim · conversation lock · reconcile",
+      "pos": [
+        710,
+        450
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 155,
+          "end_line": 177
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 181,
+          "end_line": 194
+        }
+      ],
+      "tag": "1 run / conversation"
+    },
+    {
+      "id": "fixture",
+      "type": "database",
+      "label": "Business fixtures",
+      "sublabel": "Returns · reviews · synthetic data",
+      "pos": [
+        40,
+        690
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 185,
+          "end_line": 196
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 224,
+          "end_line": 226
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "Provider adapter",
+      "sublabel": "openai_agents / fake",
+      "pos": [
+        710,
+        690
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 15,
+          "end_line": 27
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 224,
+          "end_line": 226
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 259,
+          "end_line": 259
+        }
+      ],
+      "tag": "fake: local/test only"
+    },
+    {
+      "id": "openai",
+      "type": "cloud",
+      "label": "OpenAI Agents API",
+      "sublabel": "Orchestrator + session",
+      "pos": [
+        1120,
+        690
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 25,
+          "end_line": 27
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 59,
+          "end_line": 63
+        },
+        {
+          "path": "services/agent-core/agents_api_template_spec.md",
+          "line": 98,
+          "end_line": 102
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "request",
+      "from": "client",
+      "to": "auth",
+      "label": "Bearer token",
+      "variant": "emphasis"
+    },
+    {
+      "id": "scope",
+      "from": "auth",
+      "to": "api",
+      "label": "AuthContext",
+      "variant": "security"
+    },
+    {
+      "id": "enqueue",
+      "from": "api",
+      "to": "db",
+      "label": "Write / read",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim",
+      "from": "worker",
+      "to": "db",
+      "label": "Claim / save run",
+      "variant": "default"
+    },
+    {
+      "id": "tool-request",
+      "from": "worker",
+      "to": "bridge",
+      "label": "Pending call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "knowledge",
+      "from": "bridge",
+      "to": "memory",
+      "label": "MCP + scope",
+      "variant": "security"
+    },
+    {
+      "id": "business",
+      "from": "bridge",
+      "to": "data",
+      "label": "MCP + scope",
+      "variant": "security"
+    },
+    {
+      "id": "lookup",
+      "from": "memory",
+      "to": "bundle",
+      "label": "Search",
+      "variant": "default"
+    },
+    {
+      "id": "history",
+      "from": "memory",
+      "to": "db",
+      "label": "Read history",
+      "variant": "default"
+    },
+    {
+      "id": "mock-only",
+      "from": "data",
+      "to": "fixture",
+      "label": "Mock only",
+      "variant": "default"
+    },
+    {
+      "id": "agent-call",
+      "from": "worker",
+      "to": "provider",
+      "label": "Turn / events",
+      "variant": "emphasis"
+    },
+    {
+      "id": "provider-call",
+      "from": "provider",
+      "to": "openai",
+      "label": "Sessions / stream",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Proposed design; not implemented",
+      "items": [
+        "Source: Agent Core Template Spec at revision b43f461. One FastAPI service on port 8000; modules are not separate microservices.",
+        "OpenAI Agents API and Data MCP in remote mode are external integrations; provider sessions retain execution context, while SQLite stores application history.",
+        "Mock Data MCP: /mcp/data. Knowledge–Memory MCP: /mcp/knowledge-memory. Keep both MCP routes behind internal ingress."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Message processing",
+      "items": [
+        "The API validates scope, saves the message and run, and locks the conversation in one transaction. It returns 202 after commit; clients poll results and events.",
+        "The worker claims the run and creates or reuses a session through the provider adapter. OpenAI returns pending function calls; the worker delegates MCP access to the bridge.",
+        "The worker persists tool results before returning them to the provider. Only root-turn completion finishes a run; response sources must match persisted tool results."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Authorization & recovery",
+      "items": [
+        "The bridge derives scope from the stored AuthContext and signs short-lived credentials. Each MCP validates permissions again; the model cannot choose arbitrary identities, URLs, or tool names.",
+        "Each conversation has a separate session and a pinned config revision. An orchestrator is shop configuration, rather than a dedicated container.",
+        "Unknown provider outcome → reconciling. Still unknown at the recovery deadline → failed run + blocked conversation. Stream loss alone does not trigger message resubmission."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Limits & modes",
+      "items": [
+        "180 seconds/run · 15 seconds/MCP call · up to 8 tool calls/run · 4 concurrent runs across the service.",
+        "Offline: fake provider + MCP fixtures. Live: real OpenAI + MCP fixtures. Remote Data MCP replaces the mock and does not use its fixtures.",
+        "The MVP includes data, knowledge, and history tools. Specialist agents, sandbox execution, vector databases, proactive monitoring, and shop actions belong to later phases."
+      ]
+    }
+  ]
+}
