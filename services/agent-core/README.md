@@ -455,3 +455,11 @@ The frontend runtime upstream remains
 port80 and valid HTTPS for its public domain. Backend containers use port8000 and
 private cluster URLs. Do not change either service's database path just to apply the
 preset, and do not put provider credentials in browser configuration.
+
+
+The Luna preset selects `OPENAI_MODEL=gpt-6-luna` and chat revision
+`returns-hosted-data-luna-dev-v1`. This adds a separate immutable revision; the
+Astra revisions remain unchanged. Reconcile pending work and activate this revision
+using the stopped-app maintenance workflow before changing the chat namespace.
+New conversations select Luna; existing conversations keep their original model.
+Account access and Agents API compatibility require a separate live check.
