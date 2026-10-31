@@ -1,6 +1,6 @@
 # Implementation plan: mock data and synchronization MVP
 
-Status: approved by the user on 2026-10-31. Implementation in progress. The task checklist is [todo.md](todo.md).
+Status: approved by the user on 2026-10-31. Implementation complete; local acceptance verified. The task checklist is [todo.md](todo.md).
 
 ## Objective and scope
 
@@ -219,6 +219,7 @@ No business question blocks implementation planning. PostgreSQL host/port/TLS an
 confirmation of fresh destination schemas are needed only for deployment to the
 user's database; local development and tests use disposable databases.
 
-Approval requested for this implementation plan and its proposed task checklist,
-including the narrowly scoped integration workflow. After approval, begin task 01
-and preserve the approved specification contracts.
+The user approved this plan and authorized implementation. All tasks are complete;
+see [todo.md](todo.md) for evidence and [implementation-review.md](implementation-review.md)
+for review results. The narrowly scoped workflow is added; no remote PR or deployment
+was performed.

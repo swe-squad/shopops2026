@@ -1,7 +1,8 @@
 # Capability map: mock data and synchronization MVP
 
 Status: capability map and linked specifications approved by the user on
-2026-10-31. Planning is authorized; implementation is pending plan approval.
+2026-10-31. The implementation plan was subsequently approved and implemented;
+local acceptance checks passed for both services.
 See [implementation plan](tasks/plan.md) and [task checklist](tasks/todo.md).
 
 | Module ID | Responsibility | Deployable service | Depends on | Specification |

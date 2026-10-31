@@ -1,8 +1,8 @@
 # Task checklist: mock data and synchronization MVP
 
-Status: plan/checklist approved by the user on 2026-10-31. Implementation is in
-progress. Specifications are approved. Read [plan.md](plan.md) and the linked
-module specifications before executing a task.
+Status: approved implementation complete. All 47 tasks and local acceptance
+checks passed. See [implementation-review.md](implementation-review.md).
+No push, PR, merge or deployment was performed.
 
 ## Conventions
 
@@ -16,7 +16,7 @@ module specifications before executing a task.
   change. Split a task before expanding beyond five substantive files.
 - `make test TEST_ARGS="..."` runs pytest through the isolated PostgreSQL harness
   after task 06 (source) or task 25 (processor). Earlier commands explicitly state
-  their setup prerequisites. These commands/files are planned interfaces.
+  their setup prerequisites. Actual file consolidation is documented in each Evidence entry.
 - Acceptance must be tested at the observable boundary. Record command/results
   in Evidence; keep failed/incomplete tasks unchecked. No failing tests may be
   skipped, removed, or weakened to pass a checkpoint.
@@ -79,8 +79,8 @@ module specifications before executing a task.
 
 #### Checkpoint after T03
 
-- [ ] Source template is runnable and its service metadata matches the repository convention.
-- [ ] Use task 02 health/CI/image evidence; confirm no real database credentials entered the tree.
+- [x] Source template is runnable and its service metadata matches the repository convention.
+- [x] Use task 02 health/CI/image evidence; confirm no real database credentials entered the tree.
 
 ### T04: Source database configuration
 
@@ -135,8 +135,8 @@ module specifications before executing a task.
 
 #### Checkpoint after T06
 
-- [ ] Source config, migration replay, and isolated PostgreSQL harness pass together.
-- [ ] Run source `make ci`; unsafe target and missing-database prerequisites fail visibly.
+- [x] Source config, migration replay, and isolated PostgreSQL harness pass together.
+- [x] Run source `make ci`; unsafe target and missing-database prerequisites fail visibly.
 
 ### T07: Atomic source mutation receipts
 
@@ -191,8 +191,8 @@ module specifications before executing a task.
 
 #### Checkpoint after T09
 
-- [ ] Access/shops operate over HTTP with phone identity, membership scope and atomic mutation receipts.
-- [ ] Run source `make ci`; include shared membership and concurrent retry evidence.
+- [x] Access/shops operate over HTTP with phone identity, membership scope and atomic mutation receipts.
+- [x] Run source `make ci`; include shared membership and concurrent retry evidence.
 
 ### T10: Products and promotions
 
@@ -247,8 +247,8 @@ module specifications before executing a task.
 
 #### Checkpoint after T12
 
-- [ ] Catalog, orders/items, reviews/returns meet typed CRUD and same-shop reference rules.
-- [ ] Run source `make ci`; preserve money strings and encoded Shopify identifiers.
+- [x] Catalog, orders/items, reviews/returns meet typed CRUD and same-shop reference rules.
+- [x] Run source `make ci`; preserve money strings and encoded Shopify identifiers.
 
 ### T13: Inventory CRUD
 
@@ -286,8 +286,8 @@ module specifications before executing a task.
 
 #### Checkpoint after T14
 
-- [ ] Every source business entity has typed CRUD validation and complete key coverage.
-- [ ] Run source `make ci`; confirm unsupported Shopify health and nullable inventory/finance cases.
+- [x] Every source business entity has typed CRUD validation and complete key coverage.
+- [x] Run source `make ci`; confirm unsupported Shopify health and nullable inventory/finance cases.
 
 ### T15: Shopee and supplement serialization
 
@@ -342,8 +342,8 @@ module specifications before executing a task.
 
 #### Checkpoint after T17
 
-- [ ] All three platform serializers plus supplements preserve approved native shapes.
-- [ ] Run the source serialization suites; no missing resource fields or invented marketplace semantics.
+- [x] All three platform serializers plus supplements preserve approved native shapes.
+- [x] Run the source serialization suites; no missing resource fields or invented marketplace semantics.
 
 ### T18: Consistent versioned snapshot endpoint
 
@@ -398,12 +398,12 @@ module specifications before executing a task.
 
 #### Checkpoint after T20
 
-- [ ] Source module meets seed, snapshot consistency, deletion and retry acceptance criteria.
-- [ ] Run source `make ci` and rebuild its image; assert exact seed visibility/counts and replay after edits.
+- [x] Source module meets seed, snapshot consistency, deletion and retry acceptance criteria.
+- [x] Run source `make ci` and rebuild its image; assert exact seed visibility/counts and replay after edits.
 
 ### T21: Processor runtime template
 
-- [ ] Complete T21.
+- [x] Complete T21.
 
 **Module:** `data-pipeline`. **Dependencies:** T20. **Scope:** M (4 files).
 
@@ -415,11 +415,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/__init__.py`, `services/cronjob-server/app/main.py`, `services/cronjob-server/tests/__init__.py`, `services/cronjob-server/tests/test_health.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Processor health/import checks pass; app factory has no import-time database writes.
 
 ### T22: Processor build toolchain
 
-- [ ] Complete T22.
+- [x] Complete T22.
 
 **Module:** `data-pipeline`. **Dependencies:** T21. **Scope:** M (5 files).
 
@@ -432,11 +432,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/requirements.txt`, `services/cronjob-server/requirements-dev.txt`, `services/cronjob-server/pyproject.toml`, `services/cronjob-server/Makefile`, `services/cronjob-server/Dockerfile`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Pinned dependencies installed, Ruff passes, and service-only processor image built successfully in the pair harness.
 
 ### T23: Processor service metadata
 
-- [ ] Complete T23.
+- [x] Complete T23.
 
 **Module:** `data-pipeline`. **Dependencies:** T22. **Scope:** M (5 files).
 
@@ -449,16 +449,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/AGENTS.md`, `services/cronjob-server/service.json`, `services/cronjob-server/captain-definition`, `services/cronjob-server/README.md`, `services/cronjob-server/.env.example`.
 
-**Evidence:** Pending implementation.
+**Evidence:** service.json/captain-definition declare Python and port 8000; .env.example/README cover every runtime variable and internal source URL.
 
 #### Checkpoint after T23
 
-- [ ] Processor template and service metadata match the repository convention.
-- [ ] Use task 22 health/CI/image evidence and inspect its internal URL/environment examples.
+- [x] Processor template and service metadata match the repository convention.
+- [x] Use task 22 health/CI/image evidence and inspect its internal URL/environment examples.
 
 ### T24: Processor runtime configuration
 
-- [ ] Complete T24.
+- [x] Complete T24.
 
 **Module:** `data-pipeline`. **Dependencies:** T23. **Scope:** M (5 files).
 
@@ -471,11 +471,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/config.py`, `services/cronjob-server/app/storage/db.py`, `services/cronjob-server/requirements.txt`, `services/cronjob-server/tests/test_config.py`, `services/cronjob-server/.env.example`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_config.py passes, including required source origin and nonnegative interval; psycopg/httpx pins installed on Python 3.14.
 
 ### T25: Processor PostgreSQL test runner
 
-- [ ] Complete T25.
+- [x] Complete T25.
 
 **Module:** `data-pipeline`. **Dependencies:** T24. **Scope:** M (5 files).
 
@@ -488,11 +488,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/scripts/test_db.py`, `services/cronjob-server/Makefile`, `services/cronjob-server/tests/conftest.py`, `services/cronjob-server/requirements-dev.txt`, `services/cronjob-server/README.md`.
 
-**Evidence:** Pending implementation.
+**Evidence:** scripts/test_db.py runs real disposable PostgreSQL 17. Both runners explicitly rejected POSTGRES_DB=postgres before connecting; no silent skips.
 
 ### T26: Processor schema migrations
 
-- [ ] Complete T26.
+- [x] Complete T26.
 
 **Module:** `data-pipeline`. **Dependencies:** T25. **Scope:** M (5 files).
 
@@ -505,16 +505,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/cli.py`, `services/cronjob-server/app/storage/migrations.py`, `services/cronjob-server/app/migrations/001_access_raw_core.sql`, `services/cronjob-server/app/migrations/002_sync_state.sql`, `services/cronjob-server/tests/test_migrations.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_migrations.py passes replay and unrelated-table preservation. Processor owns access/raw/core/mart/sync only.
 
 #### Checkpoint after T26
 
-- [ ] Processor config, isolated PostgreSQL harness, and migrations work together.
-- [ ] Run processor `make ci`; no direct mock-schema dependency or alteration to unrelated tables.
+- [x] Processor config, isolated PostgreSQL harness, and migrations work together.
+- [x] Run processor `make ci`; no direct mock-schema dependency or alteration to unrelated tables.
 
 ### T27: Validated source client
 
-- [ ] Complete T27.
+- [x] Complete T27.
 
 **Module:** `data-pipeline`. **Dependencies:** T26, T18. **Scope:** M (5 files).
 
@@ -527,11 +527,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/source/client.py`, `services/cronjob-server/app/source/models.py`, `services/cronjob-server/app/pipeline/validate.py`, `services/cronjob-server/tests/test_source_client.py`, `services/cronjob-server/tests/test_snapshot_validation.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_source_client.py and tests/test_normalization.py pass bounded HTTP/error/access checks and complete-count/document/ownership validation.
 
 ### T28: Shopee normalization
 
-- [ ] Complete T28.
+- [x] Complete T28.
 
 **Module:** `data-pipeline`. **Dependencies:** T27, T15. **Scope:** M (4 files).
 
@@ -544,11 +544,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/connectors/common.py`, `services/cronjob-server/app/connectors/shopee.py`, `services/cronjob-server/tests/test_shopee.py`, `services/cronjob-server/tests/test_common_mapping.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** app/pipeline/connectors.py adapts the approved mapper; normalization plus mart tests verify Shopee status, money, supplement provenance and shop-qualified keys.
 
 ### T29: Lazada and Shopify normalization
 
-- [ ] Complete T29.
+- [x] Complete T29.
 
 **Module:** `data-pipeline`. **Dependencies:** T28, T16, T17. **Scope:** M (4 files).
 
@@ -561,16 +561,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/connectors/lazada.py`, `services/cronjob-server/app/connectors/shopify.py`, `services/cronjob-server/tests/test_lazada.py`, `services/cronjob-server/tests/test_shopify.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_normalization.py verifies Lazada one-unit lines and complete Shopify GIDs/shipped semantics; pair tests exercise encoded Shopify CRUD.
 
 #### Checkpoint after T29
 
-- [ ] All adapters consume the provider snapshot contract and preserve identity, money and status differences.
-- [ ] Run processor `make ci`; cross-platform key collisions and malformed snapshots have explicit outcomes.
+- [x] All adapters consume the provider snapshot contract and preserve identity, money and status differences.
+- [x] Run processor `make ci`; cross-platform key collisions and malformed snapshots have explicit outcomes.
 
 ### T30: Atomic full-snapshot publication
 
-- [ ] Complete T30.
+- [x] Complete T30.
 
 **Module:** `data-pipeline`. **Dependencies:** T29. **Scope:** M (5 files).
 
@@ -583,11 +583,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/pipeline/run.py`, `services/cronjob-server/app/storage/publish.py`, `services/cronjob-server/app/storage/sync_state.py`, `services/cronjob-server/tests/test_publication.py`, `services/cronjob-server/tests/test_replay.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_publish.py, test_concurrency.py and test_reconciliation.py verify atomic publication, no-op replay, competing revisions and late-failure rollback.
 
 ### T31: Target deletion and raw history
 
-- [ ] Complete T31.
+- [x] Complete T31.
 
 **Module:** `data-pipeline`. **Dependencies:** T30, T19. **Scope:** M (5 files).
 
@@ -600,16 +600,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/pipeline/reconcile.py`, `services/cronjob-server/app/storage/publish.py`, `services/cronjob-server/app/storage/raw.py`, `services/cronjob-server/tests/test_reconciliation.py`, `services/cronjob-server/tests/test_raw_history.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_reconciliation.py verifies explicit dependency-ordered deletion, unchanged replay, retained raw history and rejection of unexplained missing records.
 
 #### Checkpoint after T31
 
-- [ ] Atomic publication, unchanged replay, raw retention and tombstones work in real PostgreSQL.
-- [ ] Run publication/replay/reconciliation/history tests; a forced failure leaves the prior dataset intact.
+- [x] Atomic publication, unchanged replay, raw retention and tombstones work in real PostgreSQL.
+- [x] Run publication/replay/reconciliation/history tests; a forced failure leaves the prior dataset intact.
 
 ### T32: Frozen-clock mart views
 
-- [ ] Complete T32.
+- [x] Complete T32.
 
 **Module:** `data-pipeline`. **Dependencies:** T31. **Scope:** M (4 files).
 
@@ -622,11 +622,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/migrations/003_marts.sql`, `services/cronjob-server/tests/test_mart_economics.py`, `services/cronjob-server/tests/test_mart_operations.py`, `services/cronjob-server/tests/test_mart_clock.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Migration 004 installs the eight existing views and frozen settings. tests/test_marts.py checks refund/cost/null semantics, weighted fees and no fanout; clock/settings tests pass.
 
 ### T33: Full-scenario regression coverage
 
-- [ ] Complete T33.
+- [x] Complete T33.
 
 **Module:** `data-pipeline`. **Dependencies:** T32. **Scope:** M (4 files).
 
@@ -639,16 +639,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/tests/fixtures/full_snapshot.json`, `services/cronjob-server/tests/fixtures/full_expected.json`, `services/cronjob-server/tests/test_full_scenarios.py`, `services/cronjob-server/tests/fixtures/README.md`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_publish.py and test_marts.py reproduce 1,344 orders, 1,400 lines and 29 candidates (10/10/9), with zero for healthy Shopee 1002. Fixture provenance is documented.
 
 #### Checkpoint after T33
 
-- [ ] Pipeline meets all table/view and small/large dataset acceptance targets.
-- [ ] Run processor `make ci`; verify 1,344 orders, 29 candidates and the healthy control in the separate regression fixture.
+- [x] Pipeline meets all table/view and small/large dataset acceptance targets.
+- [x] Run processor `make ci`; verify 1,344 orders, 29 candidates and the healthy control in the separate regression fixture.
 
 ### T34: Durable run records
 
-- [ ] Complete T34.
+- [x] Complete T34.
 
 **Module:** `sync-control`. **Dependencies:** T33. **Scope:** M (4 files).
 
@@ -661,11 +661,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/migrations/004_runs.sql`, `services/cronjob-server/app/storage/runs.py`, `services/cronjob-server/app/jobs/models.py`, `services/cronjob-server/tests/test_runs.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_runs.py verifies persisted manual/mutation intents, stable UUID replay and changed-intent conflicts; migrations include bounded state enums.
 
 ### T35: Manual trigger and worker
 
-- [ ] Complete T35.
+- [x] Complete T35.
 
 **Module:** `sync-control`. **Dependencies:** T34. **Scope:** M (5 files).
 
@@ -678,16 +678,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/api/runs.py`, `services/cronjob-server/app/jobs/worker.py`, `services/cronjob-server/app/main.py`, `services/cronjob-server/tests/test_manual_sync.py`, `services/cronjob-server/tests/test_worker.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_worker.py and actual HTTP pair tests verify manual full sync with interval disabled, durable status and applied revision.
 
 #### Checkpoint after T35
 
-- [ ] Manual full sync and persisted status work with scheduling disabled.
-- [ ] Run processor `make ci`; stable run IDs, scoped status and revision-gated no-op behavior are tested.
+- [x] Manual full sync and persisted status work with scheduling disabled.
+- [x] Run processor `make ci`; stable run IDs, scoped status and revision-gated no-op behavior are tested.
 
 ### T36: MCP-facing mutation facade
 
-- [ ] Complete T36.
+- [x] Complete T36.
 
 **Module:** `sync-control`. **Dependencies:** T35, T20. **Scope:** M (5 files).
 
@@ -700,11 +700,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/api/mock.py`, `services/cronjob-server/app/storage/intents.py`, `services/cronjob-server/app/migrations/005_intents.sql`, `services/cronjob-server/app/main.py`, `services/cronjob-server/tests/test_mock_facade.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/e2e/test_crud.py performs create/read/update/delete for all 14 resources through the processor facade and checks processed records and encoded keys.
 
 ### T37: Recovery and bounded retries
 
-- [ ] Complete T37.
+- [x] Complete T37.
 
 **Module:** `sync-control`. **Dependencies:** T36. **Scope:** M (5 files).
 
@@ -717,16 +717,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/jobs/recovery.py`, `services/cronjob-server/app/jobs/worker.py`, `services/cronjob-server/app/storage/intents.py`, `services/cronjob-server/tests/test_recovery.py`, `services/cronjob-server/tests/test_retries.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_worker.py and tests/e2e/test_recovery.py verify three-attempt unknown outcomes, same-intent resume, definitive errors, and kill/restart after source commit with exactly one effect.
 
 #### Checkpoint after T37
 
-- [ ] Mutation forwarding closes the source-success/processor-crash gap.
-- [ ] Run facade/recovery/retry suites; do not claim unknown writes failed or completed without evidence.
+- [x] Mutation forwarding closes the source-success/processor-crash gap.
+- [x] Run facade/recovery/retry suites; do not claim unknown writes failed or completed without evidence.
 
 ### T38: Scoped core and raw reads
 
-- [ ] Complete T38.
+- [x] Complete T38.
 
 **Module:** `sync-control`. **Dependencies:** T37. **Scope:** M (5 files).
 
@@ -739,11 +739,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/api/reads.py`, `services/cronjob-server/app/storage/reads.py`, `services/cronjob-server/app/source/access.py`, `services/cronjob-server/app/main.py`, `services/cronjob-server/tests/test_processed_reads.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** tests/test_reads.py and pair recovery tests verify current grants on raw/core, source-outage failure, full-key records and immediate revocation before synchronization.
 
 ### T39: Mart reads and settings
 
-- [ ] Complete T39.
+- [x] Complete T39.
 
 **Module:** `sync-control`. **Dependencies:** T38, T32. **Scope:** M (5 files).
 
@@ -756,16 +756,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/api/marts.py`, `services/cronjob-server/app/storage/marts.py`, `services/cronjob-server/app/api/settings.py`, `services/cronjob-server/app/main.py`, `services/cronjob-server/tests/test_mart_api.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** All eight mart routes use generated concrete DTOs; tests/test_reads.py verifies scope and settings validation/idempotency, including admin key collisions.
 
 #### Checkpoint after T39
 
-- [ ] Processed core/raw/mart access is scoped by current grants, and settings updates are explicit.
-- [ ] Run processor `make ci`; revocation-before-sync, source outage, and global-count leakage checks pass.
+- [x] Processed core/raw/mart access is scoped by current grants, and settings updates are explicit.
+- [x] Run processor `make ci`; revocation-before-sync, source outage, and global-count leakage checks pass.
 
 ### T40: Seconds-based scheduling
 
-- [ ] Complete T40.
+- [x] Complete T40.
 
 **Module:** `sync-control`. **Dependencies:** T39. **Scope:** M (4 files).
 
@@ -778,11 +778,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/jobs/scheduler.py`, `services/cronjob-server/app/jobs/worker.py`, `services/cronjob-server/app/main.py`, `services/cronjob-server/tests/test_scheduler.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Controlled-clock tests in test_worker.py verify interval waiting and disabled scheduling; queue/global-lock and restart tests verify serialization and recovery.
 
 ### T41: Dependency health and safe diagnostics
 
-- [ ] Complete T41.
+- [x] Complete T41.
 
 **Module:** `sync-control`. **Dependencies:** T40. **Scope:** M (5 files).
 
@@ -795,16 +795,16 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/app/api/health.py`, `services/cronjob-server/app/main.py`, `services/cronjob-server/app/jobs/worker.py`, `services/cronjob-server/tests/test_health.py`, `services/cronjob-server/tests/test_diagnostics.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Both image lifecycles pass /health/ready; configuration tests reject missing inputs. Pair tests verify liveness during source outage and absence of phones/test credentials in logs.
 
 #### Checkpoint after T41
 
-- [ ] Interval, startup recovery, readiness and diagnostics complete the control module.
-- [ ] Run processor `make ci`; fake-clock tests prove no overlaps/backlog and no change to frozen business time.
+- [x] Interval, startup recovery, readiness and diagnostics complete the control module.
+- [x] Run processor `make ci`; fake-clock tests prove no overlaps/backlog and no change to frozen business time.
 
 ### T42: Two-service CRUD integration harness
 
-- [ ] Complete T42.
+- [x] Complete T42.
 
 **Module:** `integration`. **Dependencies:** T41, T20. **Scope:** M (5 files).
 
@@ -817,11 +817,11 @@ module specifications before executing a task.
 
 **Likely files:** `scripts/test-mock-pipeline.py`, `services/cronjob-server/tests/e2e/compose.yml`, `services/cronjob-server/tests/e2e/test_crud.py`, `services/cronjob-server/tests/e2e/conftest.py`, `services/cronjob-server/tests/e2e/requirements.txt`.
 
-**Evidence:** Pending implementation.
+**Evidence:** scripts/test-mock-pipeline.py creates an isolated network/PostgreSQL and launches both images. All-resource HTTP CRUD, shared users, 20 orders per user and deletion replay pass.
 
 ### T43: Two-service failure scenarios
 
-- [ ] Complete T43.
+- [x] Complete T43.
 
 **Module:** `integration`. **Dependencies:** T42. **Scope:** M (3 files).
 
@@ -834,11 +834,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/tests/e2e/test_recovery.py`, `services/cronjob-server/tests/e2e/test_access.py`, `scripts/test-mock-pipeline.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Pair fault proxy deterministically exercises source commit then processor kill, malformed snapshot rollback, edits during snapshots, source outage, membership revocation and log hygiene.
 
 ### T44: Cross-service CI coverage
 
-- [ ] Complete T44.
+- [x] Complete T44.
 
 **Module:** `integration`. **Dependencies:** T43. **Scope:** M (3 files).
 
@@ -851,16 +851,16 @@ module specifications before executing a task.
 
 **Likely files:** `.github/workflows/mock-pipeline-e2e.yml`, `scripts/test-mock-pipeline.py`, `services/cronjob-server/tests/e2e/compose.yml`.
 
-**Evidence:** Pending implementation.
+**Evidence:** New mock-pipeline-e2e.yml runs the full pair suite with contents: read and narrow path filters. YAML, permissions and positive/negative path cases validated locally; remote PR run unavailable because no PR was opened.
 
 #### Checkpoint after T44
 
-- [ ] Separate service processes pass normal and failure integration flows; both service paths trigger the proposed CI check.
-- [ ] Run the full pair harness and validate workflow permissions/path filters; record any remote CI evidence still unavailable.
+- [x] Separate service processes pass normal and failure integration flows; both service paths trigger the proposed CI check.
+- [x] Run the full pair harness and validate workflow permissions/path filters; record any remote CI evidence still unavailable.
 
 ### T45: Source container and usage handoff
 
-- [ ] Complete T45.
+- [x] Complete T45.
 
 **Module:** `mock-source`. **Dependencies:** T44. **Scope:** M (5 files).
 
@@ -873,11 +873,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/README.md`, `services/mock-data-server/AGENTS.md`, `services/mock-data-server/.env.example`, `services/mock-data-server/Dockerfile`, `services/mock-data-server/tests/test_image_assets.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source README documents env/migrate/seed/keys/deletion; image runs as UID 1001 and migrations/seed execute using only packaged assets. Repeated-seed preservation is tested.
 
 ### T46: Processor container and MCP handoff
 
-- [ ] Complete T46.
+- [x] Complete T46.
 
 **Module:** `sync-control`. **Dependencies:** T45. **Scope:** M (5 files).
 
@@ -890,11 +890,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/cronjob-server/README.md`, `services/cronjob-server/AGENTS.md`, `services/cronjob-server/.env.example`, `services/cronjob-server/Dockerfile`, `services/cronjob-server/tests/test_image_assets.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Processor README documents pending/unknown outcomes, polling, interval/frozen-time semantics, scoped reads and private internal routing. Service-only image and documented HTTP forms pass pair tests.
 
 ### T47: Acceptance evidence and final review
 
-- [ ] Complete T47.
+- [x] Complete T47.
 
 **Module:** `integration`. **Dependencies:** T46. **Scope:** S (2 files).
 
@@ -907,9 +907,30 @@ module specifications before executing a task.
 
 **Likely files:** `tasks/todo.md`, `tasks/plan.md`.
 
-**Evidence:** Pending implementation.
+**Evidence:** See implementation-review.md for final counts, spec mapping, review fixes and remaining deployment inputs. No merge, push or deployment performed.
 
 #### Checkpoint after T47
 
-- [ ] Every task and approved spec acceptance item has passing evidence, or remains explicitly unchecked.
-- [ ] Record the review outcome and deployment inputs; do not merge/deploy as part of this plan.
+- [x] Every task and approved spec acceptance item has passing evidence, or remains explicitly unchecked.
+- [x] Record the review outcome and deployment inputs; do not merge/deploy as part of this plan.
+
+
+## Final verification record
+
+- Source: `.venv/Scripts/python.exe scripts/test_db.py` ? **39 passed**.
+- Processor: `.venv/Scripts/python.exe scripts/test_db.py` ? **40 passed**.
+- Root: `python scripts/test-mock-pipeline.py --suite all` ? **9 passed**;
+  both service images rebuilt and migration/seed executed from their image assets.
+- Ruff check and format check passed for both services; root harness lint passed.
+- Both unsafe-database guard checks rejected a non-test database before connecting.
+- New workflow YAML, read-only permissions and positive/negative path filters passed
+  local checks. A remote GitHub run remains unavailable until a PR is opened.
+- Docker verification found no remaining pair-test containers after cleanup.
+- Windows has no `make`; the dependency installation, Ruff and database runner
+  commands above are the equivalent operations used by each service's `make ci`.
+- The only test warning is Starlette's existing httpx TestClient deprecation.
+  No skips, suppressed assertions, real database writes or deployment occurred.
+- Anticipated tiny files were consolidated into resource registration and platform
+  mapping modules. The pair harness uses Docker CLI directly instead of Compose;
+  it remains isolated, service-contained for runtime assets, and independently
+  testable through the documented commands.

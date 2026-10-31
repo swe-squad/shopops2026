@@ -1,0 +1,27 @@
+name: Mock pipeline integration
+
+on:
+  pull_request:
+    paths:
+      - 'services/mock-data-server/**'
+      - 'services/cronjob-server/**'
+      - 'scripts/test-mock-pipeline.py'
+      - '.github/workflows/mock-pipeline-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install test client
+        run: python -m pip install -r services/cronjob-server/requirements-dev.txt
+      - name: Test both service images with disposable PostgreSQL
+        run: python scripts/test-mock-pipeline.py --suite all
