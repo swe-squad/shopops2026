@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "synthetic": true,
+  "scenarios": [
+    {"tool_name": "get_return_metrics", "arguments": {"sku": "SKU-A", "start_date": "2026-10-01", "end_date": "2026-10-15"}},
+    {"tool_name": "search_knowledge", "arguments": {"query": "Chính sách hoàn trả", "limit": 2}},
+    {"response": {"kind": "clarification", "text": "Bạn cho biết SKU và khoảng ngày cần xem?", "sources": []}},
+    {"tool_name": "get_return_metrics", "arguments": {"sku": "SKU-A", "start_date": "2026-10-01", "end_date": "2026-10-15"}},
+    {"duplicate_event": true},
+    {"interrupted": true}
+  ]
+}
