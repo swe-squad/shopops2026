@@ -115,7 +115,7 @@ A complete handoff records branch/worktree/base and dependency SHAs, changed ser
 - Worktree: `/tmp/shopops2026-agent-core/T10`.
 - Branch: `feat/agent-core-data-mcp`; combined dependency base `09a30a1`.
 - Inputs: planning `15202f5`, pipeline `5262ba4`, Data MCP `e663f88`,
-  accepted T09 fixes `311aa4e` / `e34056f`. Preparatory checkpoint `f6dbff9`.
+  accepted T09 fixes `311aa4e` / `e34056f`. Preparatory checkpoint `f6dbff9`. Implementation result: `0ba1bcb`.
 - Changed services: `agent-core`, `shop-data-mcp`, `shopops-chat-api`, `shopops-chat`.
   Upstream dependency merges precede the implementation base; no new root workflow,
   source/processor runtime change, production reset or deployment is part of T10.
