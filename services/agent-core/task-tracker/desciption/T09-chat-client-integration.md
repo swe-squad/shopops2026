@@ -10,7 +10,7 @@
 
 **Spec:** [Integration design](#integration-design) below, [application API](../../contracts/application-api.md), [managed runtime](../../agents_api_managed_runtime_spec.md), [client architecture](../../../../docs/client-workspace.md), [tracker](../task_list.md#chat-client-integration-follow-up-t09).
 
-**Status:** Ready for integration (offline implementation verified; hosted acceptance UNVERIFIED). **Difficulty:** D5 — Very hard. The work crosses one phone demo identity, scoped resource access, durable HTTP submission/recovery, polling-to-SSE adaptation, two independent databases, scoped downloads and legacy compatibility. A successful browser reply alone does not prove hosted execution.
+**Status:** In progress — two P1 review findings open; not ready for merge. Existing offline suites pass; hosted acceptance remains UNVERIFIED. **Difficulty:** D5 — Very hard. The work crosses one phone demo identity, scoped resource access, durable HTTP submission/recovery, polling-to-SSE adaptation, two independent databases, scoped downloads and legacy compatibility. A successful browser reply alone does not prove hosted execution.
 
 ## User scope amendment: one user and one shop
 
@@ -131,7 +131,7 @@ Forward bounded content and safe attachment/nosniff headers; enforce the current
 - [x] **5. Connect the existing UI and navigation.** Add RED→GREEN cases in `test_agent_core_navigation.py` for authenticated phone sessions, membership denial, server-only operations credentials and navigation-only retry. Implement the bounded mailbox adapter. Update controller/transport to send the stable client-message ID and selected output mode. Add focused tests for phone login/lock, report/text, final replacement, Stop/reload, UUID history IDs, malformed optional metadata, authenticated Blob download/revocation, expired attachment and no operations-navigation call for downloads. Preserve mobile layout, safe rendering and standalone/viewer isolation; run the existing UI suite and build.
 - [x] **6. Prove the application boundary offline.** `test_agent_core_integration.py` must exercise a real loopback Core application with its own SQLite and explicit fake provider plus the chat API, not only a mocked HTTP transport. Add service-local Core fixture support if needed; run the services in separate processes/import environments to avoid their `app` package collision. Verify text, report, clarification, same-conversation follow-up, replay, restart, history and authorized/foreign downloads. Assert no external calls; synthetic artifacts/children remain explicitly fake evidence.
 - [x] **7. Record configuration and deployment prerequisites.** Update owned `.env.example`/READMEs with demo-phone session/fixture separation, hosted revision activation, separate volumes, stop/cutover behavior and runtime cluster URL. Local ports: operations 8000, chat API 8001, Core 8002, client 5174. Existing container ports and public same-origin proxies remain unchanged.
-- [x] **8. Verify and hand off.** Run the commands below, review service scope and preserve the isolated worktree. Record exact commits, changed paths, RED→GREEN/scoped/full results, migration/restart and image evidence. Run paid hosted acceptance only with a separately explicit opt-in, operator configuration and accepted T08 proof prerequisites; otherwise record it UNVERIFIED. Mark Ready for integration after module checks; Done requires accepted integrated evidence.
+- [ ] **8. Verify and hand off.** Run the commands below, review service scope and preserve the isolated worktree. Record exact commits, changed paths, RED→GREEN/scoped/full results, migration/restart and image evidence. Run paid hosted acceptance only with a separately explicit opt-in, operator configuration and accepted T08 proof prerequisites; otherwise record it UNVERIFIED. Mark Ready for integration after module checks; Done requires accepted integrated evidence.
 
 ## Verification and acceptance
 
@@ -153,7 +153,8 @@ For actual hosted proof, reuse the established T08 credentials-loader/dual-opt-i
 
 ## Handoff record
 
-- Status: **Ready for integration** for the implemented offline module. Full hosted acceptance
+- Historical implementation handoff at `7ee2b35`: **Ready for integration** for the offline module.
+  The independent review below supersedes that readiness and reopens step 8. Full hosted acceptance
   remains **UNVERIFIED**; T08's exact boundary probe and child-role evidence remain unaccepted.
 - Worktree: `/tmp/shopops2026-agent-core/T09`; branch `feat/shopops-chat-agent-core`.
   Base `fd3be2f5517518a9e65474394e9839c449385131` contains `develop` baseline `53d094e`.
@@ -189,7 +190,8 @@ For actual hosted proof, reuse the established T08 credentials-loader/dual-opt-i
 - Read-only final review identified a P1 lease expiry during long finalization. Fixed by projecting
   only the current run, independently renewing the lease/emitting SSE comments, and bounding whole
   history reconciliation/replay. Accelerated clock regression fails without renewal and passes with
-  it; the full backend suite is green. No deferred review findings.
+  it; the full backend suite is green. No findings were deferred in that implementation review;
+  the subsequent independent review below identifies two additional open P1 issues.
 - Graphify AST updates ran in each changed service. Generated graphs/evidence are service-local
   and ignored; Core SQL extraction is partial because `tree_sitter_sql` is unavailable.
 - Environment note: the initial Python3.13 venv was replaced operationally by the service-local
@@ -208,3 +210,57 @@ For actual hosted proof, reuse the established T08 credentials-loader/dual-opt-i
 Paid hosted end-to-end acceptance and remote cleanup proof remain **UNVERIFIED**, pending the
 stated operator configuration/explicit opt-ins/T08 gates. No paid provider call, merge or deployment
 was performed. This handoff preserves the isolated implementation branch/worktree.
+
+
+## Independent review of 7ee2b35
+
+**Current decision:** Not ready for merge. Both findings below are open and reproducible offline.
+This record documents review results only; no product fix or new paid/live call is included.
+
+### T09-R01 — P1: explicit message rejection leaves the outbox pending
+
+- **Location:** `services/shopops-chat-api/app/core_chat.py:86–91`, `CoreChat.receipt()`.
+- **Trigger:** Configure the real Core fixture application with valid legacy revision `returns-v1`
+  (`environment=none`), log in, and submit `output_mode=report`. Core rejects the input with 422.
+- **Observed:** The first browser request receives an SSE error, but `core_outbox` remains `pending`
+  with `run_id=NULL`. Loading history replays the same rejected report and returns 422. A corrected
+  text message with a new client ID returns 409, and backend/scope cutover is also blocked. Core
+  accepted no run, yet the adapter cannot recover without manual database intervention.
+- **Required correction:** Distinguish a definite rejected application POST from an unknown outcome.
+  Finish the locally rejected outbox entry without fabricating an assistant reply or `done` event.
+  Preserve pending state for timeouts/unknown outcomes and preserve busy/idempotency-conflict semantics.
+- [ ] Add a regression proving 422 rejection releases the failed submission, history recovers and
+  a corrected text submission can proceed without duplicate Core input.
+- [ ] Retain passing lost-receipt, timeout/unknown-outcome and replay regressions.
+- [ ] Record the fix commit and fresh scoped/full verification before closing T09-R01.
+
+### T09-R02 — P1: cached orchestrator can create a conversation under another revision
+
+- **Location:** `services/shopops-chat-api/app/core_chat.py:48–50`, `CoreChat.provision()`, and
+  lines 65–76, `CoreChat.ensure()`.
+- **Trigger:** Log in while `AGENT_CORE_CONFIG_REVISION=returns-hosted-v1`. Before sending the
+  first message, activate `returns-hosted-v2` for the same shop in Core, then log in/send again.
+- **Observed:** Cached orchestrator state skips provisioning validation. Core creates the new
+  conversation using active v2 and the browser receives `done`, although adapter settings and its
+  namespace still identify v1. The actual runtime/model/tool configuration may therefore differ
+  from the selected immutable revision without a conflict being surfaced.
+- **Required correction:** Bind or verify the intended revision at conversation creation and
+  reject a mismatch without silently adopting it. Preserve existing pinned conversations and
+  exact replay of an already-created conversation. Coordinate any necessary public Core contract
+  amendment; a separate preflight must not be treated as an atomic revision guarantee.
+- [ ] Add a regression that activates a different revision between login and first message;
+  the adapter must not complete under an unexpected revision or label it as v1.
+- [ ] Retain same-revision login/replay and existing-conversation revision-pinning coverage.
+- [ ] Record the fix commit and fresh scoped/full verification before closing T09-R02.
+
+### Fresh verification at the reviewed commit
+
+- Chat API `make ci`: **93 passed, 1 skipped** (explicit cross-service loopback gate).
+- Chat client `make ci`: **48 passed**, lint and production build pass.
+- Core `make ci`: **428 passed, 2 skipped** (the existing paid/live suites).
+- Explicit `AGENT_CORE_LOOPBACK=1 .venv/bin/python -m pytest tests/test_agent_core_integration.py -q`:
+  **1 passed**, with the real Core application/worker/SQLite and a synthetic provider.
+- Both newly reported failure scenarios were independently reproduced offline with real Core
+  HTTP/repository behavior. Existing green suites do not cover these two cases.
+- Hosted acceptance/T08 probe and child-role proof remain separately UNVERIFIED; this review does
+  not replace those gates. Product files remained unchanged during review.
