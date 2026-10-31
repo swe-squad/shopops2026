@@ -1,0 +1,17 @@
+{
+  "id": "returns-v1",
+  "version": "1",
+  "checksum": "9fd00e2ec90da8e429d522d93fde932fac537fb8bc9504d95f260489e6bd82ba",
+  "documents": [
+    {
+      "id": "sizing",
+      "file": "sizing.md",
+      "sha256": "5f36809f2ff089c7ee98b623a65871d596e337cc418eb97440c5519a93fa1747"
+    },
+    {
+      "id": "returns",
+      "file": "returns.md",
+      "sha256": "3bbd9baa8bebb7a311513fd6ad59b8c6a49deaeefc78fb4b71340fcabb2ab508"
+    }
+  ]
+}

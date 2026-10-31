@@ -1,0 +1,191 @@
+{
+  "id": "returns-v1",
+  "observed_at": "2026-10-26T00:00:00Z",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "shops": [
+    {
+      "tenant_id": "tenant-a",
+      "shop_id": "shop-a",
+      "user_ids": [
+        "alice",
+        "bob"
+      ],
+      "products": {
+        "SKU-A": {
+          "daily": [
+            {
+              "date": "2026-10-12",
+              "orders": 14,
+              "returns": 1
+            },
+            {
+              "date": "2026-10-13",
+              "orders": 14,
+              "returns": 1
+            },
+            {
+              "date": "2026-10-14",
+              "orders": 14,
+              "returns": 1
+            },
+            {
+              "date": "2026-10-15",
+              "orders": 14,
+              "returns": 1
+            },
+            {
+              "date": "2026-10-16",
+              "orders": 14,
+              "returns": 1
+            },
+            {
+              "date": "2026-10-17",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-18",
+              "orders": 16,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-19",
+              "orders": 14,
+              "returns": 2
+            },
+            {
+              "date": "2026-10-20",
+              "orders": 14,
+              "returns": 2
+            },
+            {
+              "date": "2026-10-21",
+              "orders": 14,
+              "returns": 2
+            },
+            {
+              "date": "2026-10-22",
+              "orders": 14,
+              "returns": 2
+            },
+            {
+              "date": "2026-10-23",
+              "orders": 14,
+              "returns": 2
+            },
+            {
+              "date": "2026-10-24",
+              "orders": 14,
+              "returns": 2
+            },
+            {
+              "date": "2026-10-25",
+              "orders": 16,
+              "returns": 3
+            }
+          ],
+          "reviews": [
+            {
+              "id": "shop-a-review-1",
+              "date": "2026-10-20",
+              "category": "sizing",
+              "count": 12,
+              "text": "Khách phản ánh kích cỡ nhỏ hơn bảng size."
+            },
+            {
+              "id": "shop-a-review-2",
+              "date": "2026-10-22",
+              "category": "material",
+              "count": 3,
+              "text": "Khách phản ánh chất liệu chưa phù hợp."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "tenant_id": "tenant-a",
+      "shop_id": "shop-b",
+      "user_ids": [
+        "alice"
+      ],
+      "products": {
+        "SKU-A": {
+          "daily": [
+            {
+              "date": "2026-10-12",
+              "orders": 14,
+              "returns": 1
+            },
+            {
+              "date": "2026-10-13",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-14",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-15",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-16",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-17",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-18",
+              "orders": 16,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-19",
+              "orders": 14,
+              "returns": 1
+            },
+            {
+              "date": "2026-10-20",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-21",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-22",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-23",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-24",
+              "orders": 14,
+              "returns": 0
+            },
+            {
+              "date": "2026-10-25",
+              "orders": 16,
+              "returns": 0
+            }
+          ],
+          "reviews": []
+        }
+      }
+    }
+  ]
+}
