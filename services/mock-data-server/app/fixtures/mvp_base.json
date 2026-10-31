@@ -262,21 +262,24 @@
         "sku": "SHIRT-M",
         "name": "Áo thun cotton size M",
         "unit_cost": "130000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://images.pexels.com/photos/6046231/pexels-photo-6046231.jpeg?auto=compress&cs=tinysrgb&w=800"
       },
       {
         "shop_key": "shopee-open-platform:1001",
         "sku": "CAP",
         "name": "Nón lưỡi trai",
         "unit_cost": "45000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://burst.shopifycdn.com/photos/tan-colored-hat-on-monochrome-background.jpg?width=800&format=pjpg&exif=0&iptc=0"
       },
       {
         "shop_key": "shopee-open-platform:1001",
         "sku": "TOTE",
         "name": "Túi tote canvas",
         "unit_cost": "120000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://images.pexels.com/photos/1214212/pexels-photo-1214212.jpeg?auto=compress&cs=tinysrgb&w=800"
       }
     ],
     "promotions": [
@@ -713,21 +716,24 @@
         "sku": "SHIRT-M",
         "name": "Áo thun cotton size M",
         "unit_cost": "130000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://images.pexels.com/photos/6046231/pexels-photo-6046231.jpeg?auto=compress&cs=tinysrgb&w=800"
       },
       {
         "shop_key": "lazada:1001",
         "sku": "CAP",
         "name": "Nón lưỡi trai",
         "unit_cost": "45000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://burst.shopifycdn.com/photos/tan-colored-hat-on-monochrome-background.jpg?width=800&format=pjpg&exif=0&iptc=0"
       },
       {
         "shop_key": "lazada:1001",
         "sku": "TOTE",
         "name": "Túi tote canvas",
         "unit_cost": "120000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://images.pexels.com/photos/1214212/pexels-photo-1214212.jpeg?auto=compress&cs=tinysrgb&w=800"
       }
     ],
     "promotions": [
@@ -1091,21 +1097,24 @@
         "sku": "SHIRT-M",
         "name": "Áo thun cotton size M",
         "unit_cost": "130000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://images.pexels.com/photos/6046231/pexels-photo-6046231.jpeg?auto=compress&cs=tinysrgb&w=800"
       },
       {
         "shop_key": "shopify:1001",
         "sku": "CAP",
         "name": "Nón lưỡi trai",
         "unit_cost": "45000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://burst.shopifycdn.com/photos/tan-colored-hat-on-monochrome-background.jpg?width=800&format=pjpg&exif=0&iptc=0"
       },
       {
         "shop_key": "shopify:1001",
         "sku": "TOTE",
         "name": "Túi tote canvas",
         "unit_cost": "120000.00",
-        "cost_basis": "seller_supplied_demo"
+        "cost_basis": "seller_supplied_demo",
+        "image_url": "https://images.pexels.com/photos/1214212/pexels-photo-1214212.jpeg?auto=compress&cs=tinysrgb&w=800"
       }
     ],
     "promotions": [
