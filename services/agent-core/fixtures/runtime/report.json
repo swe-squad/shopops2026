@@ -1,0 +1,27 @@
+{
+  "schema_version": "1",
+  "metrics": {
+    "sku": "SKU-A",
+    "start_date": "2026-10-19",
+    "end_date": "2026-10-25",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "orders": 100,
+    "returns": 15,
+    "return_rate": 15.0,
+    "baseline": {
+      "start_date": "2026-10-12",
+      "end_date": "2026-10-18",
+      "orders": 100,
+      "returns": 5,
+      "return_rate": 5.0
+    },
+    "change_percentage_points": 10.0
+  },
+  "knowledge_findings": [
+    {"reference": "knowledge:returns-v1:1:sizing#synthetic", "finding": "Kiểm tra bảng kích cỡ."}
+  ],
+  "sources": [
+    {"type": "data", "reference": "fixture:returns-v1:tenant-a:shop-a:SKU-A:2026-10-19:2026-10-25:get_return_metrics"},
+    {"type": "knowledge", "reference": "knowledge:returns-v1:1:sizing#synthetic"}
+  ]
+}
