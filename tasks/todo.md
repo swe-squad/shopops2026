@@ -157,7 +157,7 @@ module specifications before executing a task.
 
 ### T08: Access administration
 
-- [ ] Complete T08.
+- [x] Complete T08.
 
 **Module:** `mock-source`. **Dependencies:** T07. **Scope:** M (5 files).
 
@@ -170,11 +170,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/access.py`, `services/mock-data-server/app/domain/access.py`, `services/mock-data-server/app/storage/access.py`, `services/mock-data-server/app/main.py`, `services/mock-data-server/tests/test_access.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T09: Shop CRUD
 
-- [ ] Complete T09.
+- [x] Complete T09.
 
 **Module:** `mock-source`. **Dependencies:** T08. **Scope:** M (5 files).
 
@@ -187,7 +187,7 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/entities.py`, `services/mock-data-server/app/domain/shops.py`, `services/mock-data-server/app/migrations/003_shops.sql`, `services/mock-data-server/app/main.py`, `services/mock-data-server/tests/test_shops.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 #### Checkpoint after T09
 
@@ -196,7 +196,7 @@ module specifications before executing a task.
 
 ### T10: Products and promotions
 
-- [ ] Complete T10.
+- [x] Complete T10.
 
 **Module:** `mock-source`. **Dependencies:** T09. **Scope:** M (5 files).
 
@@ -209,11 +209,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/entities.py`, `services/mock-data-server/app/domain/catalog.py`, `services/mock-data-server/app/migrations/004_catalog.sql`, `services/mock-data-server/app/storage/catalog.py`, `services/mock-data-server/tests/test_catalog.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T11: Orders and order items
 
-- [ ] Complete T11.
+- [x] Complete T11.
 
 **Module:** `mock-source`. **Dependencies:** T10. **Scope:** M (5 files).
 
@@ -226,11 +226,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/entities.py`, `services/mock-data-server/app/domain/orders.py`, `services/mock-data-server/app/migrations/005_orders.sql`, `services/mock-data-server/app/storage/orders.py`, `services/mock-data-server/tests/test_orders.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T12: Reviews and returns
 
-- [ ] Complete T12.
+- [x] Complete T12.
 
 **Module:** `mock-source`. **Dependencies:** T11. **Scope:** M (5 files).
 
@@ -243,7 +243,7 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/entities.py`, `services/mock-data-server/app/domain/feedback.py`, `services/mock-data-server/app/migrations/006_feedback.sql`, `services/mock-data-server/app/storage/feedback.py`, `services/mock-data-server/tests/test_feedback.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 #### Checkpoint after T12
 
@@ -252,7 +252,7 @@ module specifications before executing a task.
 
 ### T13: Inventory CRUD
 
-- [ ] Complete T13.
+- [x] Complete T13.
 
 **Module:** `mock-source`. **Dependencies:** T11. **Scope:** M (5 files).
 
@@ -265,11 +265,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/entities.py`, `services/mock-data-server/app/domain/inventory.py`, `services/mock-data-server/app/migrations/007_inventory.sql`, `services/mock-data-server/app/storage/inventory.py`, `services/mock-data-server/tests/test_inventory.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T14: Operational business entities
 
-- [ ] Complete T14.
+- [x] Complete T14.
 
 **Module:** `mock-source`. **Dependencies:** T11. **Scope:** M (5 files).
 
@@ -282,7 +282,7 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/entities.py`, `services/mock-data-server/app/domain/operations.py`, `services/mock-data-server/app/migrations/008_operations.sql`, `services/mock-data-server/app/storage/operations.py`, `services/mock-data-server/tests/test_operations.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 #### Checkpoint after T14
 
@@ -291,7 +291,7 @@ module specifications before executing a task.
 
 ### T15: Shopee and supplement serialization
 
-- [ ] Complete T15.
+- [x] Complete T15.
 
 **Module:** `mock-source`. **Dependencies:** T12, T13, T14. **Scope:** M (4 files).
 
@@ -304,11 +304,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/domain/serialize_shopee.py`, `services/mock-data-server/app/domain/serialize_supplement.py`, `services/mock-data-server/tests/test_serialize_shopee.py`, `services/mock-data-server/tests/test_supplement.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T16: Lazada serialization
 
-- [ ] Complete T16.
+- [x] Complete T16.
 
 **Module:** `mock-source`. **Dependencies:** T15. **Scope:** S (2 files).
 
@@ -321,11 +321,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/domain/serialize_lazada.py`, `services/mock-data-server/tests/test_serialize_lazada.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T17: Shopify serialization
 
-- [ ] Complete T17.
+- [x] Complete T17.
 
 **Module:** `mock-source`. **Dependencies:** T15. **Scope:** S (2 files).
 
@@ -338,7 +338,7 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/domain/serialize_shopify.py`, `services/mock-data-server/tests/test_serialize_shopify.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 #### Checkpoint after T17
 
@@ -347,7 +347,7 @@ module specifications before executing a task.
 
 ### T18: Consistent versioned snapshot endpoint
 
-- [ ] Complete T18.
+- [x] Complete T18.
 
 **Module:** `mock-source`. **Dependencies:** T16, T17. **Scope:** M (5 files).
 
@@ -360,11 +360,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/api/snapshot.py`, `services/mock-data-server/app/storage/snapshot.py`, `services/mock-data-server/app/domain/snapshot.py`, `services/mock-data-server/app/main.py`, `services/mock-data-server/tests/test_snapshot.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T19: Explicit deletion reconciliation at source
 
-- [ ] Complete T19.
+- [x] Complete T19.
 
 **Module:** `mock-source`. **Dependencies:** T18. **Scope:** M (5 files).
 
@@ -377,11 +377,11 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/storage/tombstones.py`, `services/mock-data-server/app/storage/orders.py`, `services/mock-data-server/app/storage/mutations.py`, `services/mock-data-server/app/migrations/009_tombstones.sql`, `services/mock-data-server/tests/test_deletions.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 ### T20: Deterministic MVP seed
 
-- [ ] Complete T20.
+- [x] Complete T20.
 
 **Module:** `mock-source`. **Dependencies:** T19. **Scope:** M (5 files).
 
@@ -394,7 +394,7 @@ module specifications before executing a task.
 
 **Likely files:** `services/mock-data-server/app/fixtures/mvp.py`, `services/mock-data-server/app/fixtures/scenarios.json`, `services/mock-data-server/app/storage/seed.py`, `services/mock-data-server/app/cli.py`, `services/mock-data-server/tests/test_seed.py`.
 
-**Evidence:** Pending implementation.
+**Evidence:** Source suite: 36 passed on disposable PostgreSQL 17; Ruff check/format passed; service-only Docker build succeeded. Covers all entity CRUD, native serializers, stable document versions, explicit deletion markers, replay authorization, and exact 10/7/21/140 seed counts. Related models/routes consolidated into domain/entities.py, api/entities.py and storage/entities.py; focused cases live in the corresponding source tests.
 
 #### Checkpoint after T20
 

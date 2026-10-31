@@ -7,6 +7,7 @@ from psycopg.types.json import Jsonb
 
 from app.api.common import APIError
 from app.storage.db import connect
+from app.storage.snapshot import refresh
 
 
 def mutate(
@@ -39,6 +40,7 @@ def mutate(
             + 1
         )
         data = operation(conn, revision)
+        refresh(conn, revision)
         response = {"data": data, "source_revision": revision}
         conn.execute("UPDATE mock.state SET revision=%s WHERE singleton", (revision,))
         conn.execute(
