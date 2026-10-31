@@ -66,3 +66,11 @@ the ToolResult whose metrics match, not another result within the same root turn
 `Run.runtime_setup_started_at` is persisted when marking session creation before provider I/O;
 setup uses that timestamp with the remaining application deadline, so queue delay does not
 consume the setup budget. Unknown mutation outcomes retain the existing reconciliation policy.
+
+Integration amendment: `build_runtime_bundle(profile, *, bundle_root: Path | None = None)` keeps
+its original one-argument behavior and accepts a validated operator directory when configured.
+The configured live provider receives the same directory used by startup validation. The image
+ships the registered skill-only bundle; no secret or arbitrary user path enters its payload.
+First connection is validated against the durable setup deadline even if it arrives connected;
+known session/receipt/environment IDs survive failure for cleanup. An established connection is
+not subject to another setup deadline on follow-up work.

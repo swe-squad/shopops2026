@@ -1,6 +1,6 @@
 # Managed Codex Harness and OpenAI-hosted Runtime Extension
 
-Status: **Specified; implementation not started.** Date: 2026-10-31.
+Status: **T05–T08 integrated and verified offline; hosted live acceptance NOT ACCEPTED.** Date: 2026-10-31.
 
 This extends the [template spec](agents_api_template_spec.md) and [basic requirements](agents_api_template_requirements.md). T01–T04 delivered the conversation/tool baseline. T05–T08 deliver the hosted runtime described here; existing baseline test results do not establish these new capabilities.
 
@@ -132,11 +132,11 @@ On timeout/cancellation, request cancellation and establish root termination bef
 
 ## 8. Configuration, delivery, and credentials
 
-All code, docs, bundles, fixtures and scripts stay under `services/agent-core/`. Reuse Python 3.14, FastAPI, SQLite, pinned `openai==3.42.0` unless the foundation owner verifies and coordinates a necessary upgrade, existing Docker/CI, and one service/worker/replica. Add only the proposed non-secret `RUNTIME_BUNDLE_PATH` setting (default `runtime-bundles`), documented in `.env.example` and README when implemented. Runtime selection, bundle version/digest and limits belong in registry revisions. This specification alone adds no runtime env variable.
+All code, docs, bundles, fixtures and scripts stay under `services/agent-core/`. Reuse Python 3.14, FastAPI, SQLite, pinned `openai==3.42.0` unless the foundation owner verifies and coordinates a necessary upgrade, existing Docker/CI, and one service/worker/replica. The non-secret `RUNTIME_BUNDLE_PATH` setting is implemented (default `runtime-bundles`), documented in `.env.example` and README. Runtime selection, bundle version/digest and limits belong in registry revisions. The legacy default registry remains unchanged; select an explicit hosted revision.
 
 Backend secrets stay in CapRover App Configs/operator process. Hosted smoke can use the existing explicit `--credentials-file` loader, which reads only key/model from an ignored file and never copies the root env. T06/T08 need credentials only for explicit live calls; T05/T07 and default CI need none. Check the installed SDK's session, environment, plugin and artifact surfaces before coding; unavailable account support is an explicit unverified/blocked live prerequisite, not an offline pass.
 
-Future test opt-in: require both `AGENT_CORE_LIVE=1` and `AGENT_CORE_LIVE_HOSTED=1` for hosted tests. They must be skipped unless both flags are explicit, including when only the legacy live gate is enabled. The implementation will document `python -m scripts.demo_live_hosted --live --hosted --credentials-file <ignored-file> --evidence .evidence/live-hosted.json`; this command does not exist yet. Run a bounded synthetic scenario and record model/runtime/bundle digest, completed root turns, actual child IDs/command items, artifact validation and cleanup status. Do not publish content or credentials in evidence. A new sandbox run is billable model/container work; this documentation update executes none.
+Hosted test opt-in requires both `AGENT_CORE_LIVE=1` and `AGENT_CORE_LIVE_HOSTED=1` for hosted tests. They must be skipped unless both flags are explicit, including when only the legacy live gate is enabled. Use `python -m scripts.demo_live_hosted --live --hosted --credentials-file <ignored-file> --evidence .evidence/live-hosted.json` from this service directory. Run a bounded synthetic scenario and record model/runtime/bundle digest, completed root turns, actual child IDs/command items, artifact validation and cleanup status. Do not publish content or credentials in evidence. A new sandbox run is billable model/container work; record each actual attempt separately.
 
 ## 9. Acceptance and evidence
 
@@ -157,4 +157,4 @@ Live acceptance cannot be satisfied by a hardcoded artifact, a local subprocess,
 
 ## 10. Implementation order
 
-[T05](task-tracker/desciption/T05-runtime-foundation.md) first publishes the shared runtime foundation. [T06](task-tracker/desciption/T06-hosted-provider.md) and [T07](task-tracker/desciption/T07-skills-specialists.md) then implement independent provider/bundle modules in separate worktrees. [T08](task-tracker/desciption/T08-hosted-acceptance.md) can prepare acceptance fixtures after the foundation, but final verification waits for both module handoffs and T05 application wiring. No new task has started, no foundation SHA is published for this extension, and no hosted live result is claimed.
+[T05](task-tracker/desciption/T05-runtime-foundation.md) first publishes the shared runtime foundation. [T06](task-tracker/desciption/T06-hosted-provider.md) and [T07](task-tracker/desciption/T07-skills-specialists.md) then implement independent provider/bundle modules in separate worktrees. [T08](task-tracker/desciption/T08-hosted-acceptance.md) can prepare acceptance fixtures after the foundation, but final verification waits for both module handoffs and T05 application wiring. Foundation `1e45865` and amendment `ebd7537` are published. T05–T08 committed handoffs are integrated with setup, wiring, safe-error and cleanup fixes on `feat/agent-core-hosted-runtime`. Offline verification and actual live attempts are recorded in the tracker; no complete hosted live result is claimed until all required proof passes.

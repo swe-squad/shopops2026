@@ -95,10 +95,24 @@ and final acceptance require the separate T06/T07/T08 handoffs. No such handoff 
 baseline. AC15 has offline migration/pinning evidence; AC19 has offline API/validation evidence.
 Full AC15/AC19 acceptance and AC16–AC22 remain pending integrated hosted execution and T08 review.
 
-T06 must implement the hosted provider/environment builder, enforce streaming read limits, and
-confirm cleanup independently for artifacts and session removal. T07 must replace its fail-closed
-bundle builder stub, publish a real registered digest, and supply the image bundle. The example
-hosted registry uses a placeholder digest and must not be activated as supplied. T05 final wiring,
-image bundle packaging and integrated checks resume after those committed handoffs. No fallback
-to none/fake/local execution is enabled for a hosted registry. No OpenAI call, deployment, merge
-or remote push was performed. The module is Ready for integration, not Done for the hosted extension.
+At the original T05 module handoff, T06/T07 builder stubs, the placeholder registry digest,
+image packaging and final application wiring were consumer/integration prerequisites. Those
+committed modules and the actual registered bundle are now imported on the lead's integration
+branch. The checkpoint below supersedes that historical stub boundary. Hosted selection still
+never falls back to none/fake/local execution; full live acceptance remains separate.
+
+### Integration follow-up
+
+The integration branch includes `98ed1a2` (durable setup deadline fix) and `5568975` (provider,
+registered bundle, image, and runtime path wiring). The late-connected case was reproduced and
+fixed with RED→GREEN coverage; an already connected environment is not timed out again. Integrated
+CI: 355 passed, 1 skipped; Docker bundle construction and volume recreation pass. Final T08
+hosted acceptance remains pending; this does not mark the whole extension Done.
+
+The review correction `de7b747` makes setup expiry durable across pending cancellation/restart;
+a later connected snapshot cannot erase the saved timeout decision. T08 integration amendment
+`9562b46` exposes the three safe hosted error codes through the public API and verifies artifact
+delete acknowledgements. The final parser amendment `7d2700d` recognizes one system-bash wrapper
+without relaxing proof contents. Full integrated CI: 428 passed, 2 live skipped, zero xfails;
+Docker packaging and recorded volume recreation pass. See the central tracker for actual live
+attempts and remaining acceptance gates; no whole-extension Done claim follows from these counts.

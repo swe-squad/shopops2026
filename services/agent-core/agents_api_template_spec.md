@@ -1,6 +1,6 @@
 # Agent Core Template Spec
 
-Status: Conversation/tool baseline implemented; hosted runtime extension specified, not implemented. Date: 2026-10-31.
+Status: Conversation/tool baseline implemented; T05–T08 hosted modules integrated offline; live acceptance pending. Date: 2026-10-31.
 
 The [Managed Codex Harness and OpenAI-hosted Runtime Extension](agents_api_managed_runtime_spec.md) is normative for the next milestone (T05–T08, AC15–AC22). Existing T01–T04 completion applies only to the baseline described below.
 

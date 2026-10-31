@@ -8,7 +8,7 @@ saved-item fixtures, are not proof of OpenAI-hosted execution. AC01–AC14 remai
 T08 imports the T05 foundation `1e45865` and lifecycle amendment `ebd7537`, plus T07 implementation
 `c955460` and handoff `944481f`, and T06 provider `dc05790`/handoff `6e122fc`.
 Its application workflow uses the registered T07 manifest, version
-and digest; it does not activate the example registry's placeholder digest.
+and digest. The integrated example registry now pins those same shipped contents.
 
 T06's hosted environment/provider implementation is now imported for offline integration. If a
 consumer still has the foundation stub, an enabled runner returns
@@ -18,11 +18,11 @@ No fallback to `none`, fake execution or local shell is
 used by the live runner. `test_hosted_workflow.py` explicitly injects synthetic provider files and
 tool results to exercise the application/SQLite/worker boundary offline.
 
-The T05 API currently maps `environment_failed`, `environment_timeout` and
-`environment_unavailable` to `internal_error` in `app/api/runs.py:public_error`. Strict expected
-failures preserve these three acceptance requirements without treating them as passes. T05 must
-extend its safe error mapping; these tests will XPASS strictly and require removal of their xfail
-marks after that shared amendment is imported. Do not weaken the expected errors.
+The integration amendment exposes `environment_failed`, `environment_timeout` and
+`environment_unavailable` through the existing safe public-error mapping. Their three acceptance
+tests now pass without expected-failure markers. Artifact cleanup requires a matching artifact ID
+and `deleted=true`, or confirmed 404; malformed/negative acknowledgements retain failure while
+cleanup attempts continue for the remaining resources.
 
 ## Offline checks
 
@@ -92,8 +92,10 @@ Helper execution uses the exact `bundle_execution_code()` payload with `python -
 by the resolved plugin root, input JSON path and `/workspace/outputs/report.json`. It checks all six
 registered file digests and rejects symlinks before compiling/executing the already-verified helper
 bytes in the same invocation. Its fixed saved success marker ties execution to approved contents,
-not a filename suffix. Only standard Python executable names/system paths are recognized; arbitrary
-workspace executables and compound shell commands remain unverified. The first prompt supplies both
+not a filename suffix. The verifier accepts direct commands or exactly one `/bin/bash -lc` / `/usr/bin/bash -lc`
+wrapper observed in saved hosted commands. It validates the inner command with the same exact
+payload, path, bytes and output checks; other shells, nested wrappers, arbitrary workspace
+executables and compound shell commands remain unverified. The first prompt supplies both
 the bundle execution and boundary-probe payloads; neither executes in the backend.
 
 The harmless boundary probe is a direct isolated Python command containing the exact `PROBE` code
@@ -104,11 +106,14 @@ This is synthetic egress-denial evidence, not a comprehensive network security a
 
 SDK assumptions were checked against pinned 3.42.0 and
 [official saved-items documentation](https://developers.openai.com/api/docs/guides/agents-api/sessions/events).
-Account availability and actual runtime behavior remain unverified until an authorized live run.
+Four authorized bounded attempts established hosted availability and partial saved execution.
+The integrated tracker records the actual accepted checks and remaining proof gaps. Account support
+for one successful operation does not establish every acceptance criterion.
 
 ## Evidence and recovery
 
-Only aggregate JSON is printed/written to the requested evidence file: status/reason; model and SDK;
+Only aggregate JSON is printed/written to the requested evidence file: status/reason; fixed workflow
+stage and last application run status/safe error code; model and SDK;
 bundle version/digest; completed turn/child counts; verified runtime/skill/helper/probe/root/metrics/
 follow-up/isolation/clarification flags; accepted cleanup request count; confirmed session removal
 count; local cleanup; and, when unresolved, the recovery-directory path. No prompts, reports, tool
@@ -132,3 +137,15 @@ For failed cleanup, preserve the directory and credentials in their original ign
 Resolve every recorded session and run before removing local recovery state; do not retry the entire
 smoke as a substitute for cleanup, copy credentials, delete the DB or replace an expired session.
 Do not commit raw live artifacts or recovery/evidence files. Do not merge or deploy from T08.
+
+
+## Current integrated result
+
+The final attempt verified the registered helper bytes and both approved skill reads after system
+bash normalization. Full acceptance still failed at the exact fixed boundary probe. The two actual
+children completed with saved assistant outputs, but their task `instructions` were null, so the
+frozen role-binding check also lacks required evidence. These are unverified proof gates, not a
+successful security or specialist-role attestation. Later workflow checks were not reached.
+All four known sessions were confirmed absent and local cleanup completed. See the tracker for
+committed fixes/offline counts and ignored aggregate evidence paths. No paid retry or alternative
+evidence contract is silently enabled by the offline integration.

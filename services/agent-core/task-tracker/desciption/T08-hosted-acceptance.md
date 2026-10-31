@@ -112,3 +112,44 @@ Expose CLI `python -m scripts.demo_live_hosted --live --hosted --credentials-fil
 
 
 Update this description only for your handoff; the runtime integration lead updates the central task table. Mark Ready for integration after module verification, not Done until required integration evidence is accepted.
+
+
+## Lead integration checkpoint
+
+The user confirmed the module handoff complete. Implementation `e648728` and handoff `6894bfb`
+were imported into `feat/agent-core-hosted-runtime` as `00d201d` / `e329467`; the original task
+worktree and commits remain intact. The historical module results above are retained as recorded.
+
+- `9562b46` resolves the T05 public-error dependency and removes all three strict xfails. It also
+  requires positive artifact-delete acknowledgements while still attempting every other resource.
+- `43d3abf` adds fixed workflow stages and safe run status/error diagnostics, with content-leak
+  regression coverage. `7d2700d` fixes a live-observed command shape: saved system bash login-shell
+  wrappers are unwrapped once, then the same exact inner proof checks apply. Two positive cases
+  were RED before the fix; direct and wrapped adversarial cases remain rejected.
+- Final integrated Python 3.14 / SDK 3.42.0 `make ci`: **428 passed, 2 live skipped, zero xfails**.
+  Scoped T08 tests: **72 passed**. Docker build PASS; volume restart and runtime bundle packaging
+  have recorded integration evidence. The new diagnostic/parser deltas received independent
+  read-only review with no P0/P1 findings. Runtime/graph/evidence files remain ignored.
+- Actual hosted attempts are separate from the original offline handoff. Connected sandbox,
+  completed root, two child identities and completed commands have been observed, but complete
+  saved-proof/artifact/follow-up/isolation acceptance is not inferred from those partial facts.
+  The central tracker records the final attempt and cleanup outcome.
+
+### Actual hosted result (lead)
+
+Four bounded attempts used `gpt-6-astra`, SDK 3.42.0 and bundle `1.0.0`. Each created one known
+session before the proof gate; all four confirmed session absence and local cleanup. No known
+remote resource remains unresolved, and physical sandbox destruction is not claimed.
+
+After the bash-wrapper fix, the final saved proof passed both approved skill reads and exact
+verified-helper execution, then failed the fixed boundary-probe check. The root, two child turns
+and nine commands completed, and two MCP calls succeeded without worker/MCP errors. Both child
+`instructions` fields were null, while child assistant outputs were present; the current contract
+cannot bind those outputs to the required assigned roles. No encrypted/absent task content is
+inferred as plaintext. The fixed probe evidence and role binding remain UNVERIFIED.
+
+The integrated workflow stops at that proof gate. Complete artifact download/numeric verification,
+same-session follow-up, separate-conversation isolation and overall AC22 are NOT ACCEPTED.
+Step 6 remains unchecked. The integration is prepared for draft review; no further paid run,
+contract relaxation, merge or deployment is implied. Aggregate evidence stays in ignored
+`.evidence/live-hosted-attempt1.json` through `.evidence/live-hosted-attempt4.json`.
