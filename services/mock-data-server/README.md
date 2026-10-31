@@ -48,6 +48,9 @@ source is rejected.
 
 ## Seed and identity
 
+Products include an optional HTTPS `image_url`. See [product images](PRODUCT_IMAGES.md)
+for photo sources, schema migrations and the explicit post-deploy backfill.
+
 Ten active users (`+84900000001` through `+84900000010`), seven merchants, 21 shops
 and 140 unique orders. Every user sees 20 orders: seven Shopee, seven Lazada and
 six Shopify. Users 1–4 have separate merchants; pairs 5/6, 7/8 and 9/10 share

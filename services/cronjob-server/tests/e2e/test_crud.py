@@ -6,6 +6,9 @@ def test_seed_sync_and_shared_reads(pair):
     assert snapshot["counts"]["users"] == 10
     assert snapshot["counts"]["orders"] == 140
     pair.write("POST", "/v1/sync-runs", json={})
+    products = pair.request("GET", "/v1/core/products").json()["data"]
+    assert len(products) == 9
+    assert all(p["image_url"].startswith("https://") for p in products)
     for n in range(1, 11):
         response = pair.request("GET", "/v1/core/orders", actor=f"+849000000{n:02}")
         assert response.status_code == 200, response.text
@@ -41,7 +44,11 @@ def test_every_entity_crud_through_facade(pair):
     ]
     resources = [
         ("shops", {"name": "Edited"}, ("shop_key",)),
-        ("products", {"unit_cost": "25000.00"}, ("shop_key", "sku")),
+        (
+            "products",
+            {"unit_cost": "25000.00", "image_url": "https://example.com/item.jpg"},
+            ("shop_key", "sku"),
+        ),
         ("promotions", {"name": "Edited"}, ("shop_key", "promotion_id")),
         ("orders", {"seller_discount": "10.00"}, ("shop_key", "order_id")),
         ("order-items", {"quantity": 2}, ("shop_key", "order_id", "line_id")),
@@ -86,6 +93,8 @@ def test_every_entity_crud_through_facade(pair):
             response = pair.request("GET", f"/v1/core/{name}/record", params=key, actor=phone)
             assert response.status_code == 200, response.text
             assert response.json()["applied_source_revision"] >= result["source_revision"]
+            if name == "products":
+                assert response.json()["data"]["image_url"] == patch["image_url"]
     for i in reversed(range(len(entries))):
         name, body, _, keys = entries[i]
         path = (admin if i < 3 else business) + name

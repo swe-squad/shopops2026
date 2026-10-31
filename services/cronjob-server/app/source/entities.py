@@ -5,11 +5,29 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    AfterValidator,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    model_validator,
+)
 
 Text = Annotated[str, Field(min_length=1, max_length=500, pattern=r".*\S.*")]
 Phone = Annotated[str, Field(pattern=r"^\+[1-9][0-9]{7,14}$")]
 Money = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2)]
+
+
+def validate_image_url(value: str) -> str:
+    url = HttpUrl(value)
+    if url.scheme != "https" or url.username is not None or url.password is not None:
+        raise ValueError("Image URL must use HTTPS without credentials")
+    return value
+
+
+ImageURL = Annotated[str, Field(max_length=2048), AfterValidator(validate_image_url)]
 
 
 class Record(BaseModel):
@@ -68,6 +86,7 @@ class Product(Record):
     name: Text
     unit_cost: Money | None
     cost_basis: Text
+    image_url: ImageURL | None = None
 
 
 class Promotion(Record):
