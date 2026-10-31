@@ -1,5 +1,5 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 const json = (value: unknown) => new Response(JSON.stringify(value), { headers: { 'Content-Type': 'application/json' } })
@@ -9,9 +9,43 @@ function unlock() {
   fireEvent.click(screen.getByRole('button', { name: /unlock workspace/i }))
 }
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals() })
+beforeEach(() => window.history.replaceState(null, '', '/shop/overview'))
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.history.replaceState(null, '', '/') })
 
 describe('standalone shop browser', () => {
+  it('starts the demo after unlock and reads server state again across tabs and lock/unlock', async () => {
+    window.history.replaceState(null, '', '/')
+    let connected = false
+    vi.stubGlobal('fetch', vi.fn(async (url: string, options?: RequestInit) => {
+      if (url.endsWith('/navigation')) return json(null)
+      if (!url.startsWith('/api/mock/')) return json([])
+      if (options?.method === 'PUT') { connected = true; return json({ platform: 'shopee', connected, mock: true }) }
+      return json({ connections: [{ platform: 'shopee', connected, mock: true }, { platform: 'tiktok', connected: false, mock: true }] })
+    }))
+    render(<App />)
+    unlock()
+    expect(screen.getByLabelText('Browser address')).toHaveValue(`${window.location.origin}/shop/connections`)
+    await screen.findAllByText('Not connected')
+    fireEvent.click(screen.getByRole('button', { name: 'Log in to Shopee' }))
+    await screen.findByRole('heading', { name: 'Connection successful' })
+    fireEvent.click(screen.getByRole('button', { name: 'New browser tab' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Keep my draft' } })
+    fireEvent.click(screen.getByRole('link', { name: 'Connections' }))
+    const panel = within(screen.getByRole('tabpanel'))
+    await panel.findByRole('button', { name: 'View Shopee connection' })
+    expect(panel.getByRole('button', { name: 'Log in to TikTok' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('link', { name: 'Overview' }))
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Keep my draft')
+    fireEvent.click(screen.getByRole('tab', { name: 'Connections — tab 1' }))
+    await screen.findByRole('heading', { name: 'Connection successful' })
+    expect(screen.getByRole('tab', { name: 'Connections — tab 1' })).not.toHaveAttribute('tabindex', '-1')
+    fireEvent.click(screen.getByRole('button', { name: 'Lock workspace' }))
+    unlock()
+    await screen.findByRole('button', { name: 'View Shopee connection' })
+    expect(localStorage.length).toBe(0)
+    expect(sessionStorage.length).toBe(0)
+  })
+
   it('loads and saves operations without loading or displaying the chat app', async () => {
     const incident = { id: 7, title: 'Late shipment', detail: 'Review the carrier handoff.', created_at: '2026-10-31T09:00:00Z' }
     const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {

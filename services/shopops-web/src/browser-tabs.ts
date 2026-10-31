@@ -1,4 +1,4 @@
-import { browserUrl, isLocalShop } from './browser-url'
+import { browserUrl, connectionPage, isLocalShop } from './browser-url'
 
 export type BrowserTab = {
   id: number
@@ -27,12 +27,13 @@ function createTab(id: number, value = '/shop/overview'): BrowserTab {
 
 export function initialBrowserTabs(): BrowserTabs {
   const location = new URL(window.location.href)
-  return { tabs: [createTab(1, isLocalShop(location) ? location.href : undefined)], activeId: 1, nextId: 2 }
+  return { tabs: [createTab(1, isLocalShop(location) ? location.href : '/shop/connections')], activeId: 1, nextId: 2 }
 }
 
 export function tabTitle(tab: BrowserTab) {
   const url = new URL(tab.history[tab.index])
   if (!isLocalShop(url)) return url.origin === window.location.origin ? 'Workspace page' : url.hostname
+  if (connectionPage(url.pathname)) return 'Connections'
   return url.pathname === '/shop/incidents' ? 'Incidents' : ['/shop', '/shop/', '/shop/overview'].includes(url.pathname) ? 'Overview' : 'Shop page'
 }
 

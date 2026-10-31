@@ -4,8 +4,10 @@ import { ShopClient } from './shop-client'
 import { BrowserIcon } from './browser-icon'
 import { BrowserTabStrip } from './browser-tab-strip'
 import { browserTabsReducer, initialBrowserTabs } from './browser-tabs'
+import { useMockConnectors } from './use-mock-connectors'
 
 export function BrowserPane({ token, requestedUrl }: { token: string; requestedUrl: { url: string; sequence: number } | null }) {
+  const connectors = useMockConnectors()
   const [state, dispatch] = useReducer(browserTabsReducer, undefined, initialBrowserTabs)
   const receivedSequence = useRef(0)
   const active = state.tabs.find(tab => tab.id === state.activeId)!
@@ -46,7 +48,7 @@ export function BrowserPane({ token, requestedUrl }: { token: string; requestedU
           const external = url.origin !== window.location.origin
           return <div key={tab.id} id={`browser-panel-${tab.id}`} className="browser-tab-panel" role="tabpanel" aria-labelledby={`browser-tab-${tab.id}`} hidden={tab.id !== state.activeId} tabIndex={0}>
             <div className="local-shop-page" hidden={!localShop}>
-              <ShopClient token={token} url={new URL(tab.shopUrl)} reload={tab.reload} active={tab.id === state.activeId && localShop} onNavigate={value => dispatch({ type: 'navigate', value, id: tab.id })} />
+              <ShopClient token={token} connectors={connectors} url={new URL(tab.shopUrl)} reload={tab.reload} active={tab.id === state.activeId && localShop} onNavigate={value => dispatch({ type: 'navigate', value, id: tab.id })} />
             </div>
             {external ? <div className="external-page">
               <div className="external-notice"><BrowserIcon name="globe" /><p><strong>{url.hostname}</strong> · External preview. Some websites block embedding. Use “Open in new tab” if the page stays blank.</p></div>
