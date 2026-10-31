@@ -266,8 +266,11 @@ and CapRover deployment still require their own configuration and checks.
 Runtime profiles are immutable registry revision data. Legacy snapshots normalize to
 `conversation-v1` / `none` independently of the active revision. `RUNTIME_BUNDLE_PATH` defaults to
 `runtime-bundles`; it is an operator-controlled service-local directory, never a request parameter.
-`config/registry-hosted.example.json` pins the shipped T07 bundle version `1.0.0` and verified
-SHA-256. Its `gpt-6-astra` model is an explicit example, not a default: set OPENAI_MODEL explicitly
+`config/registry-hosted.example.json` preserves `returns-hosted-v1` / bundle `1.0.0` and appends
+`returns-hosted-v2` / bundle `1.1.0` for product investigation policy. Each has a verified SHA-256;
+the old bundle directory and revision remain immutable. Activate the new revision explicitly for
+new conversations; existing snapshots keep their pins. Its `gpt-6-astra` model is an explicit
+example, not a default: set OPENAI_MODEL explicitly
 and publish a new matching registry revision before using another model. The example's loopback
 MCP URLs are local/test only; dev deployments need approved cluster endpoints throughout the
 registry. The legacy default registry remains unchanged. The image includes runtime-bundles/.
@@ -290,6 +293,23 @@ No hosted result is inferred from offline tests. See `contracts/managed-runtime.
 The durable setup budget is 60 seconds within the run deadline. First observed connection after
 that budget fails even if the provider now reports connected; established sessions do not receive
 a second setup deadline. Known session/environment IDs are retained for cleanup and recovery.
+
+## Product investigation policy
+
+The opt-in `returns-hosted-v2` bundles a `product-investigation` skill and freshness/six-workflow
+references alongside the existing returns helper and data/knowledge specialists. It starts with
+granted summaries, follows permitted source evidence, checks dates/observed_at/revisions/coverage,
+and treats a future granted pull-latest as pending until status reconciliation and an evidence
+reread verify freshness. Data refresh never grants merchant writes. The frozen report-v1 stays
+returns metrics plus versioned policy findings; broader workflows remain capability-aware guidance.
+
+Today's four read-only fixture tools expose no raw-record fetch, catalog, refresh request/status or
+revision/coverage guarantees. Neither this policy nor an approved remote-profile name adds those
+tools. Approved runtime-registered MCP connections may use runtime-managed authentication; the agent
+never reads a vault/token, selects alternate transport or derives grants from user text. See the
+[integration seam and limits](contracts/product-investigation.md). Offline policy/packaging checks
+do not establish live MCP, hosted team, refresh, or merchant-operation acceptance. Existing hosted
+smoke tooling remains pinned to the old `1.0.0` fixture workflow and does not accept the new workflow.
 
 
 ## Hosted acceptance (T08)

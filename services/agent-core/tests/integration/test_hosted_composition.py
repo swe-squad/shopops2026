@@ -26,6 +26,27 @@ def test_registered_hosted_example_builds_real_plugin():
     assert len(result["plugins"]) == 1
 
 
+def test_investigation_revision_is_opt_in_and_preserves_existing_pins():
+    registry = Registry.load("config/registry-hosted.example.json")
+    old = registry.get("shopops", "returns-hosted-v1")
+    new = registry.get("shopops", "returns-hosted-v2")
+    assert old.runtime_profile.bundle_version == "1.0.0"
+    assert new.runtime_profile.bundle_version == "1.1.0"
+    manifest = json.loads(Path("runtime-bundles/shopops-hosted-v1.1/manifest.json").read_text())
+    assert new.runtime_profile.bundle_sha256 == manifest["bundle_sha256"]
+    assert old.capabilities == new.capabilities
+    assert old.mcp_profile == new.mcp_profile == "mock-v1"
+    assert old.data_mcp_url == new.data_mcp_url
+    assert old.knowledge_mcp_url == new.knowledge_mcp_url
+    assert Registry.load("config/registry.json").snapshots() == (
+        registry.get("shopops", "returns-v1"),
+    )
+    for config in (old, new):
+        assert build_hosted_environment(
+            config.runtime_profile, build_runtime_bundle(config.runtime_profile)
+        )["network"] == {"access": "disabled"}
+
+
 def test_missing_configured_bundle_path_is_rejected_before_provider_io(tmp_path, repo):
     from app.composition import build_configured_provider
 

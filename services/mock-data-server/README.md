@@ -20,6 +20,12 @@ mapping. The processor reaches it through `MOCK_DATA_SERVER_URL`.
 
 Database tests will run only against an explicitly isolated test database.
 
+For the current ShopOps deployment target, the existing PostgreSQL listener uses port `15432`.
+Set `POSTGRES_PORT=15432` in the app's runtime configuration with the existing host, database and
+credentials; the generic code default `5432` does not select that listener. See the owning
+[deployment route and product preflight](../../docs/deploy-flow.md#products-đọc-dữ-liệu-postgresql-hiện-có).
+UI deployment must preserve this database and must not reseed or reset it.
+
 ## Local setup
 
 Requires Python 3.14 and PostgreSQL 17. From this directory in POSIX/WSL:

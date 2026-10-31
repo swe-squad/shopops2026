@@ -1,6 +1,10 @@
 # Workspace browser regression suite
 
-Runs three real frontend documents and two real FastAPI services with temporary SQLite databases. Only OpenAI transport is replaced with an offline fixture in this directory. Replies label themselves as test content; the transport cannot contact OpenAI. Production services never import this fixture.
+Runs three real frontend documents and two real FastAPI services with temporary SQLite databases.
+OpenAI transport is replaced with an offline fixture in this directory. The catalog's HTTP transport
+uses the real mock-source seed through a test-only fixture; it cannot contact a configured live data
+service. Replies and catalog screens identify mock/test data. Production services never import these
+fixtures. The local stock-change endpoint belongs only to this test runner.
 
 ## Run
 
@@ -33,6 +37,8 @@ The [workspace CI workflow](../../.github/workflows/workspace-checks.yml) runs t
 - Separate origins, blocked parent DOM access, no viewer credentials/business requests.
 - Browser tab histories/drafts, add/select/close and keyboard navigation.
 - Real SSE normalization and Markdown; chat links delivered through the operations mailbox to the active tab.
+- Authenticated product catalog, scoped SKU deep links, review/return evidence, question drafts,
+  revision-aware stock refresh and retained data during a source outage.
 - Independent reload and narrow switches preserving the other client.
 - Child scrolling with pinned controls; streamed text respects reader position.
 - Explicit stop/history recovery without silently resending.

@@ -27,6 +27,37 @@ One component owns each provisioning attempt and session submission. Coordinate 
 
 The current chat adapter explicitly creates sessions with `environment.type: none`; this must be aligned before claiming hosted-sandbox delivery. The earlier agent-core spec also defers specialist execution and client-facing SSE. Those are known implementation gaps, not reasons to reverse the confirmed design.
 
+## Product investigation and data freshness
+
+The product client has a scoped product gallery and evidence view; its catalog reads the persistent
+mock source through the operations API. The agent's current four fixture tools still use their own
+fixture contract. Connect real MCP reads to the same shop/product records and date definitions before
+claiming that agent metrics and browser evidence are one shared live dataset. See the
+[agent-core README](../services/agent-core/README.md) for the versioned product-investigation bundle
+and its exact capability limits; existing report-v1 and the earlier runtime bundle remain compatible.
+
+The AI integration owner supplies each verified user's dedicated runtime, registered MCP tools
+and runtime-managed credentials from that user's vault. Product instructions consume granted tool
+schemas; they do not read vault contents, accept a token from chat, choose arbitrary endpoints, or
+implement an alternate authentication path. Keep credentials out of browser state, reports, artifacts,
+specialist handoffs and navigation URLs.
+
+For a real data MCP, reconcile these semantics with its executable schema:
+
+- Resolve authorized shop/product scope; read marts or summaries first, then fetch permitted raw
+  evidence to investigate a specific hypothesis. Preserve source IDs, observation time, coverage,
+  metric definitions and revisions. A summary reference alone is not a retrieved raw record.
+- Expose pull-latest only when the principal has that capability. Return stable operation identity,
+  status and retry/poll guidance. A refresh authorizes evidence retrieval, not merchant operations.
+- Treat accepted/queued/unknown/failed/cooldown distinctly. Reconcile uncertain requests, respect
+  limits, and reread evidence after completion. A synchronized snapshot does not imply historical
+  backfill, mart readiness, or a resolved merchant problem.
+
+The current fixture capabilities cannot demonstrate raw-record retrieval or refresh. Verify those
+against the engineer's registered MCP and actual per-user scope; instructions and offline tests do
+not establish a working authenticated remote connection. The browser adapter's configured workspace
+identity must also be replaced by trusted registered-user context during that integration.
+
 ## Evidence before completion
 
 Fix mismatches in the assigned integration scope, including affected contracts, callers, and persistence/recovery behavior. Preserve existing stored data and document migration when ownership changes. Report remaining gaps precisely if another component is needed; do not mark live integration complete based on fixtures.

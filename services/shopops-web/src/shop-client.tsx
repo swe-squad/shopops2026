@@ -6,22 +6,25 @@ import { useIncidents } from './use-incidents'
 import { ConnectionsPage } from './connections-page'
 import { connectionPage } from './browser-url'
 import type { MockConnectors } from './use-mock-connectors'
+import { ProductWorkspace } from './product-workspace'
 
 export function ShopClient({ token, connectors, url, onNavigate, reload = 0, active = true }: { token: string; connectors: MockConnectors; url: URL; onNavigate: (url: string) => void; reload?: number; active?: boolean }) {
   const data = useIncidents(token, reload)
   const prefix = useId()
   const page = useRef<HTMLDivElement>(null)
-  const previousPath = useRef(url.pathname)
   const scrolledTarget = useRef('')
   const connectorPage = connectionPage(url.pathname)
-  const knownPage = !!connectorPage || ['/shop', '/shop/', '/shop/overview', '/shop/incidents'].includes(url.pathname)
+  const productsPage = url.pathname === '/shop/products'
+  const pageSelection = productsPage ? `${url.pathname}${url.search}` : url.pathname
+  const previousPath = useRef(pageSelection)
+  const knownPage = !!connectorPage || ['/shop', '/shop/', '/shop/overview', '/shop/incidents', '/shop/products'].includes(url.pathname)
   const incidentsPage = url.pathname === '/shop/incidents'
   const shownIncidents = incidentsPage || url.hash ? data.incidents : data.incidents.slice(0, 5)
 
   useEffect(() => {
-    if (url.pathname !== previousPath.current) {
+    if (pageSelection !== previousPath.current) {
       if (page.current) page.current.scrollTop = 0
-      previousPath.current = url.pathname
+      previousPath.current = pageSelection
     }
     const match = /^#incident-(\d+)$/.exec(url.hash)
     const target = `${url.pathname}${url.hash}`
@@ -35,14 +38,15 @@ export function ShopClient({ token, connectors, url, onNavigate, reload = 0, act
         scrolledTarget.current = target
       }
     }
-  }, [url.pathname, url.hash, data.loading, active])
+  }, [pageSelection, url.pathname, url.hash, data.loading, active])
 
   return <section className="shop-client" aria-label="Shop workspace">
-    <nav className="shop-nav" aria-label="Shop pages">{[['Overview', '/shop/overview'], ['Incidents', '/shop/incidents'], ['Connections', '/shop/connections']].map(([label, path]) => <a key={path} href={path} aria-current={(connectorPage ? path === '/shop/connections' : incidentsPage ? path === '/shop/incidents' : knownPage && path === '/shop/overview') ? 'page' : undefined} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onNavigate(path) } }}>{label}</a>)}<span className="workspace-mode">Manual workspace</span></nav>
+    <nav className="shop-nav" aria-label="Shop pages">{[['Products', '/shop/products'], ['Overview', '/shop/overview'], ['Incidents', '/shop/incidents'], ['Connections', '/shop/connections']].map(([label, path]) => <a key={path} href={path} aria-current={(productsPage ? path === '/shop/products' : connectorPage ? path === '/shop/connections' : incidentsPage ? path === '/shop/incidents' : knownPage && path === '/shop/overview') ? 'page' : undefined} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onNavigate(path) } }}>{label}</a>)}<span className="workspace-mode">{productsPage ? 'Inspection only' : 'Manual workspace'}</span></nav>
     <div className="shop-page" ref={page} tabIndex={0} aria-label="Shop page content">
       {connectorPage && <ConnectionsPage page={connectorPage} data={connectors} active={active} reload={reload} onNavigate={onNavigate} />}
       <div hidden={!!connectorPage}>
-      {!knownPage ? <div className="unavailable-page"><span className="empty-symbol"><BrowserIcon name="globe" /></span><h1>This shop page is not available.</h1><p>Choose a workspace page to continue.</p><button className="secondary-button" onClick={() => onNavigate('/shop/overview')}>Go to overview</button></div> : <div className="shop-page-inner">
+      <div className="product-page" hidden={!productsPage}><ProductWorkspace token={token} url={url} active={active && productsPage} reload={reload} onNavigate={onNavigate} /></div>
+      {!knownPage ? <div className="unavailable-page"><span className="empty-symbol"><BrowserIcon name="globe" /></span><h1>This shop page is not available.</h1><p>Choose a workspace page to continue.</p><button className="secondary-button" onClick={() => onNavigate('/shop/overview')}>Go to overview</button></div> : <div className="shop-page-inner" hidden={productsPage}>
         <h1>{incidentsPage ? 'Incident log' : 'Shop overview'}</h1>
         <aside className="connection-note"><BrowserIcon name="list" /><p>Shop data is not connected. Add incidents manually.</p></aside>
         <div className="operations-grid">

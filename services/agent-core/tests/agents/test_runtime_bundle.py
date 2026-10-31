@@ -28,12 +28,12 @@ def profile(manifest):
     )
 
 
-@pytest.fixture
-def bundle(tmp_path, monkeypatch):
+@pytest.fixture(params=["shopops-hosted-v1", "shopops-hosted-v1.1"])
+def bundle(tmp_path, monkeypatch, request):
     target = tmp_path / "runtime-bundles"
     shutil.copytree(ROOT, target)
     monkeypatch.setattr(builder, "BUNDLE_ROOT", target)
-    root = target / "shopops-hosted-v1"
+    root = target / request.param
     manifest = json.loads((root / "manifest.json").read_text())
     return root, manifest
 
@@ -142,3 +142,32 @@ def test_invalid_bundle_fails_closed(bundle, mutation):
 def test_legacy_profile_cannot_load_bundle():
     with pytest.raises(ConfigurationConflict):
         builder.build_runtime_bundle(RuntimeProfile())
+
+
+def test_new_version_preserves_the_old_immutable_bundle_and_adds_investigation_assets():
+    old = json.loads((ROOT / "shopops-hosted-v1/manifest.json").read_text())
+    new = json.loads((ROOT / "shopops-hosted-v1.1/manifest.json").read_text())
+    assert old["bundle_version"] == "1.0.0"
+    assert (
+        old["bundle_sha256"] == "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a"
+    )
+    assert new["bundle_version"] == "1.1.0"
+    assert new["bundle_sha256"] != old["bundle_sha256"]
+    for manifest in (old, new):
+        bundle = builder.build_runtime_bundle(profile(manifest))
+        raw = base64.b64decode(bundle.inline_plugin["source"]["data"], validate=True)
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            skill = "shopops-analysis/skills/product-investigation/SKILL.md"
+            assert (skill in archive.namelist()) == (manifest is new)
+            if manifest is new:
+                assert "No raw-record fetch" in archive.read(skill).decode()
+                reference = "shopops-analysis/references/investigation/refresh-and-freshness.md"
+                assert "Reconcile the same request" in archive.read(reference).decode()
+
+
+@pytest.mark.parametrize("version", ["1", "1.0.1", "2.0.0", "../shopops-hosted-v1"])
+def test_unknown_bundle_version_cannot_select_another_directory(version):
+    manifest = json.loads((ROOT / "shopops-hosted-v1/manifest.json").read_text())
+    pinned = profile(manifest).model_copy(update={"bundle_version": version})
+    with pytest.raises(ConfigurationConflict):
+        builder.build_runtime_bundle(pinned)

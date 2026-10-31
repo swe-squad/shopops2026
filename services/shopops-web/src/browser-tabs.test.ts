@@ -4,6 +4,17 @@ import { browserTabsReducer, initialBrowserTabs, tabTitle } from './browser-tabs
 afterEach(() => window.history.replaceState(null, '', '/'))
 
 describe('browser navigation history', () => {
+  it.each([
+    ['/shop/connections', 'Connections'],
+    ['/shop/connections/shopee/success', 'Connections'],
+    ['/shop/products?shop_key=merchant&sku=ITEM-1', 'Products'],
+  ])('preserves direct page entry and title for %s', (path, title) => {
+    window.history.replaceState(null, '', path)
+    const state = initialBrowserTabs()
+    expect(state.tabs[0].address).toBe(`${window.location.origin}${path}`)
+    expect(tabTitle(state.tabs[0])).toBe(title)
+  })
+
   it('starts a direct shop deep link in its first tab', () => {
     window.history.replaceState(null, '', '/shop/incidents#incident-7')
     const state = initialBrowserTabs()

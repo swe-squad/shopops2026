@@ -6,13 +6,21 @@ from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Annotated
 
+import httpx
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app import navigation, operations
+from app import catalog, navigation, operations
+from app.catalog_source import CatalogConfig
 
 
-def create_app(database: str | None = None, token: str | None = None) -> FastAPI:
+def create_app(
+    database: str | None = None,
+    token: str | None = None,
+    *,
+    catalog_provider: catalog.CatalogProvider | None = None,
+    catalog_transport: httpx.BaseTransport | None = None,
+) -> FastAPI:
     db_path = (
         database
         if database is not None
@@ -26,6 +34,10 @@ def create_app(database: str | None = None, token: str | None = None) -> FastAPI
             raise RuntimeError("SHOP_API_TOKEN is required")
         if not db_path.strip():
             raise RuntimeError("SHOP_DATA_PATH is required")
+        config = CatalogConfig.from_environment()
+        _app.state.catalog = catalog_provider or (
+            catalog.SourceCatalog(config, catalog_transport) if config else None
+        )
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         with connect() as db:
             db.execute(
@@ -71,6 +83,7 @@ def create_app(database: str | None = None, token: str | None = None) -> FastAPI
 
     app.include_router(operations.router(connect, authorize))
     app.include_router(navigation.router(connect, authorize))
+    app.include_router(catalog.router(authorize, lambda: app.state.catalog))
 
     return app
 
