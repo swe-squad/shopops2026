@@ -21,6 +21,7 @@ def handler(request):
         return httpx.Response(201, json={"orchestrator_id": ORCHESTRATOR, "config_revision": "v1"})
     if path.endswith("/conversations"):
         assert body["orchestrator_id"] == ORCHESTRATOR
+        assert body["expected_config_revision"] == "v1"
         return httpx.Response(201, json={"conversation_id": C})
     if path.endswith("/messages"):
         assert body["client_message_id"] == "stable-key"

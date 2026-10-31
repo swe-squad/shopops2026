@@ -1,10 +1,12 @@
+import json
+
 import httpx
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.store import BusyError, CoreStore
-from tests.test_agent_core_contract import M, handler
+from tests.test_agent_core_contract import M, R, handler
 from tests.test_demo_phone_auth import config, login
 
 
@@ -167,3 +169,171 @@ def test_slow_completion_renews_lease_and_emits_heartbeat(tmp_path, monkeypatch)
         await chat.api.client.aclose()
 
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("status", [403, 404, 422])
+def test_definite_message_rejection_unblocks_history_and_corrected_input(tmp_path, status):
+    posts = []
+    accepted = []
+
+    def transport(request):
+        if request.url.path.endswith("/messages"):
+            body = json.loads(request.content)
+            posts.append(body)
+            if body["output_mode"] == "report":
+                return httpx.Response(
+                    status,
+                    json={"error": {"code": "invalid_input", "message": "private-upstream-detail"}},
+                )
+            accepted.append(body)
+            return httpx.Response(
+                202, json={"message_id": M, "run_id": R, "polling_url": "/ignored"}
+            )
+        if request.url.path.endswith("/history") and not accepted:
+            return httpx.Response(200, json={"items": [], "next_cursor": None})
+        return handler(request)
+
+    with TestClient(create_app(config(tmp_path), httpx.MockTransport(transport))) as client:
+        headers = login(client)
+        body = {"text": "Report", "output_mode": "report", "client_message_id": "rejected"}
+        rejected = client.post("/api/chat/messages", headers=headers, json=body)
+        assert '"type":"error"' in rejected.text and '"type":"done"' not in rejected.text
+        assert "private-upstream-detail" not in rejected.text
+        with client.app.state.core_store.connect() as db:
+            row = db.execute("SELECT status,run_id FROM core_outbox").fetchone()
+            assert tuple(row) == ("failed", None)
+        history = client.get("/api/chat/messages", headers=headers)
+        assert history.status_code == 200 and history.json() == []
+        before = len(posts)
+        replay = client.post("/api/chat/messages", headers=headers, json=body)
+        assert '"type":"error"' in replay.text and len(posts) == before
+        assert (
+            client.post(
+                "/api/chat/messages", headers=headers, json=body | {"text": "Changed"}
+            ).status_code
+            == 409
+        )
+        corrected = client.post(
+            "/api/chat/messages",
+            headers=headers,
+            json={"text": "Text", "client_message_id": "corrected"},
+        )
+        assert '"type":"done"' in corrected.text
+        assert len(accepted) == 1 and len(posts) == 2
+
+
+@pytest.mark.parametrize("code", ["conversation_busy", "idempotency_conflict", "unknown_conflict"])
+def test_core_conflict_does_not_discard_pending_correlation(tmp_path, code):
+    def transport(request):
+        if request.url.path.endswith("/messages"):
+            return httpx.Response(409, json={"error": {"code": code, "message": "private"}})
+        return handler(request)
+
+    with TestClient(create_app(config(tmp_path), httpx.MockTransport(transport))) as client:
+        headers = login(client)
+        result = client.post(
+            "/api/chat/messages",
+            headers=headers,
+            json={"text": "Hello", "client_message_id": "stable-key"},
+        )
+        assert '"type":"done"' not in result.text
+        with client.app.state.core_store.connect() as db:
+            assert db.execute("SELECT status FROM core_outbox").fetchone()[0] == "pending"
+        assert (
+            client.post(
+                "/api/chat/messages",
+                headers=headers,
+                json={"text": "Next", "client_message_id": "next"},
+            ).status_code
+            == 409
+        )
+
+
+def test_first_conversation_requires_atomic_expected_revision(tmp_path):
+    requests = []
+
+    def transport(request):
+        if request.url.path.endswith("/conversations"):
+            body = json.loads(request.content)
+            requests.append(body)
+            if body.get("expected_config_revision") == "v1":
+                return httpx.Response(409, json={"error": {"code": "configuration_conflict"}})
+        return handler(request)
+
+    with TestClient(create_app(config(tmp_path), httpx.MockTransport(transport))) as client:
+        headers = login(client)
+        response = client.post(
+            "/api/chat/messages",
+            headers=headers,
+            json={"text": "Hello", "client_message_id": "stable-key"},
+        )
+        assert '"type":"done"' not in response.text
+        assert requests[0]["expected_config_revision"] == "v1"
+        with client.app.state.core_store.connect() as db:
+            assert tuple(db.execute("SELECT status,run_id FROM core_outbox").fetchone()) == (
+                "failed",
+                None,
+            )
+            assert db.execute("SELECT conversation FROM core_spaces").fetchone()[0] is None
+
+
+@pytest.mark.parametrize("late_status", [401, 403, 422])
+def test_lost_accepted_receipt_then_rejected_replay_stays_pending(tmp_path, late_status):
+    posts = []
+
+    def transport(request):
+        if request.url.path.endswith("/messages"):
+            posts.append(json.loads(request.content))
+            if len(posts) == 1:
+                # Remote accepted the input; only the application's receipt was lost.
+                raise httpx.ReadTimeout("lost accepted receipt")
+            return httpx.Response(late_status, json={"error": {"code": "permission_denied"}})
+        return handler(request)
+
+    with TestClient(create_app(config(tmp_path), httpx.MockTransport(transport))) as client:
+        headers = login(client)
+        body = {"text": "Hello", "client_message_id": "stable-key"}
+        assert (
+            '"type":"error"' in client.post("/api/chat/messages", headers=headers, json=body).text
+        )
+        client.get("/api/chat/messages", headers=headers)
+        assert posts[0] == posts[1]
+        with client.app.state.core_store.connect() as db:
+            assert tuple(db.execute("SELECT status,run_id FROM core_outbox").fetchone()) == (
+                "pending",
+                None,
+            )
+        assert (
+            client.post(
+                "/api/chat/messages", headers=headers, json=body | {"client_message_id": "new"}
+            ).status_code
+            == 409
+        )
+        with pytest.raises(RuntimeError, match="pending Core"):
+            client.app.state.core_store.ensure_legacy()
+
+
+def test_old_outbox_migration_preserves_ambiguous_dispatch(tmp_path):
+    store = CoreStore(str(tmp_path / "old.db"))
+    with store.connect() as db:
+        db.execute(
+            "CREATE TABLE core_outbox (namespace TEXT NOT NULL,client_id TEXT NOT NULL,"
+            "payload TEXT NOT NULL,run_id TEXT,message_id TEXT,"
+            "status TEXT NOT NULL DEFAULT 'pending',"
+            "owner TEXT,lease REAL NOT NULL DEFAULT 0,PRIMARY KEY(namespace,client_id))"
+        )
+        db.execute(
+            "INSERT INTO core_outbox(namespace,client_id,payload) VALUES(?,?,?)",
+            ("old", "old-key", "{}"),
+        )
+    store.initialize()
+    with store.connect() as db:
+        assert db.execute("SELECT message_dispatched FROM core_outbox").fetchone()[0] == 1
+    store.core_claim("new", "new-key", "{}", "owner")
+    with store.connect() as db:
+        assert (
+            db.execute(
+                'SELECT message_dispatched FROM core_outbox WHERE namespace="new"'
+            ).fetchone()[0]
+            == 0
+        )

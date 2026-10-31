@@ -15,7 +15,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
-from app.agent_core import CoreAPI, CoreError, identifier
+from app.agent_core import CoreAPI, CoreError, CoreRequestRejected, identifier
 from app.chat import sse
 from app.contracts import STREAM_RESPONSES, Artifact, ChatEvent, Message, MessageInput, Source
 from app.demo_auth import DemoAuth, PhoneInput
@@ -70,6 +70,7 @@ class CoreChat:
                 {
                     "orchestrator_id": space["orchestrator"],
                     "client_conversation_id": space["client_id"],
+                    "expected_config_revision": self.config.core_revision,
                 },
             )
             space["conversation"] = identifier(result["conversation_id"])
@@ -80,15 +81,23 @@ class CoreChat:
         if row["status"] != "pending" or row["run_id"]:
             return row
         ns, key = space["namespace"], row["client_id"]
+        prior_dispatch = bool(row["message_dispatched"])
         await self.db("core_update", ns, key, owner)
-        conversation = await self.ensure(who, space)
-        await self.db("core_update", ns, key, owner)
-        result = await self.api.request(
-            "POST",
-            f"conversations/{conversation}/messages",
-            who["core_token"],
-            json.loads(row["payload"]) | {"client_message_id": key},
-        )
+        try:
+            conversation = await self.ensure(who, space)
+            # Persist before crossing the message POST boundary, including receipt-loss crashes.
+            await self.db("core_update", ns, key, owner, message_dispatched=1)
+            result = await self.api.request(
+                "POST",
+                f"conversations/{conversation}/messages",
+                who["core_token"],
+                json.loads(row["payload"]) | {"client_message_id": key},
+            )
+        except CoreRequestRejected as error:
+            if error.terminal and not prior_dispatch:
+                await self.db("core_update", ns, key, owner, status="failed")
+                error.outbox_finished = True
+            raise
         # polling_url is deliberately ignored; only validated local application IDs are used.
         values = {
             "run_id": identifier(result["run_id"]),
@@ -258,13 +267,15 @@ class CoreChat:
             StopIteration,
             BusyError,
             TimeoutError,
-        ):
-            yield sse(
-                {
-                    "type": "error",
-                    "message": "The reply is unavailable. Load history before sending again.",
-                }
-            )
+        ) as error:
+            message = "The reply is unavailable. Load history before sending again."
+            if isinstance(error, CoreRequestRejected) and error.outbox_finished:
+                message = "The message was not accepted. Load history before correcting it."
+                if error.code == "configuration_conflict":
+                    message = (
+                        "The chat configuration has changed. Contact support before trying again."
+                    )
+            yield sse({"type": "error", "message": message})
         finally:
             task.cancel()
             with anyio.CancelScope(shield=True):
@@ -369,7 +380,14 @@ def create_core_app(config: Settings, transport=None) -> FastAPI:
             if row:
 
                 async def recover():
-                    pending = await chat.receipt(who, space, row, owner)
+                    try:
+                        pending = await chat.receipt(who, space, row, owner)
+                    except CoreRequestRejected as error:
+                        if error.outbox_finished:
+                            # Only a proven fresh rejection is finished here.
+                            # Canonical history is still read below.
+                            return
+                        raise
                     run = await chat.run(who, pending)
                     if run["status"] not in {"completed", "failed", "cancelled"}:
                         raise BusyError("Pending run")
