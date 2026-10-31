@@ -4,10 +4,25 @@ from pathlib import Path
 
 import pytest
 from jsonschema import Draft202012Validator
+from starlette.testclient import TestClient
 
 from app.check import main
 from app.main import create_app
 from app.settings import Catalog, ConfigurationError, Settings
+
+
+@pytest.fixture(autouse=True)
+def clean_config_environment(monkeypatch):
+    for key in (
+        "MCP_CONFIG_FILE",
+        "MCP_CONFIG_JSON",
+        "MCP_CATALOG_FILE",
+        "MCP_CATALOG_JSON",
+        "MCP_INTERNAL_URL",
+        "CRONJOB_SERVER_URL",
+        "INGESTION_TOKEN",
+    ):
+        monkeypatch.delenv(key, raising=False)
 
 
 def test_missing_configuration_fails_startup(monkeypatch):
@@ -47,6 +62,92 @@ def test_split_catalog_loads_metadata_without_overriding_shop_access(split_confi
     assert settings.shops[shop].datasets == config["shops"][shop]["datasets"]
     assert settings.scopes == {"data:read"}
     assert "issuer" not in Settings.model_fields
+
+
+def test_environment_json_and_token_enable_cronjob_without_json_mounts(split_config, monkeypatch):
+    config, catalog, operator_file, catalog_file = split_config
+    config["scopes"] = ["data:read", "cronjob:read", "cronjob:write"]
+    for prefix, value, path in (
+        ("MCP_CONFIG", config, operator_file),
+        ("MCP_CATALOG", catalog, catalog_file),
+    ):
+        monkeypatch.delenv(f"{prefix}_FILE")
+        monkeypatch.setenv(f"{prefix}_JSON", json.dumps(value))
+        path.unlink()
+    monkeypatch.setenv("INGESTION_TOKEN", "environment-service-token")
+    monkeypatch.setenv("CRONJOB_SERVER_URL", "http://srv-captain--cronjob-server-dev:8000")
+    settings = Settings.load()
+    assert settings.scopes == {"data:read", "cronjob:read", "cronjob:write"}
+    assert settings.ingestion_token.get_secret_value() == "environment-service-token"
+    assert settings.datasets == Catalog.model_validate(catalog).datasets
+    assert settings.cronjob_admin_phones == set()
+    assert set(settings.shops) == set(config["shops"])
+    with TestClient(create_app()) as client:
+        assert client.get("/health").json() == {"status": "ok"}
+
+
+@pytest.mark.parametrize("prefix", ["MCP_CONFIG", "MCP_CATALOG"])
+def test_file_and_json_sources_are_mutually_exclusive(split_config, monkeypatch, prefix):
+    monkeypatch.setenv(f"{prefix}_JSON", "{}")
+    with pytest.raises(ConfigurationError, match=f"Choose {prefix}_FILE or {prefix}_JSON"):
+        Settings.load()
+
+
+@pytest.mark.parametrize("prefix", ["MCP_CONFIG", "MCP_CATALOG"])
+@pytest.mark.parametrize("value", ["", '{"secret":"do-not-print"', '["do-not-print"]', "null"])
+def test_invalid_environment_json_has_safe_source_diagnostics(
+    split_config, monkeypatch, prefix, value
+):
+    monkeypatch.delenv(f"{prefix}_FILE")
+    monkeypatch.setenv(f"{prefix}_JSON", value)
+    with pytest.raises(ConfigurationError, match=f"{prefix}_JSON") as error:
+        Settings.load()
+    assert "do-not-print" not in str(error.value)
+
+
+@pytest.mark.parametrize("prefix", ["MCP_CONFIG", "MCP_CATALOG"])
+def test_missing_mounted_file_has_safe_source_diagnostics(
+    split_config, monkeypatch, tmp_path, prefix
+):
+    monkeypatch.setenv(f"{prefix}_FILE", str(tmp_path / "private-missing-file.json"))
+    with pytest.raises(ConfigurationError, match=f"Cannot read {prefix}_FILE") as error:
+        Settings.load()
+    assert "private-missing-file" not in str(error.value)
+
+
+def test_environment_fragment_reports_required_database_fields(monkeypatch):
+    monkeypatch.setenv(
+        "MCP_CONFIG_JSON",
+        json.dumps(
+            {
+                "public_url": "https://mcp.example/mcp",
+                "scopes": ["data:read"],
+                "ingestion_token": "do-not-print",
+                "cronjob_admin_phones": [],
+            }
+        ),
+    )
+    with pytest.raises(ConfigurationError) as error:
+        Settings.load()
+    for field in ("control_dsn", "membership_dsn", "shops"):
+        assert f"{field} (missing)" in str(error.value)
+    assert "do-not-print" not in str(error.value)
+
+
+@pytest.mark.parametrize("token", ["environment-service-token", "", "   ", "invalid\ntoken"])
+def test_environment_token_overrides_file_and_rejects_invalid_values(
+    split_config, monkeypatch, token
+):
+    config, _, operator_file, _ = split_config
+    config["ingestion_token"] = "old-service-token"
+    operator_file.write_text(json.dumps(config))
+    monkeypatch.setenv("CRONJOB_SERVER_URL", "http://localhost:8001")
+    monkeypatch.setenv("INGESTION_TOKEN", token)
+    if token == "environment-service-token":
+        assert Settings.load().ingestion_token.get_secret_value() == token
+    else:
+        with pytest.raises(ConfigurationError):
+            Settings.load()
 
 
 @pytest.mark.parametrize("value", [None, "host=localhost sslmode=disable"])

@@ -7,7 +7,7 @@ catalog, SQL, raw-grant and refresh tools keep their behavior.
 
 ## Enable
 
-In the operator-owned `MCP_CONFIG_FILE`, add `cronjob:read` for source reads and
+In the operator-owned `MCP_CONFIG_FILE` or `MCP_CONFIG_JSON`, add `cronjob:read` for source reads and
 sync-run inspection, and `cronjob:write` for source mutations. Retain `data:read`:
 
 ```json
@@ -19,9 +19,9 @@ sync-run inspection, and `cronjob:write` for source mutations. Retain `data:read
 
 This is a fragment to merge into the existing configuration. Set
 `CRONJOB_SERVER_URL` to the private cronjob origin and supply the existing
-`ingestion_token` service credential. Missing integration configuration with
-CRUD scopes enabled refuses startup. No new environment variables or dependencies
-are required. Local development uses `http://localhost:8001`; CapRover uses
+`ingestion_token` service credential, or supply it through the `INGESTION_TOKEN`
+environment override. Missing integration configuration with CRUD scopes enabled
+refuses startup. Local development uses `http://localhost:8001`; CapRover uses
 `http://srv-captain--cronjob-server-dev:8000` or
 `http://srv-captain--cronjob-server:8000` for the corresponding environment.
 
