@@ -101,7 +101,7 @@ def test_real_core_loopback_report_followup_clarification_and_restart(tmp_path):
                     assert len(before) == 6
                     assert len({item["id"] for item in before}) == 6
                 with TestClient(create_app(settings)) as restarted:
-                    headers = login(restarted)
+                    # The page did not reload; keep its token across backend restart.
                     after = restarted.get("/api/chat/messages", headers=headers)
                     assert after.status_code == 200
                     assert after.json() == before
@@ -137,7 +137,7 @@ def test_real_core_loopback_report_followup_clarification_and_restart(tmp_path):
                     assert time.monotonic() < deadline
                     time.sleep(0.05)
                 with TestClient(create_app(settings)) as both_restarted:
-                    headers = login(both_restarted)
+                    # The page did not reload; keep its token across backend restart.
                     result = both_restarted.get("/api/chat/messages", headers=headers)
                     assert result.status_code == 200
                     assert result.json() == before

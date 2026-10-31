@@ -101,7 +101,7 @@ def test_core_config_fails_before_io(tmp_path, field, value):
             pass
 
 
-def test_first_login_provisions_once_and_relogin_reuses_without_run(tmp_path):
+def test_each_login_starts_fresh_space_with_reusable_orchestrator_without_run(tmp_path):
     calls = []
 
     def provision(request):
@@ -116,7 +116,9 @@ def test_first_login_provisions_once_and_relogin_reuses_without_run(tmp_path):
         login(c)
         assert len(calls) == 1
         login(c)
-        assert len(calls) == 1
+        assert len(calls) == 2
+        assert calls[0].content == calls[1].content
         with c.app.state.core_store.connect() as db:
             row = db.execute("SELECT orchestrator,conversation FROM core_spaces").fetchone()
             assert tuple(row) == ("orchestrator-1", None)
+            assert db.execute("SELECT count(*) FROM core_spaces").fetchone()[0] == 2

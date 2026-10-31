@@ -60,7 +60,7 @@ class DemoAuth:
             ).fetchone()
         if row is None:
             raise HTTPException(401, "Unauthorized")
-        return json.loads(row[0])
+        return {**json.loads(row[0]), "chat_session_id": digest(token)}
 
     def logout(self, token: str) -> None:
         with self.store.connect() as db:

@@ -39,7 +39,10 @@ class CoreChat:
         configuration = json.dumps(
             [self.config.core_url.rstrip("/"), self.config.core_shop, self.config.core_revision]
         )
-        actor = json.dumps([who["tenant_id"], who["user_id"]])
+        actor_parts = [who["tenant_id"], who["user_id"]]
+        if who.get("chat_session_id"):
+            actor_parts.append(who["chat_session_id"])
+        actor = json.dumps(actor_parts)
         return hashlib.sha256((actor + configuration).encode()).hexdigest(), actor, configuration
 
     async def space(self, who: dict) -> dict:
@@ -359,9 +362,16 @@ def create_core_app(config: Settings, transport=None) -> FastAPI:
             raise HTTPException(401, "Unauthorized")
         if config.core_shop not in who["shop_ids"]:
             raise HTTPException(404, "Not found")
-        space = await chat.space(who)
-        await chat.provision(who, space)
-        return await asyncio.to_thread(chat.auth.login, item.phone_number)
+        session = await asyncio.to_thread(chat.auth.login, item.phone_number)
+        try:
+            who = await asyncio.to_thread(chat.auth.resolve, session["access_token"])
+            space = await chat.space(who)
+            await chat.provision(who, space)
+        except BaseException:
+            with anyio.CancelScope(shield=True):
+                await asyncio.to_thread(chat.auth.logout, session["access_token"])
+            raise
+        return session
 
     @app.post("/api/chat/auth/logout", status_code=204)
     async def logout(who=identity_dependency, credentials=bearer_dependency):
