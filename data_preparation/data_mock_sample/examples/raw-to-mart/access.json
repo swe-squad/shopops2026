@@ -1,0 +1,302 @@
+{
+  "policy": "Active users with active merchant memberships may read all shops of active merchants.",
+  "trust_boundary": "Bind user_id from the verified backend session; this export is admin/demo data, not a public response.",
+  "query": "SELECT * FROM access.user_shop_access WHERE user_id=$1 ORDER BY shop_key",
+  "access.users": [
+    {
+      "user_id": "user-agency",
+      "display_name": "Demo Agency Analyst",
+      "is_active": true
+    },
+    {
+      "user_id": "user-alice",
+      "display_name": "Demo Alice",
+      "is_active": true
+    },
+    {
+      "user_id": "user-bob",
+      "display_name": "Demo Bob",
+      "is_active": true
+    },
+    {
+      "user_id": "user-disabled",
+      "display_name": "Demo Disabled User",
+      "is_active": false
+    },
+    {
+      "user_id": "user-revoked",
+      "display_name": "Demo Revoked Member",
+      "is_active": true
+    },
+    {
+      "user_id": "user-unassigned",
+      "display_name": "Demo User Without Membership",
+      "is_active": true
+    }
+  ],
+  "access.merchants": [
+    {
+      "merchant_id": "merchant-demo-001",
+      "name": "Demo Merchant One",
+      "is_active": true
+    },
+    {
+      "merchant_id": "merchant-demo-002",
+      "name": "Demo Merchant Two",
+      "is_active": true
+    }
+  ],
+  "access.merchant_memberships": [
+    {
+      "user_id": "user-agency",
+      "merchant_id": "merchant-demo-001",
+      "role": "analyst",
+      "is_active": true
+    },
+    {
+      "user_id": "user-agency",
+      "merchant_id": "merchant-demo-002",
+      "role": "viewer",
+      "is_active": true
+    },
+    {
+      "user_id": "user-alice",
+      "merchant_id": "merchant-demo-001",
+      "role": "owner",
+      "is_active": true
+    },
+    {
+      "user_id": "user-bob",
+      "merchant_id": "merchant-demo-002",
+      "role": "owner",
+      "is_active": true
+    },
+    {
+      "user_id": "user-disabled",
+      "merchant_id": "merchant-demo-001",
+      "role": "owner",
+      "is_active": true
+    },
+    {
+      "user_id": "user-revoked",
+      "merchant_id": "merchant-demo-001",
+      "role": "viewer",
+      "is_active": false
+    }
+  ],
+  "access.user_shop_access": [
+    {
+      "user_id": "user-agency",
+      "merchant_id": "merchant-demo-001",
+      "role": "analyst",
+      "shop_key": "lazada:1001",
+      "platform": "lazada",
+      "source_shop_id": "1001",
+      "name": "VN Demo lazada 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "user_id": "user-agency",
+      "merchant_id": "merchant-demo-001",
+      "role": "analyst",
+      "shop_key": "shopee-open-platform:1001",
+      "platform": "shopee-open-platform",
+      "source_shop_id": "1001",
+      "name": "VN Demo shopee-open-platform 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "user_id": "user-agency",
+      "merchant_id": "merchant-demo-002",
+      "role": "viewer",
+      "shop_key": "shopee-open-platform:1002",
+      "platform": "shopee-open-platform",
+      "source_shop_id": "1002",
+      "name": "VN Demo shopee-open-platform 1002",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "user_id": "user-agency",
+      "merchant_id": "merchant-demo-002",
+      "role": "viewer",
+      "shop_key": "shopify:1001",
+      "platform": "shopify",
+      "source_shop_id": "1001",
+      "name": "VN Demo shopify 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "user_id": "user-alice",
+      "merchant_id": "merchant-demo-001",
+      "role": "owner",
+      "shop_key": "shopee-open-platform:1001",
+      "platform": "shopee-open-platform",
+      "source_shop_id": "1001",
+      "name": "VN Demo shopee-open-platform 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "user_id": "user-alice",
+      "merchant_id": "merchant-demo-001",
+      "role": "owner",
+      "shop_key": "lazada:1001",
+      "platform": "lazada",
+      "source_shop_id": "1001",
+      "name": "VN Demo lazada 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "user_id": "user-bob",
+      "merchant_id": "merchant-demo-002",
+      "role": "owner",
+      "shop_key": "shopify:1001",
+      "platform": "shopify",
+      "source_shop_id": "1001",
+      "name": "VN Demo shopify 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "user_id": "user-bob",
+      "merchant_id": "merchant-demo-002",
+      "role": "owner",
+      "shop_key": "shopee-open-platform:1002",
+      "platform": "shopee-open-platform",
+      "source_shop_id": "1002",
+      "name": "VN Demo shopee-open-platform 1002",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh"
+    }
+  ],
+  "examples": [
+    {
+      "user_id": "user-agency",
+      "shops": [
+        {
+          "user_id": "user-agency",
+          "merchant_id": "merchant-demo-001",
+          "role": "analyst",
+          "shop_key": "lazada:1001",
+          "platform": "lazada",
+          "source_shop_id": "1001",
+          "name": "VN Demo lazada 1001",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        },
+        {
+          "user_id": "user-agency",
+          "merchant_id": "merchant-demo-001",
+          "role": "analyst",
+          "shop_key": "shopee-open-platform:1001",
+          "platform": "shopee-open-platform",
+          "source_shop_id": "1001",
+          "name": "VN Demo shopee-open-platform 1001",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        },
+        {
+          "user_id": "user-agency",
+          "merchant_id": "merchant-demo-002",
+          "role": "viewer",
+          "shop_key": "shopee-open-platform:1002",
+          "platform": "shopee-open-platform",
+          "source_shop_id": "1002",
+          "name": "VN Demo shopee-open-platform 1002",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        },
+        {
+          "user_id": "user-agency",
+          "merchant_id": "merchant-demo-002",
+          "role": "viewer",
+          "shop_key": "shopify:1001",
+          "platform": "shopify",
+          "source_shop_id": "1001",
+          "name": "VN Demo shopify 1001",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        }
+      ]
+    },
+    {
+      "user_id": "user-alice",
+      "shops": [
+        {
+          "user_id": "user-alice",
+          "merchant_id": "merchant-demo-001",
+          "role": "owner",
+          "shop_key": "lazada:1001",
+          "platform": "lazada",
+          "source_shop_id": "1001",
+          "name": "VN Demo lazada 1001",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        },
+        {
+          "user_id": "user-alice",
+          "merchant_id": "merchant-demo-001",
+          "role": "owner",
+          "shop_key": "shopee-open-platform:1001",
+          "platform": "shopee-open-platform",
+          "source_shop_id": "1001",
+          "name": "VN Demo shopee-open-platform 1001",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        }
+      ]
+    },
+    {
+      "user_id": "user-bob",
+      "shops": [
+        {
+          "user_id": "user-bob",
+          "merchant_id": "merchant-demo-002",
+          "role": "owner",
+          "shop_key": "shopee-open-platform:1002",
+          "platform": "shopee-open-platform",
+          "source_shop_id": "1002",
+          "name": "VN Demo shopee-open-platform 1002",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        },
+        {
+          "user_id": "user-bob",
+          "merchant_id": "merchant-demo-002",
+          "role": "owner",
+          "shop_key": "shopify:1001",
+          "platform": "shopify",
+          "source_shop_id": "1001",
+          "name": "VN Demo shopify 1001",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh"
+        }
+      ]
+    },
+    {
+      "user_id": "user-disabled",
+      "shops": []
+    },
+    {
+      "user_id": "user-revoked",
+      "shops": []
+    },
+    {
+      "user_id": "user-unassigned",
+      "shops": []
+    },
+    {
+      "user_id": "unknown-user",
+      "shops": []
+    },
+    {
+      "user_id": null,
+      "shops": []
+    }
+  ]
+}

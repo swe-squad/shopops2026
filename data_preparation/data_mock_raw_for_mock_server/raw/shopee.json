@@ -1,0 +1,595 @@
+{
+  "note": "Synthetic excerpts only. API-shaped orders retain their source confidence; supplements and metadata wrappers are project-owned. This subset is not suitable for the full dataset anomaly thresholds.",
+  "documents": [
+    {
+      "document_id": "shopee-open-platform/1001/orders",
+      "platform": "shopee-open-platform",
+      "shop_id": "1001",
+      "merchant_id": "merchant-demo-001",
+      "resource": "orders",
+      "source_kind": "provisional_api_subset",
+      "captured_at": "2026-10-31T00:00:00+07:00",
+      "payload": {
+        "error": "",
+        "message": "",
+        "response": {
+          "order_list": [
+            {
+              "order_sn": "100072",
+              "create_time": 1792458000,
+              "update_time": 1792483200,
+              "currency": "VND",
+              "order_status": "COMPLETED",
+              "item_list": [
+                {
+                  "item_id": 100,
+                  "model_id": 200,
+                  "model_sku": "SHIRT-M",
+                  "model_quantity_purchased": 2,
+                  "model_original_price": 200000,
+                  "model_discounted_price": 200000
+                }
+              ]
+            },
+            {
+              "order_sn": "100294",
+              "create_time": 1793242800,
+              "update_time": 1793268000,
+              "currency": "VND",
+              "order_status": "COMPLETED",
+              "item_list": [
+                {
+                  "item_id": 100,
+                  "model_id": 200,
+                  "model_sku": "SHIRT-M",
+                  "model_quantity_purchased": 1,
+                  "model_original_price": 200000,
+                  "model_discounted_price": 200000
+                }
+              ]
+            },
+            {
+              "order_sn": "100326",
+              "create_time": 1793338800,
+              "update_time": 1793364000,
+              "currency": "VND",
+              "order_status": "READY_TO_SHIP",
+              "item_list": [
+                {
+                  "item_id": 102,
+                  "model_id": 202,
+                  "model_sku": "TOTE",
+                  "model_quantity_purchased": 2,
+                  "model_original_price": 250000,
+                  "model_discounted_price": 250000
+                }
+              ]
+            },
+            {
+              "order_sn": "100330",
+              "create_time": 1793343600,
+              "update_time": 1793368800,
+              "currency": "VND",
+              "order_status": "CANCELLED",
+              "item_list": [
+                {
+                  "item_id": 100,
+                  "model_id": 200,
+                  "model_sku": "SHIRT-M",
+                  "model_quantity_purchased": 1,
+                  "model_original_price": 200000,
+                  "model_discounted_price": 200000
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "document_id": "shopee-open-platform/1001/supplement",
+      "platform": "shopee-open-platform",
+      "shop_id": "1001",
+      "merchant_id": "merchant-demo-001",
+      "resource": "supplement",
+      "source_kind": "demo_supplement",
+      "captured_at": "2026-10-31T00:00:00+07:00",
+      "payload": {
+        "shop": {
+          "name": "VN Demo shopee-open-platform 1001",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh",
+          "capabilities": {
+            "orders": "provisional",
+            "reviews": "demo_supplement",
+            "finance": "demo_supplement",
+            "inventory": "demo_supplement",
+            "costs": "seller_supplied_demo",
+            "account_health": "demo_supplement"
+          }
+        },
+        "products": [
+          {
+            "sku": "SHIRT-M",
+            "name": "Áo thun cotton size M",
+            "unit_cost": 130000,
+            "cost_basis": "seller_supplied_demo"
+          },
+          {
+            "sku": "CAP",
+            "name": "Nón lưỡi trai",
+            "unit_cost": 45000,
+            "cost_basis": "seller_supplied_demo"
+          },
+          {
+            "sku": "TOTE",
+            "name": "Túi tote canvas",
+            "unit_cost": 120000,
+            "cost_basis": "seller_supplied_demo"
+          }
+        ],
+        "reviews": [
+          {
+            "review_id": "R100072",
+            "order_id": "100072",
+            "sku": "SHIRT-M",
+            "reviewed_at": "2026-10-20T12:00:00+07:00",
+            "rating": 5,
+            "body": "Hàng đẹp, giao nhanh."
+          },
+          {
+            "review_id": "R100294",
+            "order_id": "100294",
+            "sku": "SHIRT-M",
+            "reviewed_at": "2026-10-29T14:00:00+07:00",
+            "rating": 1,
+            "body": "Áo quá chật, size M nhỏ hơn bảng size."
+          }
+        ],
+        "returns": [
+          {
+            "return_id": "RT100072",
+            "order_id": "100072",
+            "requested_at": "2026-10-20T14:00:00+07:00",
+            "reason": "Không vừa / đổi ý",
+            "status": "refunded",
+            "refund_amount": 370000
+          }
+        ],
+        "inventory": [
+          {
+            "sku": "SHIRT-M",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-28T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "SHIRT-M",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-30T23:00:00+07:00",
+            "available": 2
+          },
+          {
+            "sku": "CAP",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-28T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "CAP",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-30T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "TOTE",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-28T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "TOTE",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-30T23:00:00+07:00",
+            "available": 250
+          }
+        ],
+        "promotions": [
+          {
+            "promotion_id": "SAVE90",
+            "name": "Giảm 90k cho áo thun",
+            "funding": "seller",
+            "starts_at": "2026-10-29T00:00:00+07:00",
+            "ends_at": "2026-11-05T00:00:00+07:00"
+          }
+        ],
+        "settlements": [
+          {
+            "order_id": "100072",
+            "fee_amount": 20000,
+            "seller_shipping_cost": 8000,
+            "refund_amount": 370000,
+            "actual_payout": -18000,
+            "paid_at": "2026-10-20T15:00:00+07:00"
+          },
+          {
+            "order_id": "100294",
+            "fee_amount": 30000,
+            "seller_shipping_cost": 8000,
+            "refund_amount": 0,
+            "actual_payout": 72000,
+            "paid_at": "2026-10-29T17:00:00+07:00"
+          }
+        ],
+        "fulfillment": [
+          {
+            "order_id": "100072",
+            "ship_by": "2026-10-21T08:00:00+07:00",
+            "shipped_at": "2026-10-20T09:00:00+07:00",
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          },
+          {
+            "order_id": "100294",
+            "ship_by": "2026-10-30T10:00:00+07:00",
+            "shipped_at": "2026-10-29T11:00:00+07:00",
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          },
+          {
+            "order_id": "100326",
+            "ship_by": "2026-10-30T15:40:00+07:00",
+            "shipped_at": null,
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          },
+          {
+            "order_id": "100330",
+            "ship_by": "2026-10-31T14:00:00+07:00",
+            "shipped_at": null,
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          }
+        ],
+        "account_health": [
+          {
+            "event_id": "P1",
+            "occurred_at": "2026-10-30T18:00:00+07:00",
+            "expires_at": "2026-11-30T00:00:00+07:00",
+            "penalty_points": 3,
+            "reason": "Demo: late shipment warning"
+          }
+        ],
+        "order_enrichment": [
+          {
+            "order_id": "100072",
+            "seller_discount": 20000,
+            "platform_discount": 10000,
+            "promotion_id": null
+          },
+          {
+            "order_id": "100294",
+            "seller_discount": 90000,
+            "platform_discount": 5000,
+            "promotion_id": "SAVE90"
+          },
+          {
+            "order_id": "100326",
+            "seller_discount": 20000,
+            "platform_discount": 10000,
+            "promotion_id": null
+          },
+          {
+            "order_id": "100330",
+            "seller_discount": 90000,
+            "platform_discount": 5000,
+            "promotion_id": "SAVE90"
+          }
+        ]
+      }
+    },
+    {
+      "document_id": "shopee-open-platform/1002/orders",
+      "platform": "shopee-open-platform",
+      "shop_id": "1002",
+      "merchant_id": "merchant-demo-002",
+      "resource": "orders",
+      "source_kind": "provisional_api_subset",
+      "captured_at": "2026-10-31T00:00:00+07:00",
+      "payload": {
+        "error": "",
+        "message": "",
+        "response": {
+          "order_list": [
+            {
+              "order_sn": "100072",
+              "create_time": 1792458000,
+              "update_time": 1792483200,
+              "currency": "VND",
+              "order_status": "COMPLETED",
+              "item_list": [
+                {
+                  "item_id": 100,
+                  "model_id": 200,
+                  "model_sku": "SHIRT-M",
+                  "model_quantity_purchased": 2,
+                  "model_original_price": 200000,
+                  "model_discounted_price": 200000
+                }
+              ]
+            },
+            {
+              "order_sn": "100294",
+              "create_time": 1793242800,
+              "update_time": 1793268000,
+              "currency": "VND",
+              "order_status": "COMPLETED",
+              "item_list": [
+                {
+                  "item_id": 100,
+                  "model_id": 200,
+                  "model_sku": "SHIRT-M",
+                  "model_quantity_purchased": 1,
+                  "model_original_price": 200000,
+                  "model_discounted_price": 200000
+                }
+              ]
+            },
+            {
+              "order_sn": "100326",
+              "create_time": 1793338800,
+              "update_time": 1793364000,
+              "currency": "VND",
+              "order_status": "COMPLETED",
+              "item_list": [
+                {
+                  "item_id": 102,
+                  "model_id": 202,
+                  "model_sku": "TOTE",
+                  "model_quantity_purchased": 2,
+                  "model_original_price": 250000,
+                  "model_discounted_price": 250000
+                }
+              ]
+            },
+            {
+              "order_sn": "100330",
+              "create_time": 1793343600,
+              "update_time": 1793368800,
+              "currency": "VND",
+              "order_status": "COMPLETED",
+              "item_list": [
+                {
+                  "item_id": 100,
+                  "model_id": 200,
+                  "model_sku": "SHIRT-M",
+                  "model_quantity_purchased": 1,
+                  "model_original_price": 200000,
+                  "model_discounted_price": 200000
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "document_id": "shopee-open-platform/1002/supplement",
+      "platform": "shopee-open-platform",
+      "shop_id": "1002",
+      "merchant_id": "merchant-demo-002",
+      "resource": "supplement",
+      "source_kind": "demo_supplement",
+      "captured_at": "2026-10-31T00:00:00+07:00",
+      "payload": {
+        "shop": {
+          "name": "VN Demo shopee-open-platform 1002",
+          "currency": "VND",
+          "timezone": "Asia/Ho_Chi_Minh",
+          "capabilities": {
+            "orders": "provisional",
+            "reviews": "demo_supplement",
+            "finance": "demo_supplement",
+            "inventory": "demo_supplement",
+            "costs": "seller_supplied_demo",
+            "account_health": "demo_supplement"
+          }
+        },
+        "products": [
+          {
+            "sku": "SHIRT-M",
+            "name": "Áo thun cotton size M",
+            "unit_cost": 130000,
+            "cost_basis": "seller_supplied_demo"
+          },
+          {
+            "sku": "CAP",
+            "name": "Nón lưỡi trai",
+            "unit_cost": 45000,
+            "cost_basis": "seller_supplied_demo"
+          },
+          {
+            "sku": "TOTE",
+            "name": "Túi tote canvas",
+            "unit_cost": 120000,
+            "cost_basis": "seller_supplied_demo"
+          }
+        ],
+        "reviews": [
+          {
+            "review_id": "R100072",
+            "order_id": "100072",
+            "sku": "SHIRT-M",
+            "reviewed_at": "2026-10-20T12:00:00+07:00",
+            "rating": 5,
+            "body": "Hàng đẹp, giao nhanh."
+          },
+          {
+            "review_id": "R100294",
+            "order_id": "100294",
+            "sku": "SHIRT-M",
+            "reviewed_at": "2026-10-29T14:00:00+07:00",
+            "rating": 5,
+            "body": "Hàng đẹp, giao nhanh."
+          },
+          {
+            "review_id": "R100326",
+            "order_id": "100326",
+            "sku": "TOTE",
+            "reviewed_at": "2026-10-30T16:40:00+07:00",
+            "rating": 5,
+            "body": "Hàng đẹp, giao nhanh."
+          },
+          {
+            "review_id": "R100330",
+            "order_id": "100330",
+            "sku": "SHIRT-M",
+            "reviewed_at": "2026-10-30T18:00:00+07:00",
+            "rating": 5,
+            "body": "Hàng đẹp, giao nhanh."
+          }
+        ],
+        "returns": [
+          {
+            "return_id": "RT100072",
+            "order_id": "100072",
+            "requested_at": "2026-10-20T14:00:00+07:00",
+            "reason": "Không vừa / đổi ý",
+            "status": "refunded",
+            "refund_amount": 370000
+          }
+        ],
+        "inventory": [
+          {
+            "sku": "SHIRT-M",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-28T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "SHIRT-M",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-30T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "CAP",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-28T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "CAP",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-30T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "TOTE",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-28T23:00:00+07:00",
+            "available": 250
+          },
+          {
+            "sku": "TOTE",
+            "location_id": "VN-HCM-1",
+            "observed_at": "2026-10-30T23:00:00+07:00",
+            "available": 250
+          }
+        ],
+        "promotions": [
+          {
+            "promotion_id": "SAVE90",
+            "name": "Giảm 90k cho áo thun",
+            "funding": "seller",
+            "starts_at": "2026-10-29T00:00:00+07:00",
+            "ends_at": "2026-11-05T00:00:00+07:00"
+          }
+        ],
+        "settlements": [
+          {
+            "order_id": "100072",
+            "fee_amount": 20000,
+            "seller_shipping_cost": 8000,
+            "refund_amount": 370000,
+            "actual_payout": -18000,
+            "paid_at": "2026-10-20T15:00:00+07:00"
+          },
+          {
+            "order_id": "100294",
+            "fee_amount": 10000,
+            "seller_shipping_cost": 8000,
+            "refund_amount": 0,
+            "actual_payout": 172000,
+            "paid_at": "2026-10-29T17:00:00+07:00"
+          },
+          {
+            "order_id": "100326",
+            "fee_amount": 25000,
+            "seller_shipping_cost": 8000,
+            "refund_amount": 0,
+            "actual_payout": 447000,
+            "paid_at": "2026-10-30T19:40:00+07:00"
+          },
+          {
+            "order_id": "100330",
+            "fee_amount": 10000,
+            "seller_shipping_cost": 8000,
+            "refund_amount": 0,
+            "actual_payout": 172000,
+            "paid_at": "2026-10-30T21:00:00+07:00"
+          }
+        ],
+        "fulfillment": [
+          {
+            "order_id": "100072",
+            "ship_by": "2026-10-21T08:00:00+07:00",
+            "shipped_at": "2026-10-20T09:00:00+07:00",
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          },
+          {
+            "order_id": "100294",
+            "ship_by": "2026-10-30T10:00:00+07:00",
+            "shipped_at": "2026-10-29T11:00:00+07:00",
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          },
+          {
+            "order_id": "100326",
+            "ship_by": "2026-10-31T12:40:00+07:00",
+            "shipped_at": "2026-10-30T13:40:00+07:00",
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          },
+          {
+            "order_id": "100330",
+            "ship_by": "2026-10-31T14:00:00+07:00",
+            "shipped_at": "2026-10-30T15:00:00+07:00",
+            "deadline_basis": "demo_policy_not_marketplace_SLA"
+          }
+        ],
+        "account_health": [],
+        "order_enrichment": [
+          {
+            "order_id": "100072",
+            "seller_discount": 20000,
+            "platform_discount": 10000,
+            "promotion_id": null
+          },
+          {
+            "order_id": "100294",
+            "seller_discount": 10000,
+            "platform_discount": 5000,
+            "promotion_id": null
+          },
+          {
+            "order_id": "100326",
+            "seller_discount": 20000,
+            "platform_discount": 10000,
+            "promotion_id": null
+          },
+          {
+            "order_id": "100330",
+            "seller_discount": 10000,
+            "platform_discount": 5000,
+            "promotion_id": null
+          }
+        ]
+      }
+    }
+  ]
+}

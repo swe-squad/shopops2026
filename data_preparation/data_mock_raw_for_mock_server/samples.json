@@ -1,0 +1,1298 @@
+{
+  "access.users": [
+    {
+      "user_id": "+84900000001",
+      "display_name": "Demo Alice",
+      "is_active": true,
+      "phone_number": "+84900000001"
+    },
+    {
+      "user_id": "+84900000002",
+      "display_name": "Demo Bob",
+      "is_active": true,
+      "phone_number": "+84900000002"
+    },
+    {
+      "user_id": "+84900000003",
+      "display_name": "Demo Agency Analyst",
+      "is_active": true,
+      "phone_number": "+84900000003"
+    },
+    {
+      "user_id": "+84900000004",
+      "display_name": "Demo Revoked Member",
+      "is_active": true,
+      "phone_number": "+84900000004"
+    },
+    {
+      "user_id": "+84900000005",
+      "display_name": "Demo Disabled User",
+      "is_active": false,
+      "phone_number": "+84900000005"
+    },
+    {
+      "user_id": "+84900000006",
+      "display_name": "Demo User Without Membership",
+      "is_active": true,
+      "phone_number": "+84900000006"
+    }
+  ],
+  "access.merchants": [
+    {
+      "merchant_id": "merchant-demo-001",
+      "name": "Demo Merchant One",
+      "is_active": true
+    },
+    {
+      "merchant_id": "merchant-demo-002",
+      "name": "Demo Merchant Two",
+      "is_active": true
+    }
+  ],
+  "access.merchant_memberships": [
+    {
+      "user_id": "+84900000001",
+      "merchant_id": "merchant-demo-001",
+      "role": "owner",
+      "is_active": true
+    },
+    {
+      "user_id": "+84900000002",
+      "merchant_id": "merchant-demo-002",
+      "role": "owner",
+      "is_active": true
+    },
+    {
+      "user_id": "+84900000003",
+      "merchant_id": "merchant-demo-001",
+      "role": "analyst",
+      "is_active": true
+    },
+    {
+      "user_id": "+84900000003",
+      "merchant_id": "merchant-demo-002",
+      "role": "viewer",
+      "is_active": true
+    },
+    {
+      "user_id": "+84900000004",
+      "merchant_id": "merchant-demo-001",
+      "role": "viewer",
+      "is_active": false
+    },
+    {
+      "user_id": "+84900000005",
+      "merchant_id": "merchant-demo-001",
+      "role": "owner",
+      "is_active": true
+    }
+  ],
+  "core.shops": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "merchant_id": "merchant-demo-001",
+      "platform": "shopee-open-platform",
+      "source_shop_id": "1001",
+      "name": "VN Demo shopee-open-platform 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "capabilities": {
+        "orders": "provisional",
+        "reviews": "demo_supplement",
+        "finance": "demo_supplement",
+        "inventory": "demo_supplement",
+        "costs": "seller_supplied_demo",
+        "account_health": "demo_supplement"
+      },
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "merchant_id": "merchant-demo-002",
+      "platform": "shopee-open-platform",
+      "source_shop_id": "1002",
+      "name": "VN Demo shopee-open-platform 1002",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "capabilities": {
+        "orders": "provisional",
+        "reviews": "demo_supplement",
+        "finance": "demo_supplement",
+        "inventory": "demo_supplement",
+        "costs": "seller_supplied_demo",
+        "account_health": "demo_supplement"
+      },
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "merchant_id": "merchant-demo-001",
+      "platform": "lazada",
+      "source_shop_id": "1001",
+      "name": "VN Demo lazada 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "capabilities": {
+        "orders": "api_subset",
+        "reviews": "demo_supplement",
+        "finance": "demo_supplement",
+        "inventory": "demo_supplement",
+        "costs": "seller_supplied_demo",
+        "account_health": "demo_supplement"
+      },
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "merchant_id": "merchant-demo-002",
+      "platform": "shopify",
+      "source_shop_id": "1001",
+      "name": "VN Demo shopify 1001",
+      "currency": "VND",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "capabilities": {
+        "orders": "api_subset",
+        "reviews": "demo_supplement",
+        "finance": "demo_supplement",
+        "inventory": "demo_supplement",
+        "costs": "seller_supplied_demo",
+        "account_health": "unsupported"
+      },
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.products": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "SHIRT-M",
+      "name": "Áo thun cotton size M",
+      "unit_cost": "130000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "CAP",
+      "name": "Nón lưỡi trai",
+      "unit_cost": "45000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "TOTE",
+      "name": "Túi tote canvas",
+      "unit_cost": "120000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "SHIRT-M",
+      "name": "Áo thun cotton size M",
+      "unit_cost": "130000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "CAP",
+      "name": "Nón lưỡi trai",
+      "unit_cost": "45000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "TOTE",
+      "name": "Túi tote canvas",
+      "unit_cost": "120000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "SHIRT-M",
+      "name": "Áo thun cotton size M",
+      "unit_cost": "130000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "CAP",
+      "name": "Nón lưỡi trai",
+      "unit_cost": "45000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "TOTE",
+      "name": "Túi tote canvas",
+      "unit_cost": "120000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "SHIRT-M",
+      "name": "Áo thun cotton size M",
+      "unit_cost": "130000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "CAP",
+      "name": "Nón lưỡi trai",
+      "unit_cost": "45000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "TOTE",
+      "name": "Túi tote canvas",
+      "unit_cost": "120000.00",
+      "cost_basis": "seller_supplied_demo",
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.orders": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100072",
+      "ordered_at": "2026-10-20T01:00:00+00:00",
+      "updated_at": "2026-10-20T08:00:00+00:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "COMPLETED",
+      "seller_discount": "20000.00",
+      "platform_discount": "10000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopee-open-platform/1001/supplement",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100294",
+      "ordered_at": "2026-10-29T03:00:00+00:00",
+      "updated_at": "2026-10-29T10:00:00+00:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "COMPLETED",
+      "seller_discount": "90000.00",
+      "platform_discount": "5000.00",
+      "promotion_id": "SAVE90",
+      "enrichment_source_document_id": "shopee-open-platform/1001/supplement",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100326",
+      "ordered_at": "2026-10-30T05:40:00+00:00",
+      "updated_at": "2026-10-30T12:40:00+00:00",
+      "currency": "VND",
+      "status": "open",
+      "original_status": "READY_TO_SHIP",
+      "seller_discount": "20000.00",
+      "platform_discount": "10000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopee-open-platform/1001/supplement",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100330",
+      "ordered_at": "2026-10-30T07:00:00+00:00",
+      "updated_at": "2026-10-30T14:00:00+00:00",
+      "currency": "VND",
+      "status": "cancelled",
+      "original_status": "CANCELLED",
+      "seller_discount": "90000.00",
+      "platform_discount": "5000.00",
+      "promotion_id": "SAVE90",
+      "enrichment_source_document_id": "shopee-open-platform/1001/supplement",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100072",
+      "ordered_at": "2026-10-20T01:00:00+00:00",
+      "updated_at": "2026-10-20T08:00:00+00:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "COMPLETED",
+      "seller_discount": "20000.00",
+      "platform_discount": "10000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopee-open-platform/1002/supplement",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100294",
+      "ordered_at": "2026-10-29T03:00:00+00:00",
+      "updated_at": "2026-10-29T10:00:00+00:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "COMPLETED",
+      "seller_discount": "10000.00",
+      "platform_discount": "5000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopee-open-platform/1002/supplement",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100326",
+      "ordered_at": "2026-10-30T05:40:00+00:00",
+      "updated_at": "2026-10-30T12:40:00+00:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "COMPLETED",
+      "seller_discount": "20000.00",
+      "platform_discount": "10000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopee-open-platform/1002/supplement",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100330",
+      "ordered_at": "2026-10-30T07:00:00+00:00",
+      "updated_at": "2026-10-30T14:00:00+00:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "COMPLETED",
+      "seller_discount": "10000.00",
+      "platform_discount": "5000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopee-open-platform/1002/supplement",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100072",
+      "ordered_at": "2026-10-20T08:00:00+07:00",
+      "updated_at": "2026-10-20T15:00:00+07:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "delivered",
+      "seller_discount": "20000.00",
+      "platform_discount": "10000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "lazada/1001/supplement",
+      "source_document_id": "lazada/1001/orders"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100294",
+      "ordered_at": "2026-10-29T10:00:00+07:00",
+      "updated_at": "2026-10-29T17:00:00+07:00",
+      "currency": "VND",
+      "status": "completed",
+      "original_status": "delivered",
+      "seller_discount": "90000.00",
+      "platform_discount": "5000.00",
+      "promotion_id": "SAVE90",
+      "enrichment_source_document_id": "lazada/1001/supplement",
+      "source_document_id": "lazada/1001/orders"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100326",
+      "ordered_at": "2026-10-30T12:40:00+07:00",
+      "updated_at": "2026-10-30T19:40:00+07:00",
+      "currency": "VND",
+      "status": "open",
+      "original_status": "pending",
+      "seller_discount": "20000.00",
+      "platform_discount": "10000.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "lazada/1001/supplement",
+      "source_document_id": "lazada/1001/orders"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100330",
+      "ordered_at": "2026-10-30T14:00:00+07:00",
+      "updated_at": "2026-10-30T21:00:00+07:00",
+      "currency": "VND",
+      "status": "cancelled",
+      "original_status": "canceled",
+      "seller_discount": "90000.00",
+      "platform_discount": "5000.00",
+      "promotion_id": "SAVE90",
+      "enrichment_source_document_id": "lazada/1001/supplement",
+      "source_document_id": "lazada/1001/orders"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100072",
+      "ordered_at": "2026-10-20T08:00:00+07:00",
+      "updated_at": "2026-10-20T15:00:00+07:00",
+      "currency": "VND",
+      "status": "shipped",
+      "original_status": "FULFILLED",
+      "seller_discount": "20000.00",
+      "platform_discount": "0.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopify/1001/supplement",
+      "source_document_id": "shopify/1001/orders"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100294",
+      "ordered_at": "2026-10-29T10:00:00+07:00",
+      "updated_at": "2026-10-29T17:00:00+07:00",
+      "currency": "VND",
+      "status": "shipped",
+      "original_status": "FULFILLED",
+      "seller_discount": "90000.00",
+      "platform_discount": "0.00",
+      "promotion_id": "SAVE90",
+      "enrichment_source_document_id": "shopify/1001/supplement",
+      "source_document_id": "shopify/1001/orders"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100326",
+      "ordered_at": "2026-10-30T12:40:00+07:00",
+      "updated_at": "2026-10-30T19:40:00+07:00",
+      "currency": "VND",
+      "status": "open",
+      "original_status": "UNFULFILLED",
+      "seller_discount": "20000.00",
+      "platform_discount": "0.00",
+      "promotion_id": null,
+      "enrichment_source_document_id": "shopify/1001/supplement",
+      "source_document_id": "shopify/1001/orders"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100330",
+      "ordered_at": "2026-10-30T14:00:00+07:00",
+      "updated_at": "2026-10-30T21:00:00+07:00",
+      "currency": "VND",
+      "status": "cancelled",
+      "original_status": "UNFULFILLED",
+      "seller_discount": "90000.00",
+      "platform_discount": "0.00",
+      "promotion_id": "SAVE90",
+      "enrichment_source_document_id": "shopify/1001/supplement",
+      "source_document_id": "shopify/1001/orders"
+    }
+  ],
+  "core.order_items": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100072",
+      "line_id": "100:200",
+      "sku": "SHIRT-M",
+      "quantity": 2,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100294",
+      "line_id": "100:200",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100326",
+      "line_id": "102:202",
+      "sku": "TOTE",
+      "quantity": 2,
+      "unit_price": "250000.00",
+      "status": "open",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100330",
+      "line_id": "100:200",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "cancelled",
+      "source_document_id": "shopee-open-platform/1001/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100072",
+      "line_id": "100:200",
+      "sku": "SHIRT-M",
+      "quantity": 2,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100294",
+      "line_id": "100:200",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100326",
+      "line_id": "102:202",
+      "sku": "TOTE",
+      "quantity": 2,
+      "unit_price": "250000.00",
+      "status": "completed",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100330",
+      "line_id": "100:200",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "shopee-open-platform/1002/orders"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100072",
+      "line_id": "1000720",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "lazada/1001/order_items"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100072",
+      "line_id": "1000721",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "lazada/1001/order_items"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100294",
+      "line_id": "1002940",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "completed",
+      "source_document_id": "lazada/1001/order_items"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100326",
+      "line_id": "1003260",
+      "sku": "TOTE",
+      "quantity": 1,
+      "unit_price": "250000.00",
+      "status": "open",
+      "source_document_id": "lazada/1001/order_items"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100326",
+      "line_id": "1003261",
+      "sku": "TOTE",
+      "quantity": 1,
+      "unit_price": "250000.00",
+      "status": "open",
+      "source_document_id": "lazada/1001/order_items"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100330",
+      "line_id": "1003300",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "cancelled",
+      "source_document_id": "lazada/1001/order_items"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100072",
+      "line_id": "gid://shopify/LineItem/1000720",
+      "sku": "SHIRT-M",
+      "quantity": 2,
+      "unit_price": "200000.00",
+      "status": "shipped",
+      "source_document_id": "shopify/1001/orders"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100294",
+      "line_id": "gid://shopify/LineItem/1002940",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "shipped",
+      "source_document_id": "shopify/1001/orders"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100326",
+      "line_id": "gid://shopify/LineItem/1003260",
+      "sku": "TOTE",
+      "quantity": 2,
+      "unit_price": "250000.00",
+      "status": "open",
+      "source_document_id": "shopify/1001/orders"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100330",
+      "line_id": "gid://shopify/LineItem/1003300",
+      "sku": "SHIRT-M",
+      "quantity": 1,
+      "unit_price": "200000.00",
+      "status": "cancelled",
+      "source_document_id": "shopify/1001/orders"
+    }
+  ],
+  "core.reviews": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "review_id": "R100072",
+      "order_id": "100072",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-20T12:00:00+07:00",
+      "rating": 5,
+      "body": "Hàng đẹp, giao nhanh.",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "review_id": "R100294",
+      "order_id": "100294",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-29T14:00:00+07:00",
+      "rating": 1,
+      "body": "Áo quá chật, size M nhỏ hơn bảng size.",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "review_id": "R100072",
+      "order_id": "100072",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-20T12:00:00+07:00",
+      "rating": 5,
+      "body": "Hàng đẹp, giao nhanh.",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "review_id": "R100294",
+      "order_id": "100294",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-29T14:00:00+07:00",
+      "rating": 5,
+      "body": "Hàng đẹp, giao nhanh.",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "review_id": "R100326",
+      "order_id": "100326",
+      "sku": "TOTE",
+      "reviewed_at": "2026-10-30T16:40:00+07:00",
+      "rating": 5,
+      "body": "Hàng đẹp, giao nhanh.",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "review_id": "R100330",
+      "order_id": "100330",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-30T18:00:00+07:00",
+      "rating": 5,
+      "body": "Hàng đẹp, giao nhanh.",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "review_id": "R100072",
+      "order_id": "100072",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-20T12:00:00+07:00",
+      "rating": 5,
+      "body": "Hàng đẹp, giao nhanh.",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "review_id": "R100294",
+      "order_id": "100294",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-29T14:00:00+07:00",
+      "rating": 1,
+      "body": "Áo quá chật, size M nhỏ hơn bảng size.",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "review_id": "R100072",
+      "order_id": "gid://shopify/Order/100072",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-20T12:00:00+07:00",
+      "rating": 5,
+      "body": "Hàng đẹp, giao nhanh.",
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "review_id": "R100294",
+      "order_id": "gid://shopify/Order/100294",
+      "sku": "SHIRT-M",
+      "reviewed_at": "2026-10-29T14:00:00+07:00",
+      "rating": 1,
+      "body": "Áo quá chật, size M nhỏ hơn bảng size.",
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.returns": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "return_id": "RT100072",
+      "order_id": "100072",
+      "requested_at": "2026-10-20T14:00:00+07:00",
+      "reason": "Không vừa / đổi ý",
+      "status": "refunded",
+      "refund_amount": "370000.00",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "return_id": "RT100072",
+      "order_id": "100072",
+      "requested_at": "2026-10-20T14:00:00+07:00",
+      "reason": "Không vừa / đổi ý",
+      "status": "refunded",
+      "refund_amount": "370000.00",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "return_id": "RT100072",
+      "order_id": "100072",
+      "requested_at": "2026-10-20T14:00:00+07:00",
+      "reason": "Không vừa / đổi ý",
+      "status": "refunded",
+      "refund_amount": "370000.00",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "return_id": "RT100072",
+      "order_id": "gid://shopify/Order/100072",
+      "requested_at": "2026-10-20T14:00:00+07:00",
+      "reason": "Không vừa / đổi ý",
+      "status": "refunded",
+      "refund_amount": "380000.00",
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.inventory": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 2,
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 2,
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "SHIRT-M",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 2,
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "CAP",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-28T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "sku": "TOTE",
+      "location_id": "VN-HCM-1",
+      "observed_at": "2026-10-30T23:00:00+07:00",
+      "available": 250,
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.promotions": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "promotion_id": "SAVE90",
+      "name": "Giảm 90k cho áo thun",
+      "funding": "seller",
+      "starts_at": "2026-10-29T00:00:00+07:00",
+      "ends_at": "2026-11-05T00:00:00+07:00",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "promotion_id": "SAVE90",
+      "name": "Giảm 90k cho áo thun",
+      "funding": "seller",
+      "starts_at": "2026-10-29T00:00:00+07:00",
+      "ends_at": "2026-11-05T00:00:00+07:00",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "promotion_id": "SAVE90",
+      "name": "Giảm 90k cho áo thun",
+      "funding": "seller",
+      "starts_at": "2026-10-29T00:00:00+07:00",
+      "ends_at": "2026-11-05T00:00:00+07:00",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "promotion_id": "SAVE90",
+      "name": "Giảm 90k cho áo thun",
+      "funding": "seller",
+      "starts_at": "2026-10-29T00:00:00+07:00",
+      "ends_at": "2026-11-05T00:00:00+07:00",
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.settlements": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100072",
+      "fee_amount": "20000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "370000.00",
+      "actual_payout": "-18000.00",
+      "paid_at": "2026-10-20T15:00:00+07:00",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100294",
+      "fee_amount": "30000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "0.00",
+      "actual_payout": "72000.00",
+      "paid_at": "2026-10-29T17:00:00+07:00",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100072",
+      "fee_amount": "20000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "370000.00",
+      "actual_payout": "-18000.00",
+      "paid_at": "2026-10-20T15:00:00+07:00",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100294",
+      "fee_amount": "10000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "0.00",
+      "actual_payout": "172000.00",
+      "paid_at": "2026-10-29T17:00:00+07:00",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100326",
+      "fee_amount": "25000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "0.00",
+      "actual_payout": "447000.00",
+      "paid_at": "2026-10-30T19:40:00+07:00",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100330",
+      "fee_amount": "10000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "0.00",
+      "actual_payout": "172000.00",
+      "paid_at": "2026-10-30T21:00:00+07:00",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100072",
+      "fee_amount": "20000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "370000.00",
+      "actual_payout": "-18000.00",
+      "paid_at": "2026-10-20T15:00:00+07:00",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100294",
+      "fee_amount": "30000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "0.00",
+      "actual_payout": "72000.00",
+      "paid_at": "2026-10-29T17:00:00+07:00",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100072",
+      "fee_amount": "20000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "380000.00",
+      "actual_payout": "-28000.00",
+      "paid_at": "2026-10-20T15:00:00+07:00",
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100294",
+      "fee_amount": "30000.00",
+      "seller_shipping_cost": "8000.00",
+      "refund_amount": "0.00",
+      "actual_payout": "72000.00",
+      "paid_at": "2026-10-29T17:00:00+07:00",
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.fulfillment": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100072",
+      "ship_by": "2026-10-21T08:00:00+07:00",
+      "shipped_at": "2026-10-20T09:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100294",
+      "ship_by": "2026-10-30T10:00:00+07:00",
+      "shipped_at": "2026-10-29T11:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100326",
+      "ship_by": "2026-10-30T15:40:00+07:00",
+      "shipped_at": null,
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "order_id": "100330",
+      "ship_by": "2026-10-31T14:00:00+07:00",
+      "shipped_at": null,
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100072",
+      "ship_by": "2026-10-21T08:00:00+07:00",
+      "shipped_at": "2026-10-20T09:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100294",
+      "ship_by": "2026-10-30T10:00:00+07:00",
+      "shipped_at": "2026-10-29T11:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100326",
+      "ship_by": "2026-10-31T12:40:00+07:00",
+      "shipped_at": "2026-10-30T13:40:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "shopee-open-platform:1002",
+      "order_id": "100330",
+      "ship_by": "2026-10-31T14:00:00+07:00",
+      "shipped_at": "2026-10-30T15:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopee-open-platform/1002/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100072",
+      "ship_by": "2026-10-21T08:00:00+07:00",
+      "shipped_at": "2026-10-20T09:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100294",
+      "ship_by": "2026-10-30T10:00:00+07:00",
+      "shipped_at": "2026-10-29T11:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100326",
+      "ship_by": "2026-10-30T15:40:00+07:00",
+      "shipped_at": null,
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "order_id": "100330",
+      "ship_by": "2026-10-31T14:00:00+07:00",
+      "shipped_at": null,
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "lazada/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100072",
+      "ship_by": "2026-10-21T08:00:00+07:00",
+      "shipped_at": "2026-10-20T09:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100294",
+      "ship_by": "2026-10-30T10:00:00+07:00",
+      "shipped_at": "2026-10-29T11:00:00+07:00",
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100326",
+      "ship_by": "2026-10-30T15:40:00+07:00",
+      "shipped_at": null,
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopify/1001/supplement"
+    },
+    {
+      "shop_key": "shopify:1001",
+      "order_id": "gid://shopify/Order/100330",
+      "ship_by": "2026-10-31T14:00:00+07:00",
+      "shipped_at": null,
+      "deadline_basis": "demo_policy_not_marketplace_SLA",
+      "source_document_id": "shopify/1001/supplement"
+    }
+  ],
+  "core.account_health": [
+    {
+      "shop_key": "shopee-open-platform:1001",
+      "event_id": "P1",
+      "occurred_at": "2026-10-30T18:00:00+07:00",
+      "expires_at": "2026-11-30T00:00:00+07:00",
+      "penalty_points": 3,
+      "reason": "Demo: late shipment warning",
+      "source_document_id": "shopee-open-platform/1001/supplement"
+    },
+    {
+      "shop_key": "lazada:1001",
+      "event_id": "P1",
+      "occurred_at": "2026-10-30T18:00:00+07:00",
+      "expires_at": "2026-11-30T00:00:00+07:00",
+      "penalty_points": 3,
+      "reason": "Demo: late shipment warning",
+      "source_document_id": "lazada/1001/supplement"
+    }
+  ]
+}
