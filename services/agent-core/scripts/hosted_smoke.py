@@ -472,6 +472,7 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
     import secrets
     import time
 
+    from app.api.runs import public_error
     from app.contracts.report import RuntimeReport
 
     def api(method: str, url: str, **kwargs):
@@ -513,6 +514,21 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
         deadline = time.monotonic() + 190
         while time.monotonic() < deadline:
             run = api("GET", f"/runs/{rid}").json()
+            evidence["last_run_status"] = (
+                run["status"]
+                if run["status"]
+                in {
+                    "queued",
+                    "running",
+                    "waiting_tool",
+                    "reconciling",
+                    "completed",
+                    "failed",
+                    "cancelled",
+                }
+                else "unknown"
+            )
+            evidence["last_run_error"] = public_error(run.get("error"))
             if run["status"] in {"completed", "failed", "cancelled"}:
                 _require(run["status"] == "completed")
                 return rid, run
@@ -524,6 +540,7 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
             app.state.repository.execution_context(rid), loop
         ).result(timeout=10)[0]
 
+    evidence["stage"] = "first_report"
     cid = conversation()
     prompt = (
         "Lập báo cáo tiếng Việt SKU-A từ 2026-10-19 đến 2026-10-25, đối chiếu kỳ trước "
@@ -560,7 +577,9 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
             knowledge_references=knowledge,
         )
 
+    evidence["stage"] = "saved_execution_proof"
     evidence.update(asyncio.run_coroutine_threadsafe(proof(), loop).result(timeout=35))
+    evidence["stage"] = "artifact_validation"
     files = api("GET", f"/runs/{rid}/artifacts").json()["items"]
     reports = [f for f in files if f["filename"] == "report.json"]
     _require(len(reports) == 1)
@@ -576,6 +595,7 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
             client.get("/api/v1" + url, headers={"Authorization": f"Bearer {token}"}).status_code
             == 404
         )
+    evidence["stage"] = "same_session_followup"
     followup, answer = send(
         cid,
         "Không gọi tool, dùng ngữ cảnh vừa rồi: tỷ lệ tăng bao nhiêu điểm phần trăm? "
@@ -586,6 +606,7 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
     _require(re.search(r"(?<!\d)10(?!\d)|mười", answer["response"]["text"].casefold()))
     _require(local(followup).provider_session_id == first.provider_session_id)
     _require(api("GET", f"/runs/{followup}/artifacts").json()["items"] == [])
+    evidence["stage"] = "clarification"
     cid2 = conversation()
     missing, clarification = send(
         cid2,
@@ -605,6 +626,7 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
             await repo.get_runtime(second.scope, cid2),
         )
 
+    evidence["stage"] = "environment_isolation"
     env1, env2 = asyncio.run_coroutine_threadsafe(environments(), loop).result(timeout=10)
     _require(env1 and env2 and env1.id != env2.id)
     evidence.update(
@@ -615,6 +637,7 @@ def _workflow(client, app, loop, conversations: list, run_ids: list, evidence: d
             "same_session_followup": True,
             "clarification_verified": True,
             "completed_turns": 3,
+            "stage": "verified",
         }
     )
 

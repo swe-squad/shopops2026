@@ -902,3 +902,34 @@ def test_hosted_cleanup_requires_artifact_deletion_acknowledgement(ack):
     assert remote.artifacts_attempted == {"file-first", "file-second"}
     assert result["confirmed_session_removals"] == 2
     assert result["cleanup"] is False
+
+
+@pytest.mark.parametrize("error", ["environment_timeout", "private diagnostic payload"])
+def test_smoke_failure_diagnostics_are_safe_and_identify_stage(error):
+    from types import SimpleNamespace
+
+    from scripts.hosted_smoke import EvidenceInvalid, _workflow
+
+    responses = iter(
+        [
+            {"orchestrator_id": "private-orchestrator"},
+            {"conversation_id": "private-conversation"},
+            {"run_id": "private-run"},
+            {"status": "failed", "error": error, "response": "private model output"},
+        ]
+    )
+
+    class Client:
+        def request(self, *args, **kwargs):
+            payload = next(responses)
+            return SimpleNamespace(raise_for_status=lambda: None, json=lambda: payload)
+
+    evidence = {}
+    with pytest.raises(EvidenceInvalid):
+        _workflow(Client(), None, None, [], [], evidence)
+    assert evidence["stage"] == "first_report"
+    assert evidence["last_run_status"] == "failed"
+    assert evidence["last_run_error"] == (
+        error if error == "environment_timeout" else "internal_error"
+    )
+    assert "private" not in json.dumps(evidence)
