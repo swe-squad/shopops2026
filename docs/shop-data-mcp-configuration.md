@@ -2,6 +2,12 @@
 
 Updated: 2026-10-31. Status: implemented configuration contract; live deployment is not verified. Use the [implementation plan](../plans/261031-shop-data-mcp/plan.md) to track readiness. This document owns deployment configuration; the [design report](../plans/reports/research-20261031-data-mcp-design.md) owns analytical behavior and protection requirements.
 
+For PR #6 integration, follow the [pipeline integration guide](../services/shop-data-mcp/INTEGRATION.md).
+It supplies the actual derived-database projections, role provisioning, cronjob bearer bridge,
+snapshot status semantics and internal agent connection settings. Use `CRONJOB_SERVER_URL`
+for the private cronjob origin and `MCP_INTERNAL_URL` to allow the MCP app's internal host.
+The older range-refresh contracts below do not describe PR #6's full-snapshot refresh.
+
 ## Confirmed topology
 
 The first deployment is dev only. OpenAI's Codex Agents API connects to an authenticated public HTTPS MCP endpoint. PostgreSQL remains private on the VPS.

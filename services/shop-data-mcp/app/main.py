@@ -17,13 +17,19 @@ def create_app():
     service = DataService(settings)
     server = build_server(service)
     host = urlparse(settings.public_url).netloc
+    hosts = [host]
+    origins = [f"https://{host}"]
+    if settings.internal_url:
+        internal = urlparse(settings.internal_url)
+        hosts.append(internal.netloc)
+        origins.append(f"{internal.scheme}://{internal.netloc}")
     app = server.streamable_http_app(
         stateless_http=True,
         host="0.0.0.0",
         transport_security=TransportSecuritySettings(
             enable_dns_rebinding_protection=True,
-            allowed_hosts=[host],
-            allowed_origins=[f"https://{host}"],
+            allowed_hosts=hosts,
+            allowed_origins=origins,
         ),
     )
 

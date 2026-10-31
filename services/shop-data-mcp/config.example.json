@@ -5,11 +5,17 @@
   "jwks_url": "https://AUTH_HOST/.well-known/jwks.json",
   "public_url": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
   "shops": {
-    "shopee:1001": {
+    "shopee-open-platform:1001": {
       "query_dsn": "host=PRIVATE_HOST dbname=shopops user=shop_shopee1001 password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
       "datasets": [
         "order_economics",
-        "settlement_details"
+        "settlement_details",
+        "shop_daily",
+        "shop_window_metrics",
+        "product_review_metrics",
+        "inventory_risk",
+        "promotion_performance",
+        "issue_candidates"
       ]
     }
   },

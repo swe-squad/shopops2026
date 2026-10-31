@@ -88,6 +88,9 @@ class Settings(StrictConfiguration):
     audience: str
     jwks_url: str
     public_url: str
+    internal_url: str | None = Field(
+        default=None, description="Explicit internal MCP URL allowed by transport host protection"
+    )
     datasets: list[Dataset] = Field(default_factory=list)
     shops: dict[str, Shop]
     query_timeout_ms: int = Field(default=10000, ge=100, le=60000)
@@ -107,6 +110,10 @@ class Settings(StrictConfiguration):
         # Mount outside the repository; never log validation inputs or DSNs.
         try:
             raw = json.loads(Path(os.environ["MCP_CONFIG_FILE"]).read_text())
+            if "CRONJOB_SERVER_URL" in os.environ:
+                raw["ingestion_url"] = os.environ["CRONJOB_SERVER_URL"]
+            if "MCP_INTERNAL_URL" in os.environ:
+                raw["internal_url"] = os.environ["MCP_INTERNAL_URL"]
             catalog_path = os.environ.get("MCP_CATALOG_FILE")
             if catalog_path:
                 if "datasets" in raw:
@@ -114,7 +121,30 @@ class Settings(StrictConfiguration):
                 catalog = Catalog.model_validate(json.loads(Path(catalog_path).read_text()))
                 raw["datasets"] = [d.model_dump() for d in catalog.datasets]
             settings = cls.model_validate(raw)
+            if settings.ingestion_url is not None or settings.ingestion_token is not None:
+                from app.upstream import Upstream
+
+                Upstream(
+                    settings.ingestion_url,
+                    settings.ingestion_token.get_secret_value()
+                    if settings.ingestion_token
+                    else None,
+                )._configured_url()
             from urllib.parse import urlparse
+
+            if settings.internal_url is not None:
+                internal = urlparse(settings.internal_url)
+                if (
+                    internal.scheme not in {"http", "https"}
+                    or not internal.hostname
+                    or internal.username
+                    or internal.password
+                    or internal.query
+                    or internal.fragment
+                    or internal.path != "/mcp"
+                    or "*" in internal.netloc
+                ):
+                    raise ValueError("Invalid internal MCP URL")
 
             from psycopg.conninfo import conninfo_to_dict
 

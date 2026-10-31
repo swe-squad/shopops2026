@@ -1,10 +1,12 @@
 # Shop Data MCP integration handoff
 
-Updated 2026-10-31. This service implements the MCP side of the boundary. The ingestion,
-processing, identity and raw-approval services are external dependencies; their contracts
-below are proposed for their engineers to implement. They are not deployed or verified
-integrations. An unconfigured or failed dependency returns an error; there is no fixture
-fallback or automatic approval.
+Updated 2026-10-31. [INTEGRATION.md](INTEGRATION.md) defines the implemented PR #6
+cronjob bridge, database provisioning, private agent transport and local verification.
+That bridge supports full snapshots only (`resource=snapshot`, `snapshot_ready`,
+`refresh_mode=full_snapshot`, `applied_source_revision`, `coverage=null`). The range-based
+collection contract below remains a future contract, not PR #6's behavior. Identity and
+raw-owner approval remain external dependencies. An unconfigured or failed dependency
+returns an error; there is no fixture fallback or automatic approval.
 
 ## Service configuration and identity
 

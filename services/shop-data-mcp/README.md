@@ -11,9 +11,9 @@ For dataset registration and tool changes, start with [Data and tool changes](DE
 3. Provision a unique, non-owner PostgreSQL query login per shop with no privileged attributes or role memberships. Grant only the sanitized catalog projections for that shop. Use RLS or shop-specific security views to enforce tenancy in PostgreSQL; catalog filters supplement this boundary. This service refuses privileged query identities but cannot prove arbitrary views/RLS are correctly authored. Verify two-shop isolation before connecting real agents.
 4. Put that shop's query DSN and allowed dataset IDs in `shops`. Query connections are fresh per request and read-only, with statement timeout and restricted SQL. Both control and query DSNs require `sslmode=verify-full` plus CA material when loaded at startup. The SSL certificate must match the private hostname.
 5. Configure an RS256 JWT issuer/JWKS. Required claims: `sub` (agent identity), `shop_key`, `scope` (space-separated), `iat`, `exp`, `jti`, plus matching `iss` and `aud`. Tokens last at most one hour. Every HTTP request checks revocation in `mcp_control.revoked_tokens`; insert a jti there to revoke it. Signing keys stay outside this service. Scopes: `data:read`, optionally `raw:request`, `raw:read`, `data:refresh`.
-6. Supply approval and ingestion service URLs/tokens when implemented. Until then those tools return sanitized errors. `HANDOFF.md` defines their exact proposed contracts, including processing-stage reporting. The MCP never forwards the agent token to those services.
+6. Configure the cronjob bridge and database projections using [INTEGRATION.md](INTEGRATION.md). Set `CRONJOB_SERVER_URL`, the separate ingestion credential, and `MCP_INTERNAL_URL` for private agent traffic. Raw approval remains an external dependency defined in `HANDOFF.md`. The MCP never forwards the agent token to those services.
 
-The catalog example's dataset names/columns are integration contracts, not migrations that create those marts. The data engineer supplies actual schema, projections, semantics and coverage/watermarks. Catalog updates require a restart. Do not include customer identifiers in semantic descriptions.
+The catalog example targets PR #6's derived schema through `migrations/002-pipeline-access.sql` and shop-bound logins provisioned by `python -m app.provision`. See [INTEGRATION.md](INTEGRATION.md) for migration order, exact shop keys and snapshot semantics. Catalog updates require a restart. Do not include customer identifiers in semantic descriptions.
 
 ## Agent tools
 
@@ -23,7 +23,7 @@ Use catalog IDs in SQL, e.g. `SELECT sum(gross_sales) AS sales FROM order_econom
 
 The supported SQL subset includes projections, arithmetic, aggregates, filters, joins and selected casts. CTEs, arbitrary functions, custom types, system relations, writes and role changes are rejected. Unsupported queries fail closed. Two query slots are available per process; set replica/global database limits for total VPS capacity. A result's `truncated` flag must not be ignored when using it as a temporary mart.
 
-Refreshes enforce resource allowlists, maximum lookback, per-shop cooldown and persisted idempotency. Upstream must also enforce request/page/quota/concurrency budgets and deduplicate retries atomically: network failures can occur after job creation. Operations remain owned by the original shop and subject. The ingestion status contract includes processing; only `mart_ready` is ready for renewed BI analysis.
+Refreshes enforce resource allowlists, maximum lookback, per-shop cooldown and persisted idempotency. The cronjob bridge persists requests atomically with runs and rechecks current membership. Operations remain owned by the original shop and subject. PR #6 supports `snapshot` refresh: `snapshot_ready` reports an atomically published revision with no historical interval coverage. Its frozen event-time clock remains unchanged. The separate future range-refresh contract uses `mart_ready`.
 
 ## Data engineer checklist
 
@@ -70,4 +70,4 @@ Create CapRover app `shop-data-mcp-dev`, Container HTTP Port 8000, HTTPS and For
 
 Use the Agents API service-origin MCP entry in [configuration guide](../../docs/shop-data-mcp-configuration.md), with a backend-issued shop-bound bearer token. The SDK supplies protected-resource metadata; this app also exposes it at `/.well-known/oauth-protected-resource/mcp`. Public authentication is mandatory except for that metadata and liveness. The issuer must supply its own OAuth metadata/authorization flow if required by the client.
 
-Before enabling raw data, remind the owner to implement the approval/identity contracts. Before enabling automatic refresh, remind them to implement collection/processing contracts. No upstream service, live PostgreSQL policy or Agents API round trip is claimed verified by local tests.
+Before enabling raw data, implement the approval/identity contracts. Before enabling refresh, deploy the companion cronjob bridge and configure its service token and subject mapping. The local pipeline harness verifies real HTTP services, PostgreSQL and MCP SDK tool calls; deployed credentials, production TLS and an external agent-provider round trip require environment-specific verification.

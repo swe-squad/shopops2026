@@ -157,12 +157,16 @@ def build_server(service: DataService) -> MCPServer:
     async def request_refresh(
         resource: str, start: str, end: str, idempotency_key: str
     ) -> dict[str, Any]:
-        """Automatically request collection within policy. Reuse the key on retry."""
+        """Refresh a catalog resource within policy; reuse the key on retry.
+
+        Resource snapshot synchronizes the entire configured source snapshot, not a
+        time-range backfill. Its completion reports a revision, not interval coverage.
+        """
         return await run(service.refresh, principal.get(), resource, start, end, idempotency_key)
 
     @server.tool(structured_output=True, annotations=read)
     async def get_operation(operation_id: str) -> dict[str, Any]:
-        """Track an owned pull. Only mart_ready indicates fresh marts."""
+        """Track an owned pull. snapshot_ready is published data, not interval coverage."""
 
         async def request():
             who = principal.get()
@@ -182,6 +186,7 @@ def build_server(service: DataService) -> MCPServer:
                 "raw_available",
                 "processing",
                 "mart_ready",
+                "snapshot_ready",
                 "failed",
                 "cancelled",
                 "partial",
@@ -191,6 +196,8 @@ def build_server(service: DataService) -> MCPServer:
                 "operation_id": operation_id,
                 "status": result.get("status"),
                 "coverage": result.get("coverage"),
+                "refresh_mode": result.get("refresh_mode"),
+                "applied_source_revision": result.get("applied_source_revision"),
                 "checked_at": datetime.now(UTC).isoformat(),
             }
 

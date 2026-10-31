@@ -149,6 +149,7 @@ class DataService:
             "raw_available",
             "processing",
             "mart_ready",
+            "snapshot_ready",
             "failed",
             "cancelled",
             "partial",

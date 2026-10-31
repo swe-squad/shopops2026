@@ -2,7 +2,7 @@
 
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 
 class StrictResponse(BaseModel):
@@ -34,9 +34,22 @@ class OperationStatus(StrictResponse):
         "raw_available",
         "processing",
         "mart_ready",
+        "snapshot_ready",
         "failed",
         "cancelled",
         "partial",
     ]
     coverage: Coverage | None = None
     error_code: str | None = Field(default=None, pattern=r"^[A-Z0-9_]{1,64}$")
+    refresh_mode: Literal["full_snapshot"] | None = None
+    applied_source_revision: int | None = Field(default=None, ge=0, strict=True)
+
+    @model_validator(mode="after")
+    def snapshot_has_no_interval_coverage(self) -> "OperationStatus":
+        if self.refresh_mode == "full_snapshot" and self.coverage is not None:
+            raise ValueError("Snapshot refresh cannot certify historical interval coverage")
+        if self.status == "snapshot_ready" and (
+            self.refresh_mode != "full_snapshot" or self.applied_source_revision is None
+        ):
+            raise ValueError("Snapshot completion requires its mode and published revision")
+        return self

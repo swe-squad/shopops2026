@@ -43,7 +43,8 @@ def test_split_catalog_loads_metadata_without_overriding_shop_access(split_confi
     config, catalog, _, _ = split_config
     settings = Settings.load()
     assert settings.datasets == Catalog.model_validate(catalog).datasets
-    assert settings.shops["shopee:1001"].datasets == config["shops"]["shopee:1001"]["datasets"]
+    shop = "shopee-open-platform:1001"
+    assert settings.shops[shop].datasets == config["shops"][shop]["datasets"]
 
 
 def test_legacy_inline_catalog_still_loads(split_config, monkeypatch):
@@ -81,6 +82,48 @@ def test_config_typo_is_reported_without_secret_values(split_config):
     assert "extra_forbidden" in str(error.value)
     assert "do-not-print-this-value" not in str(error.value)
     assert "password=" not in str(error.value)
+
+
+def test_cronjob_runtime_url_and_separate_service_credential(split_config, monkeypatch):
+    config, _, operator_file, _ = split_config
+    config["ingestion_token"] = "test-service-credential"
+    operator_file.write_text(json.dumps(config))
+    monkeypatch.setenv("CRONJOB_SERVER_URL", "http://srv-captain--cronjob-server:8000")
+    settings = Settings.load()
+    assert settings.ingestion_url == "http://srv-captain--cronjob-server:8000"
+    assert settings.ingestion_token.get_secret_value() == "test-service-credential"
+
+
+@pytest.mark.parametrize("url", ["", "http://localhost:8001/path", "http://user:secret@localhost"])
+def test_invalid_cronjob_origin_fails_startup(split_config, monkeypatch, url):
+    config, _, operator_file, _ = split_config
+    config["ingestion_token"] = "test-service-credential"
+    operator_file.write_text(json.dumps(config))
+    monkeypatch.setenv("CRONJOB_SERVER_URL", url)
+    with pytest.raises(ConfigurationError):
+        Settings.load()
+
+
+def test_cronjob_url_without_service_token_fails_startup(split_config, monkeypatch):
+    monkeypatch.setenv("CRONJOB_SERVER_URL", "http://localhost:8001")
+    with pytest.raises(ConfigurationError):
+        Settings.load()
+
+
+def test_internal_url_is_explicit_runtime_configuration(split_config, monkeypatch):
+    monkeypatch.setenv("MCP_INTERNAL_URL", "http://srv-captain--shop-data-mcp:8000/mcp")
+    assert Settings.load().internal_url == "http://srv-captain--shop-data-mcp:8000/mcp"
+
+
+@pytest.mark.parametrize(
+    "url", ["http://*.example/mcp", "http://localhost/private", "http://u:p@host/mcp"]
+)
+def test_internal_transport_url_rejects_wildcards_paths_and_credentials(
+    split_config, monkeypatch, url
+):
+    monkeypatch.setenv("MCP_INTERNAL_URL", url)
+    with pytest.raises(ConfigurationError):
+        Settings.load()
 
 
 @pytest.mark.parametrize("time_column", [None, "not_exposed"])

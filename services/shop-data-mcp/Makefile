@@ -1,4 +1,4 @@
-.PHONY: ci install run test lint format docker integration check-config check-data config-schema catalog-schema
+.PHONY: ci install run test lint format docker integration pipeline-integration check-config check-data config-schema catalog-schema
 PYTHON ?= python3
 VENV ?= .venv
 
@@ -24,6 +24,10 @@ format:
 integration:
 	test -n "$(TEST_DATABASE_DSN)"
 	$(VENV)/bin/python -m pytest tests/test_database.py -q
+
+# Checkout PR #6 with its MCP bridge, or merge it first. See INTEGRATION.md.
+pipeline-integration:
+	$(VENV)/bin/python ../../scripts/test-data-mcp-integration.py --pipeline-root "$(PIPELINE_ROOT)" --pipeline-python "$(PIPELINE_PYTHON)"
 
 check-config:
 	$(VENV)/bin/python -m app.check

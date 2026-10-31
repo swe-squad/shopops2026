@@ -49,7 +49,43 @@ def test_request_creation_cannot_self_approve_or_invent_status(status: str) -> N
 
 def test_operation_accepts_exact_coverage_contract() -> None:
     body = operation(error_code=None)
-    assert OperationStatus.model_validate(body).model_dump(mode="json") == body
+    assert OperationStatus.model_validate(body).model_dump(mode="json", exclude_unset=True) == body
+
+
+def test_snapshot_completion_reports_revision_without_inventing_time_coverage() -> None:
+    body = operation(
+        status="snapshot_ready",
+        coverage=None,
+        refresh_mode="full_snapshot",
+        applied_source_revision=7,
+    )
+    result = OperationStatus.model_validate(body)
+    assert result.status == "snapshot_ready"
+    assert result.coverage is None
+    assert result.applied_source_revision == 7
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"applied_source_revision": None},
+        {"applied_source_revision": -1},
+        {"applied_source_revision": True},
+        {"refresh_mode": None},
+        {"coverage": operation()["coverage"]},
+    ],
+)
+def test_snapshot_completion_rejects_missing_revision_or_claimed_interval(changes: dict) -> None:
+    with pytest.raises(ValidationError):
+        OperationStatus.model_validate(
+            operation(
+                status="snapshot_ready",
+                coverage=None,
+                refresh_mode="full_snapshot",
+                applied_source_revision=7,
+            )
+            | changes
+        )
 
 
 @pytest.mark.parametrize(
