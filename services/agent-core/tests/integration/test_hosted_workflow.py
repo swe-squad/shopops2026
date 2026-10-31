@@ -358,9 +358,6 @@ def test_setup_failure_keeps_environment_and_blocks_followup(api, failure, code)
         assert len(provider.sessions) == 1
 
 
-@pytest.mark.xfail(
-    strict=True, reason="T05: public_error masks hosted environment errors as internal_error"
-)
 @pytest.mark.parametrize(
     "code", ["environment_failed", "environment_timeout", "environment_unavailable"]
 )
@@ -603,7 +600,7 @@ def test_hosted_cleanup_preserves_uncertainty_and_attempts_other_resources(outco
             if session_id is not None:
                 if outcome == "artifact_failure" and session_id == "first":
                     raise RemoteError()
-                return
+                return {"id": ident, "deleted": True}
             self.attempts[ident] = self.attempts.get(ident, 0) + 1
             if ident == "first":
                 if outcome == "409":
@@ -859,3 +856,49 @@ def test_smoke_drives_actual_application_api_with_synthetic_provider(api, monkey
         assert len(conversations) == 2 and len(run_ids) == 3
         # This is transport/lifecycle evidence only. The saved records above are synthetic.
         assert not result["boundary_probe_verified"]
+
+
+@pytest.mark.parametrize("ack", ["not_deleted", "wrong_id", "missing"])
+def test_hosted_cleanup_requires_artifact_deletion_acknowledgement(ack):
+    import asyncio
+
+    from scripts.hosted_smoke import cleanup_remote
+
+    class Absent(Exception):
+        status_code = 404
+
+    class Remote:
+        def __init__(self):
+            self.artifacts = self
+            self.sessions_removed = set()
+            self.artifacts_attempted = set()
+
+        def list(self, sid, **kwargs):
+            async def rows():
+                yield {"id": "file-" + sid, "session_id": sid}
+
+            return rows()
+
+        async def delete(self, ident, *, session_id=None):
+            if session_id is not None:
+                self.artifacts_attempted.add(ident)
+                if session_id == "first":
+                    if ack == "missing":
+                        return {}
+                    return {
+                        "id": "other" if ack == "wrong_id" else ident,
+                        "deleted": ack != "not_deleted",
+                    }
+                return {"id": ident, "deleted": True}
+            self.sessions_removed.add(ident)
+            return {"id": ident, "deleted": True}
+
+        async def retrieve(self, sid):
+            raise Absent()
+
+    remote = Remote()
+    result = asyncio.run(cleanup_remote(remote, {"first", "second"}))
+    assert remote.sessions_removed == {"first", "second"}
+    assert remote.artifacts_attempted == {"file-first", "file-second"}
+    assert result["confirmed_session_removals"] == 2
+    assert result["cleanup"] is False

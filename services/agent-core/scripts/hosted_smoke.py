@@ -253,7 +253,9 @@ async def cleanup_remote(sessions, session_ids: set[str]) -> dict:
         for artifact in artifacts:
             try:
                 async with asyncio.timeout(5):
-                    await sessions.artifacts.delete(artifact["id"], session_id=sid)
+                    result = _dict(await sessions.artifacts.delete(artifact["id"], session_id=sid))
+                if result.get("id") != artifact["id"] or result.get("deleted") is not True:
+                    ok = False
             except Exception as error:
                 if getattr(error, "status_code", None) != 404:
                     ok = False
