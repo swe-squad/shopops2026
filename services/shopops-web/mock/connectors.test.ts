@@ -38,10 +38,13 @@ describe('RAM connector API', () => {
     const origin = await start()
     for (const [path, method, headers, status] of [
       ['/api/mock/connectors/amazon', 'PUT', {}, 400],
+      ['/api/mock/connectors/amazon', 'DELETE', {}, 400],
       ['/api/mock/connectors', 'POST', {}, 405],
+      ['/api/mock/connectors', 'DELETE', {}, 405],
       ['/api/mock/connectors/shopee', 'GET', {}, 405],
       ['/api/mock/unknown', 'GET', {}, 404],
       ['/api/mock/connectors/shopee/extra', 'PUT', {}, 404],
+      ['/api/mock/connectors/shopee/extra', 'DELETE', {}, 404],
       ['/api/mock/connectors/shopee', 'PUT', { Origin: 'https://other.example' }, 403],
       ['/api/mock/connectors/shopee', 'PUT', { Origin: 'null' }, 403],
     ] as const) {
@@ -53,12 +56,36 @@ describe('RAM connector API', () => {
     expect(await response.json()).toMatchObject({ connections: [{ connected: false }, { connected: false }] })
   })
 
-  it('accepts the HTTPS origin forwarded by nginx behind CapRover', async () => {
+  it.each(['shopee', 'tiktok'])('disconnects only %s, repeats safely and allows reconnection', async platform => {
     const origin = await start()
+    const endpoint = `${origin}/api/mock/connectors`
+    for (const name of ['shopee', 'tiktok']) {
+      expect((await fetch(`${endpoint}/${name}`, { method: 'PUT' })).status).toBe(200)
+    }
+    for (const Origin of ['https://other.example', 'null']) {
+      expect((await fetch(`${endpoint}/${platform}`, { method: 'DELETE', headers: { Origin } })).status).toBe(403)
+    }
+    expect(await (await fetch(endpoint)).json()).toMatchObject({ connections: [{ connected: true }, { connected: true }] })
+    for (let index = 0; index < 2; index++) {
+      const response = await fetch(`${endpoint}/${platform}`, { method: 'DELETE', headers: { Origin: origin } })
+      expect(response.status).toBe(200)
+      expect(response.headers.get('Cache-Control')).toBe('no-store')
+      expect(await response.json()).toEqual({ platform, connected: false, mock: true })
+    }
+    expect(await (await fetch(endpoint)).json()).toEqual({ connections: ['shopee', 'tiktok'].map(name => ({ platform: name, connected: name !== platform, mock: true })) })
+    expect(await (await fetch(`${endpoint}/${platform}`, { method: 'PUT' })).json()).toEqual({ platform, connected: true, mock: true })
+    const unsupported = await fetch(`${endpoint}/${platform}`, { method: 'PATCH' })
+    expect(unsupported.status).toBe(405)
+    expect(unsupported.headers.get('Allow')).toBe('PUT, DELETE')
+  })
+
+  it.each(['PUT', 'DELETE'])('accepts HTTPS %s forwarded by nginx behind CapRover', async method => {
+    const origin = await start()
+    await fetch(`${origin}/api/mock/connectors/shopee`, { method: 'PUT' })
     const response = await fetch(`${origin}/api/mock/connectors/shopee`, {
-      method: 'PUT', headers: { Origin: origin.replace('http:', 'https:'), 'X-Forwarded-Proto': 'https' },
+      method, headers: { Origin: origin.replace('http:', 'https:'), 'X-Forwarded-Proto': 'https' },
     })
     expect(response.status).toBe(200)
-    expect(await response.json()).toMatchObject({ platform: 'shopee', connected: true })
+    expect(await response.json()).toMatchObject({ platform: 'shopee', connected: method === 'PUT' })
   })
 })

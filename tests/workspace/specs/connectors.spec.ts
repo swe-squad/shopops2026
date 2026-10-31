@@ -67,3 +67,22 @@ test('connector pages fit the embedded viewport and preserve tab keyboard focus'
   await expect(app.getByRole('heading', { name: 'Connection successful' })).toBeVisible()
   await expectFixedParent(page)
 })
+
+test('DELETE disconnects one platform in the web UI and allows reconnecting', async ({ page, request }) => {
+  const endpoint = 'http://localhost:5173/api/mock/connectors'
+  for (const platform of ['shopee', 'tiktok']) {
+    expect((await request.put(`${endpoint}/${platform}`)).status()).toBe(200)
+  }
+  await page.goto('/')
+  const app = browserApp(page)
+  await unlock(app, 'Unlock workspace')
+  await expect(app.getByRole('button', { name: 'View Shopee connection' })).toBeVisible()
+  const response = await request.delete(`${endpoint}/shopee`)
+  expect(response.status()).toBe(200)
+  expect(await response.json()).toEqual({ platform: 'shopee', connected: false, mock: true })
+  await app.getByRole('button', { name: 'Reload page', exact: true }).click()
+  await expect(app.getByRole('region', { name: 'Shopee' })).toContainText('Not connected')
+  await expect(app.getByRole('button', { name: 'View TikTok connection' })).toBeVisible()
+  await app.getByRole('button', { name: 'Log in to Shopee' }).click()
+  await expect(app.getByRole('heading', { name: 'Connection successful' })).toBeVisible()
+})

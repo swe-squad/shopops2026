@@ -44,6 +44,21 @@ The mock API lives in this service, with two flags in one Node process's RAM:
 | --- | --- |
 | `GET /api/mock/connectors` | `{connections: [{platform, connected, mock: true}, ...]}` for Shopee and TikTok |
 | `PUT /api/mock/connectors/shopee` or `/tiktok` | No body; idempotently set that flag and return `{platform, connected: true, mock: true}` |
+| `DELETE /api/mock/connectors/shopee` or `/tiktok` | No body; idempotently clear that flag and return `{platform, connected: false, mock: true}` |
+
+To remove a demo connection locally:
+
+```sh
+curl -X DELETE http://localhost:5173/api/mock/connectors/shopee
+```
+
+Replace `shopee` with `tiktok` for TikTok, or use the deployed frontend origin.
+The response is HTTP 200, including when the platform is already disconnected.
+Only that platform's flag is cleared; both platforms remain in the GET list.
+Reopen Connections or use **Reload page** to show **Not connected**, then use the
+existing login button to reconnect. This endpoint requires no body or workspace
+token and affects the shared demo state for this service instance. A supplied
+Origin must match the frontend origin, just as for PUT.
 
 These public demo flags are shared by every browser using this service instance.
 They survive browser refresh, closing a browser, and locking/unlocking the UI.

@@ -15,9 +15,9 @@ export function createConnectorHandler() {
     const item = path.startsWith(`${base}/`) && !platform.includes('/')
     if (path !== base && !item) return send(404, { error: 'Mock endpoint not found.' })
     if (item && platform !== 'shopee' && platform !== 'tiktok') return send(400, { error: 'Unknown platform.' })
-    const method = item ? 'PUT' : 'GET'
-    if (request.method !== method) {
-      response.setHeader('Allow', method)
+    const methods = item ? ['PUT', 'DELETE'] : ['GET']
+    if (!methods.includes(request.method ?? '')) {
+      response.setHeader('Allow', methods.join(', '))
       return send(405, { error: 'Method not allowed.' })
     }
     if (item) {
@@ -25,7 +25,7 @@ export function createConnectorHandler() {
       if (request.headers.origin && request.headers.origin !== `${protocol}://${request.headers.host}`) {
         return send(403, { error: 'Cross-origin connection is not allowed.' })
       }
-      connected[platform as keyof typeof connected] = true
+      connected[platform as keyof typeof connected] = request.method === 'PUT'
       return send(200, record(platform as keyof typeof connected))
     }
     send(200, { connections: [record('shopee'), record('tiktok')] })
