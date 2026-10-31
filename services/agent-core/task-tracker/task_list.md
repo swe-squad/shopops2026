@@ -437,7 +437,7 @@ UNVERIFIED/unaccepted. No paid call, merge or deployment was used for implementa
 
 ### T09 independent review: two P1 findings resolved offline
 
-Reviewed code: `7ee2b35`. **Current status: In progress; not ready for merge.** The detailed
+Reviewed code: `7ee2b35`. **Original review decision: In progress; not ready for merge.** The detailed
 reproductions and closure checklists are in
 [T09 independent review](desciption/T09-chat-client-integration.md#independent-review-of-7ee2b35).
 
@@ -448,9 +448,9 @@ reproductions and closure checklists are in
 
 Fresh review verification: chat API **93 passed / 1 skipped**, chat UI **48 passed** plus build,
 Core **428 passed / 2 skipped**, explicit real-Core offline loopback **1 passed**. Both P1 cases
-were reproduced offline outside the existing happy-path suite. Step 8 is reopened. Close each
-finding only with its regression, fix commit and fresh verification; no product fix is claimed
-by this review-note update. Hosted acceptance remains a separate unverified gate.
+were reproduced offline outside the existing happy-path suite. That review reopened step 8.
+The correction checkpoint below closes both findings with regressions, fix commits and fresh
+verification. Hosted acceptance remains a separate unverified gate.
 
 
 ### T09 review correction checkpoint
