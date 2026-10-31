@@ -10,7 +10,7 @@
 
 **Spec:** [Integration design](#integration-design), [Core MCP contract](../../contracts/mcp-integration.md), [managed runtime](../../agents_api_managed_runtime_spec.md), [T09](T09-chat-client-integration.md), [tracker](../task_list.md#commerce-data-integration-follow-up-t10).
 
-**Status:** Not started. **Difficulty:** D5 — Very hard. Identity translation, mismatched analytical grains, snapshot/freshness semantics, restricted query roles and real multi-service verification cross service boundaries.
+**Status:** Ready for integration (offline implementation; hosted acceptance remains UNVERIFIED). **Difficulty:** D5 — Very hard. Identity translation, mismatched analytical grains, snapshot/freshness semantics, restricted query roles and real multi-service verification cross service boundaries.
 
 ## Starting points and dependencies
 
@@ -93,12 +93,12 @@ Keep the shipped approved runtime bundle immutable. Reuse the helper/report sche
 
 ## Implementation steps
 
-- [ ] **1. Publish the frozen integration contract.** Record exact dependency SHAs, selected identity/shop binding, projection schemas/roles, metric/cutoff definitions, query/provenance envelope and error mapping in `contracts/shop-data-integration.md`. Add failing contract tests for unsupported catalog grain/auth before coding the adapter.
-- [ ] **2. Add approved Data MCP projections.** Coordinate an additive migration/catalog/provisioning commit with the MCP owner. Test known/unknown SKU, zero counts, duplicate lines/returns, boundary timestamps, safe review categories, missing publication and cross-shop database denial using disposable PostgreSQL. Do not alter pipeline source/writer permissions or expose raw bodies.
-- [ ] **3. Implement the Core profile/adapter.** Add trusted binding validation, profile-specific transport headers and fixed data-tool translation. Reproduce malformed/truncated/expired/denied/mixed-revision cases RED, then implement GREEN. Retain legacy mock, knowledge/history, source validation, deadlines and no-extra-tool regressions.
-- [ ] **4. Align the one demo phone and configuration.** Update only the single chat fixture and related examples/tests to the seeded phone; keep the same owner/Core shop. Publish the data-enabled registry revision and binding example; document manual source seed, initial sync, restricted roles/CA/config and deliberate new-conversation activation. Coordinate with the accepted T09 fix handoff; never edit its active worktree.
-- [ ] **5. Run real multi-service offline acceptance.** Add a service-local harness under `services/agent-core/` that creates isolated source/derived/control databases, seeds/syncs, starts real Data MCP and Core HTTP services plus the chat adapter, and uses a fake model provider. Exercise phone login, metrics/reviews, report download, follow-up, restart and scope rejection. Compare exact results to an independent seeded-data oracle. Apply a test-only source mutation and synchronize it; the next appropriate query must reflect the new source revision/counts, proving it does not use Core fixtures. Never point tests at the demo/operational DB.
-- [ ] **6. Verify, review and hand off.** Run affected services' `make ci`, focused adapter/protocol tests, disposable PostgreSQL projection/isolation tests and the explicit cross-service harness. Run existing pipeline/MCP harnesses unchanged. Record Docker packaging, dependency commits, migrations/role setup, browser API evidence and cleanup of every test process/container/database. Mark Ready for integration after those checks; do not mark Done from mocked transport tests.
+- [x] **1. Publish the frozen integration contract.** Record exact dependency SHAs, selected identity/shop binding, projection schemas/roles, metric/cutoff definitions, query/provenance envelope and error mapping in `contracts/shop-data-integration.md`. Add failing contract tests for unsupported catalog grain/auth before coding the adapter.
+- [x] **2. Add approved Data MCP projections.** Coordinate an additive migration/catalog/provisioning commit with the MCP owner. Test known/unknown SKU, zero counts, duplicate lines/returns, boundary timestamps, safe review categories, missing publication and cross-shop database denial using disposable PostgreSQL. Do not alter pipeline source/writer permissions or expose raw bodies.
+- [x] **3. Implement the Core profile/adapter.** Add trusted binding validation, profile-specific transport headers and fixed data-tool translation. Reproduce malformed/truncated/expired/denied/mixed-revision cases RED, then implement GREEN. Retain legacy mock, knowledge/history, source validation, deadlines and no-extra-tool regressions.
+- [x] **4. Align the one demo phone and configuration.** Update only the single chat fixture and related examples/tests to the seeded phone; keep the same owner/Core shop. Publish the data-enabled registry revision and binding example; document manual source seed, initial sync, restricted roles/CA/config and deliberate new-conversation activation. Coordinate with the accepted T09 fix handoff; never edit its active worktree.
+- [x] **5. Run real multi-service offline acceptance.** Add a service-local harness under `services/agent-core/` that creates isolated source/derived/control databases, seeds/syncs, starts real Data MCP and Core HTTP services plus the chat adapter, and uses a fake model provider. Exercise phone login, metrics/reviews, report download, follow-up, restart and scope rejection. Compare exact results to an independent seeded-data oracle. Apply a test-only source mutation and synchronize it; the next appropriate query must reflect the new source revision/counts, proving it does not use Core fixtures. Never point tests at the demo/operational DB.
+- [x] **6. Verify, review and hand off.** Run affected services' `make ci`, focused adapter/protocol tests, disposable PostgreSQL projection/isolation tests and the explicit cross-service harness. Run existing pipeline/MCP harnesses unchanged. Record Docker packaging, dependency commits, migrations/role setup, browser API evidence and cleanup of every test process/container/database. Mark Ready for integration after those checks; do not mark Done from mocked transport tests.
 - [ ] **7. Run gated hosted acceptance only when eligible.** After T08/T09 prerequisites and explicit paid opt-in, repeat the data-backed report/follow-up path through the actual chat/Core APIs with synthetic pipeline data. Reuse approved skills/child proof, compare numeric values to this pipeline's oracle (not the older fixed 5%/15% fixture), and record aggregate provenance/isolation/cleanup. Missing credentials, unavailable services or unaccepted proof remain UNVERIFIED.
 
 ## Verification and handoff
@@ -107,37 +107,103 @@ Default CI has no external network/provider calls. Keep `AGENT_CORE_LIVE` and `A
 
 A complete handoff records branch/worktree/base and dependency SHAs, changed service paths, projection/catalog/binding versions, RED→GREEN and full CI results, database-role/isolation checks, pipeline-to-answer mutation proof, restart/report/follow-up results and resource cleanup. Read-only demo data is synthetic, even when stored in real PostgreSQL; it is not live commerce-platform ingestion.
 
-**Implementation:** Not started. **Offline data integration:** Not verified. **Hosted end-to-end:** UNVERIFIED. This update creates task documents only; it does not seed a database, connect deployed services, enable tools or make paid calls.
+## Implementation handoff
 
-### Execution checkpoint
+**Implementation:** complete for offline integration. **Status:** Ready for integration.
+**Hosted end-to-end:** UNVERIFIED; do not mark Done or claim deployed/live acceptance.
 
-Status: **In progress**, not ready for integration.
-Worktree `/tmp/shopops2026-agent-core/T10`; branch `feat/agent-core-data-mcp`.
-Combined committed dependency base `09a30a1` includes pipeline `5262ba4`, Data MCP
-`e663f88`, and T09 fixes through `e34056f`. No uncommitted owner changes were consumed.
-Draft contract: `contracts/shop-data-integration.md`. Added a preparatory catalog
-compatibility gate with eight focused tests; not wired into any active runtime profile.
-Operator approved a configured and independently verified demo coverage bound.
-Coverage checks reject incomplete requested/baseline intervals. Added additive Data MCP
-projection migration and isolated catalog; real PostgreSQL test verifies duplicate
-cohorts, category flags and two-shop isolation. Adapter/full acceptance remain outstanding.
+- Worktree: `/tmp/shopops2026-agent-core/T10`.
+- Branch: `feat/agent-core-data-mcp`; combined dependency base `09a30a1`.
+- Inputs: planning `15202f5`, pipeline `5262ba4`, Data MCP `e663f88`,
+  accepted T09 fixes `311aa4e` / `e34056f`. Preparatory checkpoint `f6dbff9`.
+- Changed services: `agent-core`, `shop-data-mcp`, `shopops-chat-api`, `shopops-chat`.
+  Upstream dependency merges precede the implementation base; no new root workflow,
+  source/processor runtime change, production reset or deployment is part of T10.
 
-Validation checkpoint: Core baseline plus catalog tests: 439 passed, 2 skipped;
-latest focused catalog/coverage tests: 12 passed. Lint passes. Full Core suite after
-coverage addition and cross-service acceptance are not yet recorded. No hosted calls.
+### Delivered behavior
 
-Data MCP checkpoint: 235 passed, 1 skipped with disposable PostgreSQL 17 and
-`CRONJOB_SOURCE_DIR=../cronjob-server`. Initial full DB test attempt used password
-authentication incompatible with pre-existing passwordless test-role fixtures;
-rerunning with isolated loopback-only test trust authentication passed. The test
-container and its volume were removed. Two sandbox-stalled Core pytest processes
-were also stopped after verifying their T10 service working directory.
+- Immutable binding reference (ID/version/digest) in conversation config; private
+  trusted binding file with owner/shop/phone and verified demo coverage start.
+- Opt-in `shop-data-read-v1` / `returns-hosted-data-v1`; legacy snapshots and hosted
+  bundle bytes/digest unchanged. Header policy remains profile-specific, retaining
+  DNS allowlisting, bounded parsing, cleanup and total 15-second bridge deadline.
+- Fixed metrics/review queries over four approved projections, complete counts,
+  bounded safe review samples, publication/clock consistency including empty samples,
+  exact provenance/column/type/expiry checks, no fixture fallback or extra model tools.
+- Additive derived projections `004-agent-projections.sql`, isolated agent catalog,
+  and authoritative source membership view `005-source-membership.sql`. Apply **005
+  in source before 003**; apply 004 in derived after 002. No writer-role changes.
+- Single positive demo phone aligned to `+84900000001`; negative identity fixtures
+  and Core owner/shop/credential remain intact.
 
-Remaining: publication success/boundary projection cases, trusted binding persistence,
-profile-specific transport, fixed query adapter/result validation, registry activation,
-phone alignment, seeded-data coverage oracle, real multi-service report/follow-up/
-restart/mutation proof, browser evidence and final review. No task completion claim.
+### Decisions and review fixes
 
-Final checkpoint rerun: Core **443 passed, 2 skipped** (Python 3.14.7), Data MCP
-**235 passed, 1 skipped**, both service lint checks pass. These counts validate the
-preparatory changes only; end-to-end T10 acceptance remains unverified.
+- Operator explicitly chose a configured independently verified demo coverage bound.
+  The binding pins `2026-10-17`; the harness compares every selected-shop seeded SKU,
+  cohort and review fact against an independent complete source-fixture oracle and
+  records its digest. This does not claim arbitrary real-platform history coverage.
+- Preserved old registry endpoint revisions when a new endpoint is activated; a
+  regression test reproduces and fixes startup rejection of mixed pinned endpoints.
+- Actual SDK denial is text, not a Core JSON error envelope. MCP now emits a stable
+  `permission_denied` marker; only the phone-profile parser maps it. SDK and client
+  regression tests prove this, with legacy parsing unchanged.
+- RED→GREEN: missing catalog gate/binding/adapter, incomplete coverage, empty-sample
+  mixed-publication detection, impossible category counts, endpoint revisions and
+  SDK authorization marker. No blocker was dismissed as a style issue.
+
+### Verification evidence
+
+- Core final `make ci`: **466 passed, 2 skipped**, using Python 3.14 explicitly
+  (host `python3` defaults to 3.13).
+- Data MCP PostgreSQL suite: **246 passed, 1 skipped** before the final error-marker
+  amendment; final `make ci`: **219 passed, 29 skipped** without a database; actual
+  SDK marker suite **7 passed** and final multi-service harness cover that amendment.
+- Unchanged root pipeline/MCP harness: **1 passed**. Its `.resolve()` loses venv
+  context; a temporary interpreter wrapper was used without changing the harness.
+- Chat API final `make ci`: **104 passed, 4 skipped**, lint passes; one pre-existing
+  Starlette/httpx deprecation warning. Frontend final `make ci`: **48 passed**, lint/build
+  pass. Docker images for all four affected services build; packaged Python syntax
+  and frontend runtime nginx checks pass. Core/MCP rebuilt after final transport fix.
+- Graphify AST updates run for all four changed services; SQL extractor availability
+  limits graph coverage and is not counted as SQL validation.
+
+Run the real offline acceptance from `services/agent-core`:
+
+```sh
+.venv/bin/python scripts/t10_acceptance.py \
+  --pipeline-python /tmp/t10-pipeline-venv/bin/python \
+  --chat-python ../shopops-chat-api/.venv/bin/python
+```
+
+The pipeline interpreter must have that service's pinned dependencies installed.
+The harness launches separate service processes over loopback, disposable source,
+derived and control databases, actual MCP SDK/HTTP, Core and chat HTTP, and a test-only
+fake provider. Source seed oracle: **3 SKUs, 5 cohorts, 5 reviews**; canonical fixture
+SHA-256 `4da5766b42d34b5e086720992a4227ada03297d8e00bc7372058c03acb41e166`.
+It checks phone login, metrics/reviews/knowledge, report download/hash, follow-up,
+chat+Core restarts, scope/result/artifact denials, and a source mutation followed by
+sync (**returns 0→1**, **revision 1→2**). Core/chat receive no database credentials.
+Final exact-version harness exited 0 with `passed=true` and `cleanup=true`; also
+verified direct MCP HTTP cross-shop query/result rejection, same-shop-other-user
+artifact denial, and live selected-shop revocation while another shop remains
+authorized. Ignored local evidence: `.evidence/t10/acceptance-final.json`.
+
+This is browser-facing API evidence plus frontend tests/build, not a manual browser
+screenshot or actual hosted specialist proof.
+
+Every harness run cleans its child processes, Docker container and volumes in finally;
+validation images and temporary interpreter wrappers were removed. Service-private
+installed dependencies remain reusable. No operational DB, secret file, deployed
+service or paid provider call was used.
+
+### Remaining separately gated evidence
+
+Step 7 remains unchecked: accepted T08 hosted boundary/child-role proof is still
+missing in the committed task record, and T10 paid hosted opt-in has not been given.
+The implementation and offline acceptance do not establish those claims. Run hosted
+acceptance only after those prerequisites, with the pipeline oracle and cleanup.
+
+Environment note: sandboxed DNS/TestClient attempts stalled or timed out (including
+`test_phone_header_all_requests_no_bearer_and_session_cleanup`); the same tests and
+full CI passed outside the sandbox with only offline/loopback access. No such failed
+attempt is counted as a pass. Final process scan found no pytest/uvicorn leftovers.

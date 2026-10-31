@@ -3,6 +3,7 @@
 import asyncio
 import ipaddress
 import json
+import re
 import socket
 from urllib.parse import urlsplit
 
@@ -71,6 +72,7 @@ class MCPClient:
         self,
         *,
         allowed_urls: frozenset[str],
+        shop_data_urls: frozenset[str] = frozenset(),
         allow_loopback: bool = False,
         timeout_seconds: float = 15,
         transport: httpx.AsyncBaseTransport | None = None,
@@ -79,6 +81,9 @@ class MCPClient:
             raise ValueError("MCP client requires allowlisted URLs and timeout <=15 seconds")
         for url in allowed_urls:
             validate_url(url, allow_loopback=allow_loopback)
+        if not shop_data_urls <= allowed_urls:
+            raise ValueError("shop data endpoints must be allowlisted")
+        self.shop_data_urls = frozenset(shop_data_urls)
         self.allowed_urls = frozenset(allowed_urls)
         self.allow_loopback = allow_loopback
         self.timeout_seconds = timeout_seconds
@@ -191,13 +196,21 @@ class MCPClient:
         return result
 
     async def call_tool(self, url: str, token: str, name: str, arguments: dict) -> dict:
+        return await self._call_tool(url, {"Authorization": f"Bearer {token}"}, name, arguments)
+
+    async def call_shop_tool(self, url: str, phone: str, name: str, arguments: dict) -> dict:
+        if url not in self.shop_data_urls or not re.fullmatch(r"\+[0-9]{8,15}", phone):
+            raise ValueError("invalid shop data transport policy")
+        return await self._call_tool(url, {"X-Phone-Number": phone}, name, arguments)
+
+    async def _call_tool(self, url: str, authentication: dict, name: str, arguments: dict) -> dict:
         deadline = asyncio.get_running_loop().time() + self.timeout_seconds
         try:
             async with asyncio.timeout(self.timeout_seconds):
                 pinned = await self._pin(url)
                 original = httpx.URL(url)
                 headers = {
-                    "Authorization": f"Bearer {token}",
+                    **authentication,
                     "Accept": "application/json, text/event-stream",
                     "Host": original.netloc.decode(),
                     "MCP-Protocol-Version": PROTOCOL_VERSION,
@@ -262,6 +275,20 @@ class MCPClient:
                             original.host,
                         )
                         result = self._result(reply, 2)
+                        if "X-Phone-Number" in authentication and result.get("isError") is True:
+                            content = result.get("content")
+                            denied = (
+                                isinstance(content, list)
+                                and len(content) == 1
+                                and isinstance(content[0], dict)
+                                and content[0].get("type") == "text"
+                                and content[0].get("text")
+                                == f"Error executing tool {name}: permission_denied"
+                            )
+                            raise ClientError(
+                                "permission_denied" if denied else "upstream_unavailable",
+                                retryable=False,
+                            )
                         value = result.get("structuredContent")
                         if value is None:
                             content = result.get("content")

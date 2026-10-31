@@ -1,8 +1,8 @@
 # Shop Data integration contract — T10 draft
 
-Status: proposed contract; remote profile is NOT activated. Database projection and
-cross-service acceptance remain outstanding. Catalog validation alone proves neither
-isolation nor correctness of the published data.
+Status: implemented opt-in contract. Activation is administrative via the new registry
+revision and a new conversation. Deployment and hosted acceptance remain separately
+gated. Catalog validation alone proves neither isolation nor data correctness.
 
 ## Committed inputs
 
@@ -44,8 +44,7 @@ through the existing `mcp_access.current_shop()` restricted-login boundary.
 No raw review bodies, buyer contacts or arbitrary JSON are exposed. Unknown SKU is
 not equivalent to a known SKU with zero orders. Missing publication is unavailable.
 `validate_catalog` rejects the legacy period catalog, missing/duplicate projections,
-raw layers, unapproved relations and unexpected columns. It is preparatory code,
-not yet called by an active profile.
+raw layers, unapproved relations and unexpected columns. The adapter checks the participating projections in each query provenance envelope.
 
 ## Metric semantics
 
@@ -92,8 +91,27 @@ incomplete or incompatible remote data to upstream_unavailable. Successful Core
 results retain schema_version=1 and the 32 KiB limit. Source references must encode
 actual dataset/result/publication identity without private endpoints or phone values.
 
-## Outstanding acceptance
+## Activation and acceptance
 
-Projection migration, restricted-role tests, adapter and header policy, versioned
-bindings/registry, demo alignment and the real PostgreSQL/HTTP mutation oracle remain
-unimplemented. Hosted proof remains separately gated by T08/T09 acceptance and opt-in.
+Bindings are loaded from `SHOP_DATA_BINDINGS_PATH`; snapshots persist only ID,
+version and SHA-256 digest. Phone identity never enters the snapshot or tool results.
+`SHOP_DATA_MCP_URL` must match an approved data revision endpoint; historical approved
+endpoints remain pinned and allowlisted. The legacy scoped HMAC transport is retained
+for knowledge/history. Data transport attaches the server-resolved phone on every
+initialize/notification/query/cleanup request, with URL and DNS protections intact.
+
+Metrics use one aggregate SQL snapshot with an explicit known-SKU marker. Review
+counts and at-most-20 ordered samples each carry publication markers; a final
+publication query also checks empty samples. Every query validates exact result
+columns, catalog projections, ownership, expiry, truncation flags and numeric types.
+No pagination is needed: all queries deliberately return at most 20 rows, and counts
+are separate complete aggregates. Review references hash the actual source/review
+pair within a real dataset/result/publication reference rather than exposing free text.
+
+The outer bridge applies its existing 15-second total deadline to all internal
+queries and retries combined. Successful envelopes still pass existing schema,
+context and 32 KiB validation before persistence. Failed reads cannot use fixture data.
+
+See the task handoff for actual test/harness results. Hosted proof remains separately
+gated by accepted T08/T09 evidence and explicit opt-in; no offline fake-provider result
+establishes actual hosted skill/child execution or production deployment.

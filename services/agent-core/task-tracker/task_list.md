@@ -29,7 +29,7 @@ and task description. It does not start implementation or change the T01–T08 o
 | T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Ready for integration | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
 | T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Ready for integration | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
 | T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | In progress | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
-| T10 | [Connect Agent Core to Shop Data MCP and the data pipeline](desciption/T10-data-pipeline-integration.md) | D5 — Very hard | Data integration developer | In progress | Published Data MCP contract and pipeline handoff; contract tests may start now | Accepted T09 fixes, real PostgreSQL/MCP pipeline acceptance and separately gated hosted evidence |
+| T10 | [Connect Agent Core to Shop Data MCP and the data pipeline](desciption/T10-data-pipeline-integration.md) | D5 — Very hard | Data integration developer | Ready for integration | Published Data MCP contract and pipeline handoff; contract tests may start now | Accepted T09 fixes, real PostgreSQL/MCP pipeline acceptance and separately gated hosted evidence |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
 

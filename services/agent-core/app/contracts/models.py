@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.contracts.identity import Scope
 from app.contracts.runtime import RuntimeProfile
+from app.contracts.shop_data import BindingReference
 
 RunState = Literal[
     "queued", "running", "waiting_tool", "reconciling", "completed", "failed", "cancelled"
@@ -17,6 +18,7 @@ class Record(BaseModel):
 
 
 class ConfigSnapshot(Record):
+    shop_data_binding: BindingReference | None = None
     runtime_profile: RuntimeProfile = Field(default_factory=RuntimeProfile)
     revision: str
     template_id: str

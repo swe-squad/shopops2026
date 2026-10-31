@@ -29,7 +29,7 @@ def test_lost_receipt_exact_replay_restart(tmp_path, boundary):
         if boundary == "orchestrator":
             assert (
                 c.post(
-                    "/api/chat/auth/demo-phone", json={"phone_number": "+15550000001"}
+                    "/api/chat/auth/demo-phone", json={"phone_number": "+84900000001"}
                 ).status_code
                 == 503
             )

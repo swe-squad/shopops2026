@@ -32,7 +32,7 @@ or `OPENAI_ORCHESTRATOR_AGENT_ID` in this service and makes no provider calls.
 `SHOP_API_TOKEN` is used only server-side for the existing operations navigation mailbox.
 If absent, navigation returns503; it is never replaced by the browser's demo session.
 
-Exactly one public synthetic demo number, `+15550000001`, maps to existing Core fixture
+Exactly one public synthetic demo number, `+84900000001`, maps to existing Core fixture
 `local-alice` / `tenant-a` / `alice`, restricted here to `shop-a`. Existing Core fixtures and
 permissions are unchanged. This is labelled demo login without OTP; it does not verify phone
 ownership. Unknown numbers do not register users or shops. Demo auth is refused outside

@@ -72,7 +72,18 @@ def build_configured_bridge(
             build_hosted_environment(
                 profile, build_runtime_bundle(profile, bundle_root=settings.runtime_bundle_root)
             )
+    from app.tools.shop_bindings import Bindings
+
+    data_snapshots = [s for s in snapshots if s.mcp_profile == "shop-data-read-v1"]
+    bindings = None
+    if data_snapshots:
+        bindings = Bindings.load(settings.shop_data_bindings_path)
+        if not settings.shop_data_mcp_url or not any(
+            s.data_mcp_url == settings.shop_data_mcp_url for s in data_snapshots
+        ):
+            raise ValueError("SHOP_DATA_MCP_URL must match pinned registry")
     client = MCPClient(
+        shop_data_urls=frozenset(s.data_mcp_url for s in data_snapshots),
         allowed_urls=frozenset(
             url
             for snapshot in snapshots
@@ -82,6 +93,7 @@ def build_configured_bridge(
         timeout_seconds=settings.mcp_timeout_seconds,
     )
     bridge = MCPToolBridge(
+        shop_data_bindings=bindings,
         repository=repository,
         credentials=Credentials(settings.mcp_token_signing_key),
         client=client,
