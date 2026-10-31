@@ -1,0 +1,6 @@
+{"user_id":"user-alice","display_name":"Demo Alice","is_active":true}
+{"user_id":"user-bob","display_name":"Demo Bob","is_active":true}
+{"user_id":"user-agency","display_name":"Demo Agency Analyst","is_active":true}
+{"user_id":"user-revoked","display_name":"Demo Revoked Member","is_active":true}
+{"user_id":"user-disabled","display_name":"Demo Disabled User","is_active":false}
+{"user_id":"user-unassigned","display_name":"Demo User Without Membership","is_active":true}

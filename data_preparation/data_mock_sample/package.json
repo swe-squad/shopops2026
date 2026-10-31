@@ -1,0 +1,14 @@
+{
+  "name": "shopops-mock-data",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "normalize": "python -B scripts/normalize.py",
+    "generate": "python -B scripts/generate.py",
+    "test": "npm run normalize && python -B -m unittest discover -s tests && node tests/postgres.mjs",
+    "example": "node scripts/export-walkthrough.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.13"
+  }
+}
