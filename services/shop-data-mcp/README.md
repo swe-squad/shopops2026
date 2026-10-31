@@ -36,8 +36,9 @@ For the three DB variables, use the `control_dsn`, `membership_dsn`, and `shops`
 values from your complete operator config; `.env.example` illustrates their shape.
 They override the corresponding fields in either file or JSON-env mode. Invalid or
 empty overrides fail validation. The database schema and restricted roles must
-already be provisioned. DSNs still require verified TLS and an accessible CA file;
-the CA is not included in the image. Missing DB values are reported as required fields.
+already be provisioned. By default, DSNs require verified TLS and an accessible CA file;
+the CA is not included in the image. The explicit [dev-only exception](#caprover-dev-without-postgresql-tls)
+allows a private CapRover dev database without TLS. Missing DB values are reported as required fields.
 
 These two JSON files no longer need mounts. To customize the deployment, mount your
 own complete files over these paths, or use the JSON environment mode below. A mount
@@ -46,12 +47,45 @@ the JSON files in that mount too, or mount the CA separately. The bundled catalo
 must match your database projections. Run `python -m app.check` inside the configured
 container, then `python -m app.check --connect` to check DB connectivity.
 
+## CapRover dev without PostgreSQL TLS
+
+Deploy the image supporting this option first. On **shop-data-mcp-dev**, set:
+
+```env
+MCP_ALLOW_INSECURE_POSTGRES=true
+```
+
+In `MCP_CONTROL_DSN`, `MCP_MEMBERSHIP_DSN`, and each `query_dsn` inside
+`MCP_SHOPS_JSON`, keep the existing database, dedicated role, password and dataset
+allowlist. Replace the TLS options with `sslmode=disable` and remove `sslrootcert`.
+For example (replace the password placeholder outside Git):
+
+```text
+host=srv-captain--shopops-db-dev port=5432 dbname=postgres user=mcp_membership password=REPLACE sslmode=disable
+```
+
+The flag defaults to `false` and accepts only the literal values `true` or `false`.
+It permits an unencrypted DSN only when its single hostname matches
+`srv-captain--<app>-dev`. Public hosts, production app names, IP addresses,
+multi-host DSNs, `hostaddr`/`service` options and `PGHOSTADDR`/`PGSERVICE`
+environment overrides are rejected for unencrypted connections. Other modes such
+as `prefer` or `require` are not exceptions. Verified TLS DSNs remain unchanged,
+and failed TLS connections are never retried without TLS.
+
+This is for synthetic demo data on a controlled private cluster network: DB traffic
+is not TLS-encrypted. Keep PostgreSQL private and restrict any host port exposure.
+The flag does not create database roles, grants, membership views or agent datasets,
+and does not change MCP authentication. Run `python -m app.check --connect` from
+the configured container to verify access. To restore verified TLS, provision the
+CA/server certificate and switch the DSNs back to `verify-full` with `sslrootcert`,
+then remove the flag or set it to `false`.
+
 ## Configure
 
 1. Copy `config.example.json` to an operator-owned secret file outside Git and `catalog.example.json` to a separate approved dataset file. Replace hosts and dataset projections with real values. Mount both JSON files and the PostgreSQL CA. Set `MCP_CONFIG_FILE` and `MCP_CATALOG_FILE` to their absolute paths. Existing inline `datasets` remain supported when no separate catalog is selected. Missing/invalid configuration refuses startup; no demo data is loaded.
 2. Apply `migrations/001-control.sql` as an operator. Create a restricted control login with USAGE on `mcp_control`; SELECT/INSERT/UPDATE/DELETE on results and refreshes. It must have no application source-table access. Revoke PUBLIC schema/table access. Operator credentials never enter the MCP container.
 3. Provision a unique, non-owner PostgreSQL query login per shop with no privileged attributes or role memberships. Grant only the sanitized catalog projections for that shop. Use RLS or shop-specific security views to enforce tenancy in PostgreSQL; catalog filters supplement this boundary. This service refuses privileged query identities but cannot prove arbitrary views/RLS are correctly authored. Verify two-shop isolation before connecting real agents.
-4. Put that shop's query DSN and allowed dataset IDs in `shops`. Query connections are fresh per request and read-only, with statement timeout and restricted SQL. Control, membership and query DSNs require `sslmode=verify-full` plus CA material when loaded at startup. The SSL certificate must match the private hostname.
+4. Put that shop's query DSN and allowed dataset IDs in `shops`. Query connections are fresh per request and read-only, with statement timeout and restricted SQL. By default, control, membership and query DSNs require `sslmode=verify-full` plus CA material when loaded at startup. The SSL certificate must match the private hostname. See the explicit [dev-only exception](#caprover-dev-without-postgresql-tls) for a database without TLS.
 5. Apply `migrations/003-phone-membership.sql` **in the authoritative source database** and provision its password out of band. Set `membership_dsn` to this restricted login. It reads only `user_id` and `shop_key` from `access.user_shop_access`, which must filter inactive users, merchants and memberships. Use the live source, not a delayed snapshot. This DB contract uses canonical international phone numbers as `user_id`. Set server-controlled `scopes` (default `data:read`); optionally enable `raw:request`, `raw:read`, `data:refresh`. Raw reads still require approval.
 6. Configure the cronjob bridge and database projections using [INTEGRATION.md](INTEGRATION.md). Set `CRONJOB_SERVER_URL`, the separate ingestion credential, and `MCP_INTERNAL_URL` for private agent traffic. Raw approval remains an external dependency defined in `HANDOFF.md`. Those integrations still require their separate service credentials.
 
@@ -73,8 +107,10 @@ After deploying a version with this loader, JSON configuration files need not be
 4. Set `INGESTION_TOKEN` to the same service credential as cronjob-server's
    `MCP_SERVICE_TOKEN`. It overrides JSON `ingestion_token` in either file or env mode.
    An empty or invalid override is rejected when cronjob integration is configured.
-5. Keep the PostgreSQL CA available at the `sslrootcert` path inside the container,
-   readable by UID 1001. JSON environment variables do not remove the TLS requirement.
+5. For verified TLS, keep the PostgreSQL CA available at the `sslrootcert` path inside
+   the container, readable by UID 1001. JSON environment variables alone do not remove
+   the TLS requirement; the [dev-only exception](#caprover-dev-without-postgresql-tls)
+   requires an explicit opt-in.
 
 For the development apps, use:
 

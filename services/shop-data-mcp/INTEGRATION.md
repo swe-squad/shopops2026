@@ -51,8 +51,10 @@ enabling refresh. No service imports another service's application code.
    allowed dataset IDs per shop. Raw `settlement_details` remains owner-approval gated;
    its `fee` is `core.settlements.fee_amount` and `captured_at` is the source document's
    capture timestamp. Review text, arbitrary evidence JSON and buyer contacts are excluded.
-6. Mount config/catalog and the PostgreSQL CA. Runtime config still requires
-   `sslmode=verify-full` and `sslrootcert`. Run `make check-config` and `make check-data`.
+6. Mount config/catalog and the PostgreSQL CA. Runtime config defaults to requiring
+   `sslmode=verify-full` and `sslrootcert`. A controlled CapRover dev demo can explicitly
+   opt into the [no-TLS mode](README.md#caprover-dev-without-postgresql-tls).
+   Run `make check-config` and `make check-data`.
 
 The query login is resolved through PostgreSQL `session_user`; caller-controlled session
 settings cannot choose a shop. View security follows PostgreSQL's

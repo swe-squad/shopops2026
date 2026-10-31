@@ -34,6 +34,9 @@ def clean_config_environment(monkeypatch):
         "MCP_CONTROL_DSN",
         "MCP_MEMBERSHIP_DSN",
         "MCP_SHOPS_JSON",
+        "MCP_ALLOW_INSECURE_POSTGRES",
+        "PGHOSTADDR",
+        "PGSERVICE",
         "MCP_INTERNAL_URL",
         "CRONJOB_SERVER_URL",
         "INGESTION_TOKEN",
@@ -130,6 +133,90 @@ def test_runtime_database_overrides_cannot_disable_verified_tls(
     with pytest.raises(ConfigurationError) as error:
         Settings.load()
     assert "private-test-password" not in str(error.value)
+
+
+@pytest.fixture
+def insecure_config(split_config):
+    config, _, operator_file, _ = split_config
+    dsn = "host=srv-captain--shopops-db-dev dbname=test sslmode=disable"
+    config["control_dsn"] = dsn
+    config["membership_dsn"] = dsn
+    for shop in config["shops"].values():
+        shop["query_dsn"] = dsn
+    operator_file.write_text(json.dumps(config))
+    return config, operator_file
+
+
+@pytest.mark.parametrize("flag", [None, "false", "true"])
+def test_insecure_develop_database_requires_explicit_opt_in(insecure_config, monkeypatch, flag):
+    if flag is not None:
+        monkeypatch.setenv("MCP_ALLOW_INSECURE_POSTGRES", flag)
+    if flag != "true":
+        with pytest.raises(ConfigurationError):
+            Settings.load()
+        return
+    config, _ = insecure_config
+    settings = Settings.load()
+    assert settings.control_dsn.get_secret_value() == config["control_dsn"]
+    assert settings.membership_dsn.get_secret_value() == config["membership_dsn"]
+    assert all("sslmode=disable" in s.query_dsn.get_secret_value() for s in settings.shops.values())
+    with TestClient(create_app()) as client:
+        assert client.get("/health").json() == {"status": "ok"}
+
+
+@pytest.mark.parametrize("flag", ["", "yes", "1", "invalid-private-value"])
+def test_invalid_insecure_flag_fails_closed(split_config, monkeypatch, flag):
+    monkeypatch.setenv("MCP_ALLOW_INSECURE_POSTGRES", flag)
+    with pytest.raises(ConfigurationError, match="MCP_ALLOW_INSECURE_POSTGRES") as error:
+        Settings.load()
+    assert "invalid-private-value" not in str(error.value)
+
+
+def test_insecure_opt_in_preserves_verified_tls_dsns(split_config, monkeypatch):
+    config, _, _, _ = split_config
+    monkeypatch.setenv("MCP_ALLOW_INSECURE_POSTGRES", "true")
+    assert Settings.load().control_dsn.get_secret_value() == config["control_dsn"]
+
+
+@pytest.mark.parametrize("field", ["control_dsn", "membership_dsn", "query_dsn"])
+@pytest.mark.parametrize(
+    "options",
+    [
+        "host=db.example.com sslmode=disable",
+        "host=srv-captain--shopops-db sslmode=disable",
+        "host=srv-captain--shopops-db-dev.example.com sslmode=disable",
+        "host=srv-captain--shopops-db-dev,db.example.com sslmode=disable",
+        "host=127.0.0.1 sslmode=disable",
+        "sslmode=disable",
+        "host=srv-captain--shopops-db-dev hostaddr=203.0.113.1 sslmode=disable",
+        "host=srv-captain--shopops-db-dev service=other sslmode=disable",
+        "host=srv-captain--shopops-db-dev sslmode=prefer",
+        "host=srv-captain--shopops-db-dev sslmode=require",
+        "host=srv-captain--shopops-db-dev sslmode=verify-full",
+    ],
+)
+def test_insecure_opt_in_rejects_unapproved_dsn_on_every_role(
+    insecure_config, monkeypatch, field, options
+):
+    config, operator_file = insecure_config
+    target = next(iter(config["shops"].values())) if field == "query_dsn" else config
+    target[field] = options + " password=private-test-password"
+    operator_file.write_text(json.dumps(config))
+    monkeypatch.setenv("MCP_ALLOW_INSECURE_POSTGRES", "true")
+    with pytest.raises(ConfigurationError) as error:
+        Settings.load()
+    assert "private-test-password" not in str(error.value)
+
+
+@pytest.mark.parametrize("key", ["PGHOSTADDR", "PGSERVICE"])
+def test_insecure_opt_in_rejects_implicit_libpq_destination_overrides(
+    insecure_config, monkeypatch, key
+):
+    monkeypatch.setenv("MCP_ALLOW_INSECURE_POSTGRES", "true")
+    monkeypatch.setenv(key, "private-override")
+    with pytest.raises(ConfigurationError) as error:
+        Settings.load()
+    assert "private-override" not in str(error.value)
 
 
 @pytest.mark.parametrize("value", ["", '{"secret":"private-test-value"', "[]", "null"])
