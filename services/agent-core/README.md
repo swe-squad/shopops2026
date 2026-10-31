@@ -403,3 +403,55 @@ service's own installed dependencies; use `--help` for invocation. It never targ
 an operational database. Hosted acceptance is separate: T08/T09 evidence and
 explicit operator opt-in are required before paid calls. Offline success does not
 prove hosted child roles or sandbox boundaries.
+
+
+## CapRover T10 demo preset
+
+The committed [Core settings](config/caprover-agent-core.env.example),
+[chat API settings](config/caprover-chat-api.env.example) and
+[develop registry](config/registry.shop-data.develop.example.json) are one matching
+preset for the standard `*-dev` app names. Merge settings into each app's runtime
+configuration; keep existing secrets and durable database paths. The Core image must
+contain this preset before setting its `CONFIG_PATH` to the new file. Runtime app
+settings are not populated by merging a PR or deploying an image.
+
+The develop registry adds `returns-hosted-data-dev-v1` for the internal Data MCP URL.
+It retains every existing hosted/data revision and binding, including hosted v2;
+old conversations keep their snapshots. The new data revision reuses T10's approved
+bundle without changing its bytes. Setting `SHOP_DATA_MCP_URL` alone cannot replace
+the localhost URL pinned by the local example. A different endpoint needs another
+immutable revision and a matching chat API setting.
+
+Apply in this order:
+
+1. Complete the Data MCP [database/config setup](../shop-data-mcp/INTEGRATION.md),
+   including source membership, the four agent projections, restricted roles,
+   `catalog.agent.example.json`, configured dataset access, verified PostgreSQL CA,
+   seeded source data and a successfully published processor snapshot. Set its
+   `MCP_INTERNAL_URL=http://srv-captain--shop-data-mcp-dev:8000/mcp`.
+2. Deploy the Core image containing this registry. Apply the Core settings with
+   `OPENAI_API_KEY` and a stable `MCP_TOKEN_SIGNING_KEY` supplied separately. This
+   preset uses `APP_ENV=local`/`AUTH_MODE=fixture` for the single synthetic owner;
+   this selects demo authentication and does not change the OpenAI-hosted profile.
+   Keep one worker/replica, writable persistent `/data` owned by UID1001 and no
+   overlapping database owners. Wait for `Application startup complete`.
+3. If the shop already has an orchestrator at another revision, first reconcile
+   unresolved work under the previous settings. Follow the stopped-app
+   [maintenance workflow](#maintenance) to activate `returns-hosted-data-dev-v1`.
+   Do not edit stored snapshots, erase history or discard an uncertain submission.
+   A new shop's first login provisions this revision without a separate activation.
+4. Apply the chat API settings. Keep its own existing writable database volume;
+   never mount Core's database there. Leave the OpenAI key in Core. Wait for startup.
+5. Confirm the frontend HTTPS `/api/chat/auth/config` returns
+   `{"mode":"demo_phone"}`, reload the UI, and sign in with `+84900000001`.
+   Login provisions/reuses the logical orchestrator; it does not create an OpenAI
+   session or submit model input. The previous T09 number is no longer supported.
+6. Send a first message only when ready for a live hosted call. Follow-up and report
+   checks remain separate from successful login. T08 hosted proof gates and actual
+   pipeline freshness are not established by deployment or offline configuration tests.
+
+The frontend runtime upstream remains
+`SHOPOPS_CHAT_API_URL=http://srv-captain--shopops-chat-api-dev:8000`, with container
+port80 and valid HTTPS for its public domain. Backend containers use port8000 and
+private cluster URLs. Do not change either service's database path just to apply the
+preset, and do not put provider credentials in browser configuration.
