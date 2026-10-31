@@ -163,14 +163,15 @@ def test_auth_validation_and_service_boundaries(tmp_path):
 
 
 @pytest.mark.parametrize("field", ["token", "api_key", "agent_id", "database"])
-def test_missing_configuration_fails_startup(tmp_path, field):
+@pytest.mark.parametrize("value", ["", " \t\n"])
+def test_missing_configuration_fails_startup(tmp_path, field, value):
     config = {
         "token": "test",
         "api_key": "test",
         "agent_id": "agent_test",
         "database": str(tmp_path / "db"),
     }
-    config[field] = ""
+    config[field] = value
     with pytest.raises(RuntimeError, match="is required"):
         with TestClient(create_app(Settings(**config), httpx.MockTransport(lambda _: None))):
             pass

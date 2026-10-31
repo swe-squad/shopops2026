@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-import json
 import uuid
 from collections.abc import AsyncIterator
 from typing import Any
@@ -8,13 +7,14 @@ from typing import Any
 import anyio
 import httpx
 
+from app.contracts import EVENT_ADAPTER
 from app.output import TurnOutput, saved_text
 from app.provider import AgentsProvider, ProviderError, RejectedError
 from app.store import BusyError, Store
 
 
 def sse(event: dict) -> str:
-    return f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+    return f"data: {EVENT_ADAPTER.validate_python(event).model_dump_json()}\n\n"
 
 
 class Chat:
@@ -34,6 +34,8 @@ class Chat:
         if not session_id:
             return False
         session = await self.provider.get(self.provider.path(session_id))
+        if not isinstance(session.get("status"), str) or not session["status"]:
+            raise ProviderError("The agent returned an invalid saved session.")
         if session.get("status") == "failed":
             raise ProviderError(
                 "The saved agent session has failed. Administrator recovery is required."
@@ -55,10 +57,13 @@ class Chat:
         turn = await self.provider.get(f"{self.provider.path(session_id)}/turns/{turn_id}")
         if turn.get("subagent_id", "unknown") is not None:
             raise ProviderError("The saved turn does not belong to the orchestrator.")
-        if turn["status"] in {"failed", "cancelled"}:
+        status = turn.get("status")
+        if not isinstance(status, str) or not status:
+            raise ProviderError("The agent returned an invalid saved turn.")
+        if status in {"failed", "cancelled"}:
             await self.db("finish", pending["submission_key"], owner, None)
             return True
-        if turn["status"] != "completed":
+        if status != "completed":
             return False
         items = await self.provider.pages(f"{self.provider.path(session_id)}/turns/{turn_id}/items")
         text = saved_text(items)
@@ -102,18 +107,25 @@ class Chat:
         output = TurnOutput()
         heartbeat = asyncio.create_task(self.heartbeat(key, owner))
         finished = False
+        input_accepted = False
         sent_text = ""
+
+        async def before_input() -> None:
+            await self.db("update", key, owner, dispatched=1)
+
         try:
             if session_id:
                 turns = await self.provider.turns(session_id)
                 roots = [turn for turn in turns if turn.get("subagent_id", "unknown") is None]
+                if roots and not isinstance(roots[-1].get("status"), str):
+                    raise ProviderError("The agent returned an invalid saved turn.")
                 if roots and roots[-1]["status"] not in {"completed", "failed", "cancelled"}:
                     raise ProviderError("The orchestrator already has an active turn.")
                 await self.db(
                     "update", key, owner, baseline_turn_id=roots[-1]["id"] if roots else ""
                 )
-            await self.db("update", key, owner, dispatched=1)
-            async with self.provider.stream(session_id, text, key) as events:
+            async with self.provider.stream(session_id, text, key, before_input) as events:
+                input_accepted = True
                 async for event in events:
                     if heartbeat.done():
                         heartbeat.result()
@@ -165,6 +177,7 @@ class Chat:
             with anyio.CancelScope(shield=True):
                 with contextlib.suppress(Exception, asyncio.CancelledError):
                     await heartbeat
-                if not finished:
+                # Uncertain POSTs remain recoverable, but do not establish ownership to cancel.
+                if input_accepted and not finished:
                     await self.stop(session_id)
                 await self.db("release", key, owner)

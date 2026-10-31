@@ -50,12 +50,22 @@ class TurnOutput:
 
 
 def saved_text(items: list[dict]) -> str:
-    return "\n\n".join(
-        "".join(
-            part["text"] for part in item.get("content", []) if part.get("type") == "output_text"
-        )
-        for item in items
-        if item.get("type") == "message"
-        and item.get("role") == "assistant"
-        and item.get("status") == "completed"
-    )
+    messages: list[str] = []
+    for item in items:
+        if (
+            item.get("type") != "message"
+            or item.get("role") != "assistant"
+            or item.get("status") != "completed"
+        ):
+            continue
+        content = item.get("content")
+        if not isinstance(content, list) or any(not isinstance(part, dict) for part in content):
+            raise ProviderError("The agent returned invalid saved message content.")
+        parts: list[str] = []
+        for part in content:
+            if part.get("type") == "output_text":
+                if not isinstance(part.get("text"), str):
+                    raise ProviderError("The agent returned invalid saved message text.")
+                parts.append(part["text"])
+        messages.append("".join(parts))
+    return "\n\n".join(messages)
