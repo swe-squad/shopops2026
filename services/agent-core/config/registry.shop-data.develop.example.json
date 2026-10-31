@@ -180,6 +180,111 @@
         "version": "1",
         "digest": "40539c2dd5967736595435c4ac8332ebb802ef9e2e62600f6f10f71e541072f2"
       }
+    },
+    {
+      "revision": "returns-hosted-data-luna-shop002-dev-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-luna",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "shop-data-read-v1",
+      "data_mcp_url": "http://srv-captain--shop-data-mcp-dev:8000/mcp",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      },
+      "shop_data_binding": {
+        "id": "demo-commerce-002",
+        "version": "1",
+        "digest": "2f691f2076014ba757e40e00179c1668d42c67f3d3dec541355476879bd4d51e"
+      }
+    },
+    {
+      "revision": "returns-hosted-data-luna-shop003-dev-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-luna",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "shop-data-read-v1",
+      "data_mcp_url": "http://srv-captain--shop-data-mcp-dev:8000/mcp",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      },
+      "shop_data_binding": {
+        "id": "demo-commerce-003",
+        "version": "1",
+        "digest": "efaebdfacaecbe0ecea19c1ab93b3e396ea0d0593507d7d8d4f2ad674f7533be"
+      }
+    },
+    {
+      "revision": "returns-hosted-data-luna-shop004-dev-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-luna",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "shop-data-read-v1",
+      "data_mcp_url": "http://srv-captain--shop-data-mcp-dev:8000/mcp",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      },
+      "shop_data_binding": {
+        "id": "demo-commerce-004",
+        "version": "1",
+        "digest": "4db5b08d993e1add0e7773995c05a8513f725945e98aa49ba7434d879495278f"
+      }
     }
   ],
   "approved_remote_profiles": [

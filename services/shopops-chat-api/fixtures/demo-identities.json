@@ -11,5 +11,44 @@
       "conversation:write",
       "history:read"
     ]
+  },
+  "+84900000002": {
+    "tenant_id": "tenant-demo-002",
+    "user_id": "demo-002",
+    "shop_ids": [
+      "shop-demo-002"
+    ],
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ],
+    "core_token": "local-demo-002"
+  },
+  "+84900000003": {
+    "tenant_id": "tenant-demo-003",
+    "user_id": "demo-003",
+    "shop_ids": [
+      "shop-demo-003"
+    ],
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ],
+    "core_token": "local-demo-003"
+  },
+  "+84900000004": {
+    "tenant_id": "tenant-demo-004",
+    "user_id": "demo-004",
+    "shop_ids": [
+      "shop-demo-004"
+    ],
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ],
+    "core_token": "local-demo-004"
   }
 }

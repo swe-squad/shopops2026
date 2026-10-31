@@ -1,5 +1,73 @@
 {
-  "local-alice": {"tenant_id":"tenant-a","user_id":"alice","shop_ids":["shop-a","shop-b"],"permissions":["orchestrator:provision","conversation:write","history:read"]},
-  "local-bob": {"tenant_id":"tenant-a","user_id":"bob","shop_ids":["shop-a"],"permissions":["conversation:write","history:read"]},
-  "local-carol": {"tenant_id":"tenant-b","user_id":"carol","shop_ids":["shop-c"],"permissions":["conversation:write","history:read"]}
+  "local-alice": {
+    "tenant_id": "tenant-a",
+    "user_id": "alice",
+    "shop_ids": [
+      "shop-a",
+      "shop-b"
+    ],
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ]
+  },
+  "local-bob": {
+    "tenant_id": "tenant-a",
+    "user_id": "bob",
+    "shop_ids": [
+      "shop-a"
+    ],
+    "permissions": [
+      "conversation:write",
+      "history:read"
+    ]
+  },
+  "local-carol": {
+    "tenant_id": "tenant-b",
+    "user_id": "carol",
+    "shop_ids": [
+      "shop-c"
+    ],
+    "permissions": [
+      "conversation:write",
+      "history:read"
+    ]
+  },
+  "local-demo-002": {
+    "tenant_id": "tenant-demo-002",
+    "user_id": "demo-002",
+    "shop_ids": [
+      "shop-demo-002"
+    ],
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ]
+  },
+  "local-demo-003": {
+    "tenant_id": "tenant-demo-003",
+    "user_id": "demo-003",
+    "shop_ids": [
+      "shop-demo-003"
+    ],
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ]
+  },
+  "local-demo-004": {
+    "tenant_id": "tenant-demo-004",
+    "user_id": "demo-004",
+    "shop_ids": [
+      "shop-demo-004"
+    ],
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ]
+  }
 }

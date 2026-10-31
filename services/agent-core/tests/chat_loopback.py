@@ -63,12 +63,8 @@ async def activate(revision: str) -> dict[str, str]:
     from app.contracts.identity import Scope
 
     repository = app.state.repository
-    if revision == "returns-hosted-v2":
-        repository.registry.register(
-            repository.registry.get("shopops", "returns-hosted-v1").model_copy(
-                update={"revision": revision}
-            )
-        )
+    # Both immutable hosted revisions are already shipped in this fixture registry.
+    # Do not overwrite v2 with a renamed v1 when exercising activation.
     await repository.activate_revision(
         Scope(tenant_id="tenant-a", user_id="alice", shop_id="shop-a"), "shopops", revision
     )

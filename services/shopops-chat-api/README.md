@@ -97,3 +97,31 @@ never accepted. Such work stays pending and blocks new input/cutover until its o
 Older outbox tables migrate conservatively: existing rows lacking dispatch evidence are treated
 as possibly dispatched; newly created entries start unsubmitted. No provider call is replayed by
 this service, only the identical idempotent application request.
+
+### Four synthetic phone accounts
+
+For the local/test Core backend, set `AGENT_CORE_DEMO_ROUTES_JSON` using `.env.example`.
+Keys are server-owned public fixture credentials; values select `shop_id` and
+`config_revision`. The selected shop must also be granted by the authenticated
+fixture. Browser requests cannot select either field. Missing routes use the global
+`AGENT_CORE_SHOP_ID` and `AGENT_CORE_CONFIG_REVISION` and still enforce grants.
+Keep those globals unchanged to preserve the original account's conversation.
+
+| Phone | Core shop | Existing commerce shop |
+| --- | --- | --- |
+| +84900000001 | shop-a | shopee-open-platform:1001 |
+| +84900000002 | shop-demo-002 | shopee-open-platform:1002 |
+| +84900000003 | shop-demo-003 | lazada:1001 |
+| +84900000004 | shop-demo-004 | shopify:1001 |
+
+Each account uses separate Core credentials, ownership, outbox namespace and history.
+Provisioning on login does not create a provider session or send a model input.
+Core must load the matching appended revisions and bindings from its develop preset.
+The source membership and Data MCP dataset/query grants must authorize each commerce
+shop separately. A successful login alone does not prove tool/data availability.
+This remains a synthetic phone-only demo without OTP, restricted to local/test.
+
+The operations navigation mailbox still belongs to the original globally configured
+workspace. The three added shop accounts receive 403 from `/api/chat/navigation`;
+chat, history and owned artifact downloads remain available. Separate browser/operations
+workspaces need an identity-aware operations integration before enabling navigation.
