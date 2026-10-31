@@ -15,6 +15,62 @@ For dataset registration and tool changes, start with [Data and tool changes](DE
 
 The catalog example targets PR #6's derived schema through `migrations/002-pipeline-access.sql` and shop-bound logins provisioned by `python -m app.provision`. See [INTEGRATION.md](INTEGRATION.md) for migration order, exact shop keys and snapshot semantics. Catalog updates require a restart. Do not include customer identifiers in semantic descriptions.
 
+## CapRover configuration through environment variables
+
+After deploying a version with this loader, JSON configuration files need not be mounted:
+
+1. Remove `MCP_CONFIG_FILE` and `MCP_CATALOG_FILE` from App Configs when replacing
+   them with JSON environment variables. Setting both FILE and JSON for the same
+   source is rejected, including empty values; there is no silent fallback.
+2. Set `MCP_CONFIG_JSON` to a complete JSON object based on `config.example.json`.
+   The fragment containing only `public_url`, `scopes`, `ingestion_token` and
+   `cronjob_admin_phones` is insufficient: DB connections and `shops` are required.
+3. Set `MCP_CATALOG_JSON` to the approved contents of `catalog.example.json`, adjusted
+   to the actual database. Each shop's dataset IDs must exist in this catalog.
+   Alternatively put `datasets` in `MCP_CONFIG_JSON` and omit both catalog variables.
+4. Set `INGESTION_TOKEN` to the same service credential as cronjob-server's
+   `MCP_SERVICE_TOKEN`. It overrides JSON `ingestion_token` in either file or env mode.
+   An empty or invalid override is rejected when cronjob integration is configured.
+5. Keep the PostgreSQL CA available at the `sslrootcert` path inside the container,
+   readable by UID 1001. JSON environment variables do not remove the TLS requirement.
+
+For the development apps, use:
+
+```env
+PORT=8000
+MCP_INTERNAL_URL=http://srv-captain--shop-data-mcp-dev:8000/mcp
+CRONJOB_SERVER_URL=http://srv-captain--cronjob-server-dev:8000
+```
+
+Example **value** for `MCP_CONFIG_JSON` (replace all placeholders and the shop key;
+paste raw JSON, without Markdown fences or outer shell quotes):
+
+```json
+{
+  "public_url": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
+  "scopes": ["data:read", "cronjob:read", "cronjob:write"],
+  "cronjob_admin_phones": [],
+  "control_dsn": "host=PRIVATE_DB_HOST dbname=shopops user=mcp_control password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
+  "membership_dsn": "host=PRIVATE_SOURCE_HOST dbname=source user=mcp_membership password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
+  "shops": {
+    "shopee-open-platform:1001": {
+      "query_dsn": "host=PRIVATE_DB_HOST dbname=shopops user=shop_shopee1001 password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
+      "datasets": ["order_economics"]
+    }
+  }
+}
+```
+
+Supply the real token separately via `INGESTION_TOKEN`; keep populated JSON and
+credentials out of Git. `cronjob_admin_phones: []` leaves admin CRUD disabled.
+Restart after saving. Inside a container with the same environment and mounts,
+run `python -m app.check`, then `python -m app.check --connect` for database checks.
+Neither check proves live cronjob access or hosted-agent connectivity.
+
+Startup errors identify missing sources, unreadable mounted files, malformed JSON
+and missing model fields without printing configuration values. For FILE mode,
+setting a path does not create a file: mount it at that exact container path.
+
 ## Agent tools
 
 `list_shops`, `search_catalog`, `describe_dataset`, `query_mart`, `request_raw_access`, `query_raw`, `create_temp_mart`, `query_temp_mart`, `read_result`, `drop_temp_mart`, `request_refresh`, `get_operation`.

@@ -20,6 +20,33 @@ class ConfigurationError(RuntimeError):
     """Operator-safe configuration diagnostics without input values."""
 
 
+def load_json_source(prefix: str, *, required: bool = False) -> dict | None:
+    """Read one operator-owned source without exposing its contents or file path."""
+    file_key, json_key = f"{prefix}_FILE", f"{prefix}_JSON"
+    path, inline = os.environ.get(file_key), os.environ.get(json_key)
+    if path is not None and inline is not None:
+        raise ConfigurationError(f"Choose {file_key} or {json_key}, not both")
+    if path is None and inline is None:
+        if required:
+            raise ConfigurationError(f"Set {file_key} or {json_key}")
+        return None
+    source = file_key if path is not None else json_key
+    if path is not None:
+        try:
+            inline = Path(path).read_text()
+        except (OSError, ValueError, UnicodeError):
+            raise ConfigurationError(
+                f"Cannot read {file_key}; check file mount and permissions"
+            ) from None
+    try:
+        value = json.loads(inline)
+    except (ValueError, TypeError):
+        raise ConfigurationError(f"{source} must contain valid JSON") from None
+    if not isinstance(value, dict):
+        raise ConfigurationError(f"{source} must contain a JSON object")
+    return value
+
+
 class StrictConfiguration(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -136,18 +163,22 @@ class Settings(StrictConfiguration):
 
     @classmethod
     def load(cls) -> "Settings":
-        # Mount outside the repository; never log validation inputs or DSNs.
+        # Operator secrets stay outside the repository and are never logged.
         try:
-            raw = json.loads(Path(os.environ["MCP_CONFIG_FILE"]).read_text())
+            raw = load_json_source("MCP_CONFIG", required=True)
             if "CRONJOB_SERVER_URL" in os.environ:
                 raw["ingestion_url"] = os.environ["CRONJOB_SERVER_URL"]
             if "MCP_INTERNAL_URL" in os.environ:
                 raw["internal_url"] = os.environ["MCP_INTERNAL_URL"]
-            catalog_path = os.environ.get("MCP_CATALOG_FILE")
-            if catalog_path:
+            if "INGESTION_TOKEN" in os.environ:
+                raw["ingestion_token"] = os.environ["INGESTION_TOKEN"]
+            catalog_raw = load_json_source("MCP_CATALOG")
+            if catalog_raw is not None:
                 if "datasets" in raw:
-                    raise ConfigurationError("Choose inline datasets or MCP_CATALOG_FILE, not both")
-                catalog = Catalog.model_validate(json.loads(Path(catalog_path).read_text()))
+                    raise ConfigurationError(
+                        "Choose inline datasets or MCP_CATALOG_FILE/MCP_CATALOG_JSON, not both"
+                    )
+                catalog = Catalog.model_validate(catalog_raw)
                 raw["datasets"] = [d.model_dump() for d in catalog.datasets]
             settings = cls.model_validate(raw)
             if (
@@ -216,6 +247,7 @@ class Settings(StrictConfiguration):
             raise ConfigurationError("Invalid configuration fields: " + "; ".join(errors)) from None
         except Exception:
             raise ConfigurationError(
-                "Invalid configuration: check MCP_CONFIG_FILE, MCP_CATALOG_FILE, "
+                "Invalid configuration: check MCP_CONFIG_FILE/MCP_CONFIG_JSON, "
+                "MCP_CATALOG_FILE/MCP_CATALOG_JSON, "
                 "JSON syntax, HTTPS endpoints, verified PostgreSQL TLS and dataset mappings"
             ) from None
