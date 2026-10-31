@@ -4,6 +4,14 @@ Status: Conversation/tool baseline implemented; T05–T08 hosted modules integra
 
 The [Managed Codex Harness and OpenAI-hosted Runtime Extension](agents_api_managed_runtime_spec.md) is normative for the next milestone (T05–T08, AC15–AC22). Existing T01–T04 completion applies only to the baseline described below.
 
+> Alignment note: this document records the earlier starter implementation. The confirmed target
+> makes agent-core a reusable agents-service boilerplate invoked by the product server during user
+> registration, with dedicated per-user OpenAI-hosted teams. Shop-shared configuration, deferred
+> sandboxes/specialists, and polling-only delivery below are not target product decisions. Follow
+> the [integration checklist](../../docs/agent-integration.md) to reconcile contracts and consumers together; this note
+> does not change the implemented API or claim live acceptance.
+
+
 This spec defines a ShopOps backend starter using the **OpenAI Agents API**, supporting development with mock MCP services and configuration-based integration with real services. The first deliverable is an end-to-end conversation API with persistence, shop-scoped authorization, and data retrieval with source references.
 
 Inputs: [basic requirements](agents_api_template_requirements.md), [sketch descriptions](imported_sketches_description.md), and the [ShopOps product direction](../../README.md). The technical choices below are proposed template decisions; unclear sketch labels are not treated as confirmed requirements.

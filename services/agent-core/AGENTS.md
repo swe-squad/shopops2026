@@ -2,6 +2,17 @@
 
 Python FastAPI service. App factory in `app/main.py`, tests in `tests/`. Listens on `$PORT` (default 8000).
 
+## Boilerplate role and alignment
+
+- Before resuming this service's work, read [agent integration](../../docs/agent-integration.md).
+  The product server owns registration and calls this boilerplate's provisioning/session boundary;
+  OpenAI hosts each user's runtime. Keep reusable configuration separate from live user ownership.
+- The confirmed target is a dedicated per-user orchestrator with 2–3 specialists and an exclusive
+  hosted environment. Earlier shop-shared configuration does not authorize a shared live runtime.
+- Check hosted environment selection, duplicate-safe user provisioning, session ownership, streaming
+  output, and scoped MCP credentials when touching their integration. Amend conflicting contracts
+  and affected consumers together; preserve stored data and explicit recovery semantics.
+
 ## Commands
 
 - Setup: `make install` (creates `.venv`)
