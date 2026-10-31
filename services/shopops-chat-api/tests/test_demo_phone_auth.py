@@ -23,7 +23,7 @@ def config(tmp_path, **extra):
     )
 
 
-def login(client, phone="+15550000001"):
+def login(client, phone="+84900000001"):
     response = client.post("/api/chat/auth/demo-phone", json={"phone_number": phone})
     assert response.status_code == 200
     return {"Authorization": "Bearer " + response.json()["access_token"]}
@@ -61,7 +61,7 @@ def test_phone_sessions_isolation_expiry_logout_and_no_provider(tmp_path):
         )
         assert (
             c.post(
-                "/api/chat/auth/demo-phone", json={"phone_number": "+15550000001", "user_id": "bob"}
+                "/api/chat/auth/demo-phone", json={"phone_number": "+84900000001", "user_id": "bob"}
             ).status_code
             == 422
         )

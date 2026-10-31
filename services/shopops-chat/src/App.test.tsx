@@ -184,7 +184,7 @@ it('uses the single demo phone flow, capabilities and server logout without OTP'
   const fetcher = vi.fn(async (url: string, options?: RequestInit) => {
     if (url === '/api/chat/auth/config') return json({mode:'demo_phone'})
     if (url === '/api/chat/auth/demo-phone') {
-      expect(JSON.parse(options?.body as string)).toEqual({phone_number:'+15550000001'})
+      expect(JSON.parse(options?.body as string)).toEqual({phone_number:'+84900000001'})
       return json({access_token:'opaque-session',expires_at:'2026-10-31T17:00:00Z'})
     }
     if (url === '/api/chat/capabilities') return json({report_mode:true,artifacts:true})
@@ -195,7 +195,7 @@ it('uses the single demo phone flow, capabilities and server logout without OTP'
   render(<App />)
   const phone = await screen.findByLabelText('Demo phone number')
   expect(screen.getByText(/No OTP/)).toBeInTheDocument()
-  fireEvent.change(phone,{target:{value:'+15550000001'}})
+  fireEvent.change(phone,{target:{value:'+84900000001'}})
   fireEvent.click(screen.getByRole('button',{name:'Unlock chat'}))
   await screen.findByRole('combobox',{name:'Response format'})
   expect(screen.queryByLabelText('Demo phone number')).not.toBeInTheDocument()

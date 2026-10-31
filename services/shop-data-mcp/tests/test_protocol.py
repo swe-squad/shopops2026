@@ -202,7 +202,7 @@ def test_multi_shop_tools_reject_missing_or_unauthorized_selection(settings, sho
             for tool, args in calls.items():
                 result = await session.call_tool(tool, args | {"shop_key": shop_key})
                 assert result.is_error, tool
-                assert "Choose an authorized shop_key" in " ".join(
+                assert "permission_denied" in " ".join(
                     item.text for item in result.content if item.type == "text"
                 )
 
@@ -210,3 +210,25 @@ def test_multi_shop_tools_reject_missing_or_unauthorized_selection(settings, sho
     assert not service.db.mock_calls
     assert not service.ingestion.mock_calls
     assert not service.approval.mock_calls
+
+
+def test_revoked_selected_shop_has_stable_sdk_permission_error(settings: Settings) -> None:
+    """HTTP identity may remain valid through another shop after target revocation."""
+    settings.shops["remaining-shop"] = settings.shops["shop-a"].model_copy(deep=True)
+    service = DataService(settings)
+    service.db = AsyncMock()
+
+    async def exercise() -> None:
+        identity = Identity(subject="+84900000001", shops={"remaining-shop"}, scopes={"data:read"})
+        async with sdk_session(service, identity) as session:
+            result = await session.call_tool(
+                "query_mart", {"shop_key": "shop-a", "query": "SELECT * FROM orders"}
+            )
+            assert result.is_error
+            assert result.structured_content is None
+            assert [item.text for item in result.content if item.type == "text"] == [
+                "Error executing tool query_mart: permission_denied"
+            ]
+        service.db.query.assert_not_awaited()
+
+    asyncio.run(exercise())

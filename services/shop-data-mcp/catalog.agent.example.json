@@ -1,0 +1,54 @@
+{
+  "datasets": [
+    {
+      "id": "agent_snapshot_v1",
+      "relation": "mcp_data.agent_snapshot_v1",
+      "layer": "mart",
+      "description": "T10 sanitized projection; see Agent Core integration contract.",
+      "columns": [
+        "source_revision",
+        "published_at",
+        "analysis_as_of"
+      ],
+      "resource": "snapshot"
+    },
+    {
+      "id": "agent_sku_catalog_v1",
+      "relation": "mcp_data.agent_sku_catalog_v1",
+      "layer": "mart",
+      "description": "T10 sanitized projection; see Agent Core integration contract.",
+      "columns": [
+        "sku"
+      ],
+      "resource": "snapshot"
+    },
+    {
+      "id": "agent_order_cohorts_v1",
+      "relation": "mcp_data.agent_order_cohorts_v1",
+      "layer": "mart",
+      "description": "T10 sanitized projection; see Agent Core integration contract.",
+      "columns": [
+        "sku",
+        "order_id",
+        "business_date",
+        "has_return"
+      ],
+      "resource": "snapshot"
+    },
+    {
+      "id": "agent_review_facts_v1",
+      "relation": "mcp_data.agent_review_facts_v1",
+      "layer": "mart",
+      "description": "T10 sanitized projection; see Agent Core integration contract.",
+      "columns": [
+        "sku",
+        "business_date",
+        "review_id",
+        "source_document_id",
+        "negative_rating",
+        "sizing_mentions"
+      ],
+      "resource": "snapshot"
+    }
+  ]
+}

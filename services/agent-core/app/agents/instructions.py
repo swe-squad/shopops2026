@@ -3,6 +3,22 @@ from app.contracts.models import ApplicationResponse, ConfigSnapshot
 
 
 def build_instructions(config: ConfigSnapshot) -> str:
+    instructions = _build_instructions(config)
+    if config.mcp_profile == "shop-data-read-v1":
+        instructions += """
+Commerce data profile: orders are distinct fulfilled orders containing the SKU.
+Returns count order-level return requests observed before the frozen analysis cutoff;
+they do not prove this SKU was returned or the return completed. Dates are inclusive
+Asia/Ho_Chi_Minh; baseline is the immediately preceding equal-length interval. Rates
+are percentages and change is percentage points. Reviews expose overlapping negative
+rating and sizing categories, with deterministic safe samples of at most 20 references.
+Publication time is not historical coverage or live freshness. Data comes from a
+synchronized synthetic snapshot, not live commerce-platform ingestion. Never request
+refresh, CRUD, raw queries, phone identities or credentials. No fixture fallback."""
+    return instructions
+
+
+def _build_instructions(config: ConfigSnapshot) -> str:
     if config.template_id != "shopops":
         raise ConfigurationConflict()
     if config.runtime_profile.environment_type == "openai_hosted":

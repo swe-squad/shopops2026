@@ -18,6 +18,16 @@ enabling refresh. No service imports another service's application code.
 1. Apply the mock-data and cronjob migrations and publish an initial snapshot. Shops
    must exist before provisioning query logins. Actual source keys include
    `shopee-open-platform:1001`, `lazada:1001`, and `shopify:1001`.
+   In the authoritative **source database**, apply
+   `migrations/005-source-membership.sql` after the source migrations, then
+   `migrations/003-phone-membership.sql`. These are explicit per-database steps,
+   not a numeric migration sequence across all databases. The source owns `mock.*`;
+   migration 005 creates the security-barrier `access.user_shop_access` projection
+   there. Do not use the derived database's similarly named snapshot view for auth.
+   The projection exposes only `user_id` and `shop_key`, checks active users,
+   memberships and merchants, and excludes tombstones on all four joined tables
+   (including shops). Set the membership login password out of band. It receives
+   only column SELECT on that projection, no source table access or writes.
 2. Apply `migrations/001-control.sql` in the control database. Provision the control login
    with USAGE on `mcp_control` and SELECT/INSERT/UPDATE/DELETE on `results` and `refreshes`.
    It has no application data permissions. The legacy `revoked_tokens` table is unused.
@@ -113,7 +123,8 @@ No bearer credential is required for MCP; knowledge of the phone number grants a
 For an external agent, use the HTTPS MCP URL and a client supporting custom HTTP headers.
 
 Set `membership_dsn` to the restricted login provisioned by
-`migrations/003-phone-membership.sql` in the **authoritative source database**. It reads
+`migrations/003-phone-membership.sql` in the **authoritative source database**,
+after `005-source-membership.sql` creates the live source projection. It reads
 only `user_id` and `shop_key` from the live `access.user_shop_access` view. Every request
 resolves membership again, excluding inactive users, memberships and merchants. The phone
 must match `user_id` exactly (`+` and 8-15 digits); no local-format guessing occurs.
@@ -121,6 +132,13 @@ must match `user_id` exactly (`+` and 8-15 digits); no local-format guessing occ
 Call `list_shops` and pass `shop_key` to each data tool. One phone can access multiple shops;
 queries are executed separately through each shop's restricted login. A missing shop selection
 is accepted only for a single authorized configured shop. No tool argument can change the phone.
+If a selected shop is missing or no longer authorized, the tool returns the stable
+SDK denial marker `permission_denied` (for `query_mart`, text content is
+`Error executing tool query_mart: permission_denied`, with `isError=true`). This also
+applies when the phone still has access to another shop and HTTP authentication
+succeeds. Clients should map only this exact marker to permission denial; other
+SDK tool failures remain unavailable/invalid outcomes without exposing raw details.
+
 Server configuration supplies `scopes`, defaulting to `data:read`; refresh also needs
 `data:refresh`. Raw queries still require the external owner-approval service.
 
@@ -132,11 +150,14 @@ poll `get_operation`. Keep the idempotency key unchanged on retry. A typical que
 ## Verification
 
 Unit/protocol tests: `make ci`. Real schema/isolation tests need a fresh disposable
-PostgreSQL database and `CRONJOB_SOURCE_DIR` pointing to the cronjob service directory:
+PostgreSQL database and `CRONJOB_SOURCE_DIR` pointing to the cronjob service directory.
+Source membership tests use `../mock-data-server` by default; set `MOCK_SOURCE_DIR`
+when that source checkout lives elsewhere:
 
 ```sh
 TEST_DATABASE_DSN='...' CRONJOB_SOURCE_DIR='../cronjob-server' \
-  .venv/bin/python -m pytest tests/test_database.py tests/test_pipeline_database.py -q
+  .venv/bin/python -m pytest tests/test_database.py tests/test_pipeline_database.py \
+  tests/test_agent_projections.py tests/test_source_membership.py -q
 ```
 
 From the repo root, after installing both services' dev dependencies:
@@ -157,3 +178,24 @@ Windows uses `Scripts/python.exe`; the harness selects Psycopg's supported event
 Rollback: disable refresh configuration first. Keep receipt tables while reconciling any
 in-flight jobs. Remove shop mappings or revoke logins to stop queries; do not drop shared
 pipeline schemas. The projection migration is independent of the pipeline's base data.
+
+## T10 additive agent projections (preparatory)
+
+`migrations/004-agent-projections.sql` adds sanitized SKU/day cohorts, review flags,
+known SKUs and successful publication metadata. Apply it after pipeline migrations
+and `002-pipeline-access.sql`, as the trusted operator in the derived database.
+Existing mapped query roles receive SELECT on exactly these four new views; fresh
+roles provisioned afterward receive the existing projection permissions. Source/writer
+permissions remain unchanged. `catalog.agent.example.json` is the isolated four-dataset
+catalog; enabling it additionally requires listing its IDs in the selected shop config.
+
+The Core data profile is not yet activated. Its proposed contract is in
+`../agent-core/contracts/shop-data-integration.md`. Missing publication yields no
+snapshot row; consumers must reject that state. Configured demo history coverage is
+separate from publication/query time and must be independently verified. No raw body,
+customer data, refresh or CRUD permission is required by these views.
+
+Run `tests/test_agent_projections.py` with the same disposable database environment
+as the pipeline database tests. It verifies duplicate order/return records, category
+flags, absent publication and two real restricted shop logins. It is not a full
+pipeline-to-chat acceptance test.

@@ -11,6 +11,8 @@ from app.contracts.repository import Repository
 from app.contracts.tools import PendingToolCall, ToolDefinition, ToolResult
 from app.tools.client import ClientError, MCPClient, validate_url
 from app.tools.credentials import Credentials, same_identity
+from app.tools.shop_bindings import Bindings
+from app.tools.shop_data import ShopDataAdapter
 from app.tools.validation import (
     PERMISSIONS,
     definitions,
@@ -37,9 +39,11 @@ class MCPToolBridge:
         client: ToolClient,
         compatible_remote_profiles: frozenset[str] = frozenset(),
         timeout_seconds: float = 15,
+        shop_data_bindings: Bindings | None = None,
     ) -> None:
         if not 0 < timeout_seconds <= 15:
             raise ValueError("MCP timeout must be in (0, 15]")
+        self.shop_data_bindings = shop_data_bindings
         self.repository = repository
         self.credentials = credentials
         self.permission_resolver = permission_resolver
@@ -55,6 +59,17 @@ class MCPToolBridge:
             raise ValueError(
                 "remote MCP profile requires explicit scoped-auth compatibility approval"
             )
+        if config.mcp_profile == "shop-data-read-v1":
+            if self.shop_data_bindings is None:
+                raise ValueError("shop data bindings required")
+            self.shop_data_bindings.get(config.shop_data_binding)
+            if (
+                isinstance(self.client, MCPClient)
+                and config.data_mcp_url not in self.client.shop_data_urls
+            ):
+                raise ValueError("shop data transport policy missing")
+        elif config.shop_data_binding is not None:
+            raise ValueError("binding requires shop data profile")
         for url in (config.data_mcp_url, config.knowledge_mcp_url):
             validate_url(
                 url,
@@ -99,12 +114,23 @@ class MCPToolBridge:
                 is_data = call.name in DATA_TOOLS
                 url = config.data_mcp_url if is_data else config.knowledge_mcp_url
                 audience = "agent-core:data" if is_data else "agent-core:knowledge-memory"
+                binding = None
+                if is_data and config.mcp_profile == "shop-data-read-v1":
+                    try:
+                        binding = self.shop_data_bindings.resolve(config.shop_data_binding, scope)
+                    except ValueError:
+                        return ToolResult(error="permission_denied")
                 for attempt in range(3):
                     token = self.credentials.issue(
                         scope, conversation_id, config.revision, audience, permissions
                     )
                     try:
-                        value = await self.client.call_tool(url, token, call.name, arguments)
+                        if binding is not None:
+                            value = await ShopDataAdapter(self.client).execute(
+                                url, binding, call.name, arguments
+                            )
+                        else:
+                            value = await self.client.call_tool(url, token, call.name, arguments)
                     except ClientError as exc:
                         if exc.retryable and attempt < 2:
                             await asyncio.sleep(0.05 * (2**attempt))

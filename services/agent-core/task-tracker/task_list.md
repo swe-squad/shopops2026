@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use `superpowers:executing-plans` for inline implementation, or `superpowers:subagent-driven-development` when delegation is explicitly selected. Checkboxes track implementation progress. This tracker does not authorize implementation or deployment by itself.
 
-**Goal:** Preserve the delivered T01–T04 conversation/tool baseline and deliver the hosted runtime extension through T05–T08, with explicit ownership and integration gates, then connect the existing chat client through T09.
+**Goal:** Preserve the delivered T01–T04 conversation/tool baseline and deliver the hosted runtime extension through T05–T08, with explicit ownership and integration gates, then connect the existing chat client through T09 and the commerce data pipeline through T10.
 
 **Architecture:** FastAPI exposes scoped conversation APIs. A durable SQLite-backed worker coordinates the Agents API provider and application function tools bridged to internal MCP services.
 
@@ -29,6 +29,7 @@ and task description. It does not start implementation or change the T01–T08 o
 | T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Ready for integration | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
 | T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Ready for integration | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
 | T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | Ready for integration | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
+| T10 | [Connect Agent Core to Shop Data MCP and the data pipeline](desciption/T10-data-pipeline-integration.md) | D5 — Very hard | Data integration developer | Ready for integration | Published Data MCP contract and pipeline handoff; contract tests may start now | Accepted T09 fixes, real PostgreSQL/MCP pipeline acceptance and separately gated hosted evidence |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
 
@@ -463,3 +464,29 @@ unknown prior outcomes. Expected revision is checked atomically when creating a 
 existing pinned replay and old clients are preserved. Both corrected images and network-isolated
 migration/revision checks pass. Deploy compatible Core before the adapter. Hosted/T08 proof gates
 remain UNVERIFIED; no paid call, merge or deployment was performed. See T09's correction record.
+
+## Commerce data integration follow-up (T10)
+
+**Task:** [Connect Agent Core to Shop Data MCP and the data pipeline](desciption/T10-data-pipeline-integration.md).
+**Status:** Ready for integration (offline; deployment and hosted acceptance pending). **Difficulty:** D5 — Very hard. **Scope:** one demo user, one selected
+shop, read-only analytical data, existing text/report conversation flow.
+
+Target: `shopops-chat → shopops-chat-api → agent-core → shop-data-mcp → cronjob derived PostgreSQL`.
+`mock-data-server → cronjob-server` supplies the seeded/synchronized data. Knowledge/history remain
+on their existing Core paths. No raw-data approval, CRUD, refresh or write tools are granted to the
+agent by this task.
+
+Planning sources: T09 committed handoff/review `d3f2602`, pipeline merged on `develop` at `5262ba4`,
+and unmerged Data MCP branch `codex/shop-data-mcp-design` at `e663f88`. Do not treat that branch or
+uncommitted T09 fixes as an available integrated runtime. Protocol/adapter tests can start from the
+published contracts; complete integration requires accepted dependency handoffs, including fixes
+for T09-R01/R02. T08 hosted proof gaps remain a separate live-completion dependency.
+
+T10 pins a trusted mapping from Core owner/shop to the source phone/shop, adds the missing approved
+SKU/date projections, translates Data MCP responses into Core's validated ToolResult contract, and
+proves a data mutation + synchronization changes the answer. Existing shop-level period marts are
+not interchangeable with arbitrary SKU/date metrics; changing only DATA_MCP_URL is insufficient.
+
+Use branch `feat/agent-core-data-mcp`, native worktree label `agent-core-data-mcp`, Git fallback
+`/tmp/shopops2026-agent-core/T10`. Implementation `0ba1bcb`, handoff `978aa8f`; see the task
+description for CI, real PostgreSQL/HTTP acceptance and remaining hosted gates.

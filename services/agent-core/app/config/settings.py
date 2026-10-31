@@ -39,6 +39,8 @@ class Settings:
     knowledge_memory_mcp_url: str
     mcp_token_signing_key: str = field(repr=False)
     openai_api_key: str = field(default="", repr=False)
+    shop_data_bindings_path: str = ""
+    shop_data_mcp_url: str = ""
     openai_model: str = ""
     auth_jwks_url: str = ""
     auth_issuer: str = ""
@@ -120,6 +122,12 @@ class Settings:
                 require("RUNTIME_BUNDLE_PATH")
                 if "RUNTIME_BUNDLE_PATH" in env
                 else "runtime-bundles"
+            ),
+            shop_data_bindings_path=env.get("SHOP_DATA_BINDINGS_PATH", ""),
+            shop_data_mcp_url=(
+                endpoint(require("SHOP_DATA_MCP_URL"), "SHOP_DATA_MCP_URL")
+                if "SHOP_DATA_MCP_URL" in env
+                else ""
             ),
             app_env=app_env,
             agent_provider=provider,

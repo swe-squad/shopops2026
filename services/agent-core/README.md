@@ -333,3 +333,53 @@ connections and is not shipped as a production app. Install Core's private Pytho
 environment, then run the chat API's `AGENT_CORE_LOOPBACK=1` offline acceptance separately from
 independent service CI. Report/download and restart results from this fixture prove the HTTP
 application boundary, not real skill, specialist or sandbox execution.
+
+## Commerce data profile (T10)
+
+Use `config/registry.shop-data.example.json` and the operator-owned
+`config/shop-data-bindings.example.json` for the opt-in `shop-data-read-v1` profile.
+The new revision is `returns-hosted-data-v1`; the old revisions remain available for
+pinned conversations. The approved runtime bundle bytes/digest are unchanged.
+
+Set `CONFIG_PATH` to that registry, `DATA_MCP_MODE=remote`,
+`SHOP_DATA_BINDINGS_PATH` to the mounted trusted binding file and
+`SHOP_DATA_MCP_URL=http://localhost:8003/mcp` locally. Set the registry revision's
+`data_mcp_url` to the **same** endpoint. For CapRover use
+`http://srv-captain--shop-data-mcp-dev:8000/mcp` (dev) or
+`http://srv-captain--shop-data-mcp:8000/mcp` (production). Keep Data MCP and its
+source/processor private. Existing `DATA_MCP_URL`/`KNOWLEDGE_MEMORY_MCP_URL` settings
+remain required by the legacy service configuration. The environment verifies an
+approved registry endpoint; it does not rewrite any pinned conversation URL.
+Retain prior approved endpoint revisions and binding versions until their
+conversations are retired.
+
+The synthetic binding retains Core `tenant-a` / `alice` / `shop-a` and maps to
+source phone `+84900000001`, shop `shopee-open-platform:1001`. This is a one-phone
+demo, not production phone authentication. The versioned binding digest covers
+all fields, including `coverage_start`; never obtain bindings from browser/model
+arguments. Update the binding and its digest via a new administrative revision
+and create a new conversation after reconciling pending work. Do not silently
+retarget old conversations. Generate the reference with `Binding.reference` from
+`app.tools.shop_bindings` after validating the operator-owned binding JSON.
+
+Before activation, seed the source and successfully synchronize the processor,
+apply the Data MCP source membership and derived projection migrations, provision
+restricted query/membership roles, and mount MCP catalog/config/CA. See the Data MCP
+[setup](../shop-data-mcp/INTEGRATION.md). DSNs, CA files and database credentials stay
+with Data MCP. The four datasets in `catalog.agent.example.json` require only
+`data:read`. Core never exposes SQL, refresh, CRUD or raw approval tools to the model.
+
+The example's `coverage_start=2026-10-17` is for the verified synthetic seed; it is
+not a promise about arbitrary upstream history. Both requested and preceding
+baseline intervals must fit the declared complete-history range and the frozen
+pipeline `analysis_as_of`. Missing publication, unknown SKU, incomplete or truncated
+results and changed revisions fail closed. `queried_at` and refresh time are not
+proof of coverage or live data freshness. See the [metric contract](contracts/shop-data-integration.md)
+for order-cohort return-request semantics and safe review samples.
+
+Offline acceptance uses `scripts/t10_acceptance.py` with real disposable PostgreSQL
+and HTTP services, and a test-only fake model provider. It requires Docker and each
+service's own installed dependencies; use `--help` for invocation. It never targets
+an operational database. Hosted acceptance is separate: T08/T09 evidence and
+explicit operator opt-in are required before paid calls. Offline success does not
+prove hosted child roles or sandbox boundaries.

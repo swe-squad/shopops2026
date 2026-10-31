@@ -42,7 +42,7 @@ def build_server(service: DataService) -> MCPServer:
         try:
             return principal.get().select_shop(shop_key)
         except ValueError:
-            raise ToolError("Choose an authorized shop_key from list_shops") from None
+            raise ToolError("permission_denied") from None
 
     @server.tool(structured_output=True, annotations=read)
     async def list_shops(offset: int = 0) -> dict[str, Any]:
