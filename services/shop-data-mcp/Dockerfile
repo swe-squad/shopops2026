@@ -11,6 +11,8 @@ RUN pip install -r requirements.txt
 
 RUN useradd --system --uid 1001 app
 COPY --chown=app:app app ./app
+COPY --chown=app:app config.container.json /run/secrets/shop-data-mcp.json
+COPY --chown=app:app catalog.example.json /run/config/catalog.json
 USER app
 
 EXPOSE 8000

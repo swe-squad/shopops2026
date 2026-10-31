@@ -13,7 +13,18 @@ sync-run inspection, and `cronjob:write` for source mutations. Retain `data:read
 ```json
 {
   "scopes": ["data:read", "cronjob:read", "cronjob:write"],
-  "cronjob_admin_phones": []
+  "cronjob_admin_phones": [
+    "+84900000001",
+    "+84900000002",
+    "+84900000003",
+    "+84900000004",
+    "+84900000005",
+    "+84900000006",
+    "+84900000007",
+    "+84900000008",
+    "+84900000009",
+    "+84900000010"
+  ]
 }
 ```
 
@@ -27,7 +38,8 @@ refuses startup. Local development uses `http://localhost:8001`; CapRover uses
 
 Scopes are server-wide capabilities. CRUD source reads include complete entity
 fields such as review text; they are separately enabled because they do not use
-the SQL catalog projections or raw-access grants. Both CRUD scopes default off.
+the SQL catalog projections or raw-access grants. Both CRUD scopes default off in
+the settings model; `config.container.json` explicitly enables them for development.
 
 The existing `X-Phone-Number` request identity is forwarded as `X-Demo-User-Id`.
 Callers cannot supply another actor, upstream URL or credential. Ordinary tools
@@ -39,7 +51,9 @@ tools on it.
 
 Admin tools manage users, merchants and memberships across shops. They require
 both the relevant CRUD scope and the caller's canonical phone in the
-operator-owned `cronjob_admin_phones` allowlist, empty by default. The caller must
+operator-owned `cronjob_admin_phones` allowlist. If omitted, it defaults to all ten demo
+users (`+84900000001` through `+84900000010`), including the three demo viewers. Set `[]` to disable admin access, or another list to
+replace the default. Merchant owners/viewers are not automatically admins. The caller must
 still pass the existing MCP membership lookup. The service's existing phone-only
 identity model also applies to admin access: phone possession is not verified.
 

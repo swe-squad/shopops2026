@@ -4,6 +4,48 @@ A phone-identified Streamable HTTP MCP server for PostgreSQL marts, approved raw
 
 For dataset registration and tool changes, start with [Data and tool changes](DEVELOPMENT.md).
 
+## Bundled development configuration
+
+The Docker image includes two readable files for the non-root app user (UID 1001):
+
+| Container path | Repository source |
+| --- | --- |
+| `/run/secrets/shop-data-mcp.json` | `config.container.json` |
+| `/run/config/catalog.json` | `catalog.example.json` |
+
+Keep these variables in CapRover after deploying the updated image:
+
+```env
+MCP_CONFIG_FILE=/run/secrets/shop-data-mcp.json
+MCP_CATALOG_FILE=/run/config/catalog.json
+```
+
+The bundled config sets the development public URL, `data:read`, `cronjob:read`,
+`cronjob:write`, and admin phones `+84900000001` through `+84900000010`. It contains no database credentials
+or service token. Set the following runtime values in App Configs:
+
+- `MCP_CONTROL_DSN`: restricted control database connection string.
+- `MCP_MEMBERSHIP_DSN`: restricted connection to the authoritative membership view.
+- `MCP_SHOPS_JSON`: the full `shops` object with a restricted query connection and
+  approved dataset IDs per shop. This replaces the JSON `shops` object entirely.
+- `INGESTION_TOKEN`: the existing cronjob-server service credential.
+- `CRONJOB_SERVER_URL`: `http://srv-captain--cronjob-server-dev:8000` for these dev apps.
+- `MCP_INTERNAL_URL`: `http://srv-captain--shop-data-mcp-dev:8000/mcp` for internal calls.
+
+For the three DB variables, use the `control_dsn`, `membership_dsn`, and `shops`
+values from your complete operator config; `.env.example` illustrates their shape.
+They override the corresponding fields in either file or JSON-env mode. Invalid or
+empty overrides fail validation. The database schema and restricted roles must
+already be provisioned. DSNs still require verified TLS and an accessible CA file;
+the CA is not included in the image. Missing DB values are reported as required fields.
+
+These two JSON files no longer need mounts. To customize the deployment, mount your
+own complete files over these paths, or use the JSON environment mode below. A mount
+covering `/run/secrets` or `/run/config` hides bundled files in that directory; provide
+the JSON files in that mount too, or mount the CA separately. The bundled catalog
+must match your database projections. Run `python -m app.check` inside the configured
+container, then `python -m app.check --connect` to check DB connectivity.
+
 ## Configure
 
 1. Copy `config.example.json` to an operator-owned secret file outside Git and `catalog.example.json` to a separate approved dataset file. Replace hosts and dataset projections with real values. Mount both JSON files and the PostgreSQL CA. Set `MCP_CONFIG_FILE` and `MCP_CATALOG_FILE` to their absolute paths. Existing inline `datasets` remain supported when no separate catalog is selected. Missing/invalid configuration refuses startup; no demo data is loaded.
@@ -49,7 +91,18 @@ paste raw JSON, without Markdown fences or outer shell quotes):
 {
   "public_url": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
   "scopes": ["data:read", "cronjob:read", "cronjob:write"],
-  "cronjob_admin_phones": [],
+  "cronjob_admin_phones": [
+    "+84900000001",
+    "+84900000002",
+    "+84900000003",
+    "+84900000004",
+    "+84900000005",
+    "+84900000006",
+    "+84900000007",
+    "+84900000008",
+    "+84900000009",
+    "+84900000010"
+  ],
   "control_dsn": "host=PRIVATE_DB_HOST dbname=shopops user=mcp_control password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
   "membership_dsn": "host=PRIVATE_SOURCE_HOST dbname=source user=mcp_membership password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
   "shops": {
@@ -62,14 +115,17 @@ paste raw JSON, without Markdown fences or outer shell quotes):
 ```
 
 Supply the real token separately via `INGESTION_TOKEN`; keep populated JSON and
-credentials out of Git. `cronjob_admin_phones: []` leaves admin CRUD disabled.
+credentials out of Git. When `cronjob_admin_phones` is omitted, all ten demo users
+(`+84900000001` through `+84900000010`) are admins, including the three demo viewers. An explicit `cronjob_admin_phones: []`
+disables admin CRUD; an explicit list replaces the default. Admin callers still
+need the relevant cronjob scope and valid membership.
 Restart after saving. Inside a container with the same environment and mounts,
 run `python -m app.check`, then `python -m app.check --connect` for database checks.
 Neither check proves live cronjob access or hosted-agent connectivity.
 
 Startup errors identify missing sources, unreadable mounted files, malformed JSON
-and missing model fields without printing configuration values. For FILE mode,
-setting a path does not create a file: mount it at that exact container path.
+and missing model fields without printing configuration values. For custom FILE paths,
+mount the file at that exact container path; the image only includes the two paths above.
 
 ## Agent tools
 
@@ -79,7 +135,8 @@ Cronjob CRUD adds 70 typed tools: `cronjob_list_<resource>`, `cronjob_get_<resou
 `cronjob_create_<resource>`, `cronjob_update_<resource>`, and `cronjob_delete_<resource>`
 for all 14 source resources, plus `cronjob_get_sync_run`. Enable `cronjob:read` and
 `cronjob:write` in operator `scopes`; admin resources additionally require
-`cronjob_admin_phones`. These capabilities default off and give access to source
+`cronjob_admin_phones`. Model defaults leave these scopes off; the bundled development
+config explicitly enables them. They give access to source
 records outside the analytical catalog/grant workflow. See [CRUD configuration,
 resource keys and examples](CRONJOB.md).
 
@@ -126,7 +183,7 @@ make run
 
 `make ci` runs Ruff and unit/protocol tests. Real database tests require a **fresh disposable** PostgreSQL database with role/schema creation privileges, supplied through `TEST_DATABASE_DSN`; they create and remove test schemas/roles. Never point this setting at operational data. Docker is optional; any disposable PostgreSQL instance works. `make integration` requires this variable and runs the real isolation test explicitly.
 
-The template's toolchain uses Python 3.13+. The Docker image contains only runtime code. Health is `/health`; `/ready` requires a valid phone membership, checks control storage and reports whether integrations are configured. Ready does not certify source policies or upstream behavior.
+The template's toolchain uses Python 3.13+. The Docker image contains runtime code and the bundled non-secret config/catalog. Health is `/health`; `/ready` requires a valid phone membership, checks control storage and reports whether integrations are configured. Ready does not certify source policies or upstream behavior.
 
 ## Deployment
 

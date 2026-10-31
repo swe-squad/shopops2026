@@ -139,8 +139,11 @@ class Settings(StrictConfiguration):
     ingestion_url: str | None = None
     ingestion_token: SecretStr | None = None
     cronjob_admin_phones: set[str] = Field(
-        default_factory=set,
-        description="Operator allowlist for cronjob admin CRUD; also requires cronjob scopes",
+        default_factory=lambda: {f"+849000000{number:02}" for number in range(1, 11)},
+        description=(
+            "Cronjob admin allowlist; defaults to Demo users 1 through 10. "
+            "An explicit empty list disables admin access; cronjob scopes are still required"
+        ),
     )
     approval_url: str | None = None
     approval_token: SecretStr | None = None
@@ -166,6 +169,17 @@ class Settings(StrictConfiguration):
         # Operator secrets stay outside the repository and are never logged.
         try:
             raw = load_json_source("MCP_CONFIG", required=True)
+            for key, field in (
+                ("MCP_CONTROL_DSN", "control_dsn"),
+                ("MCP_MEMBERSHIP_DSN", "membership_dsn"),
+            ):
+                if key in os.environ:
+                    raw[field] = os.environ[key]
+            if "MCP_SHOPS_JSON" in os.environ:
+                try:
+                    raw["shops"] = json.loads(os.environ["MCP_SHOPS_JSON"])
+                except ValueError:
+                    raise ConfigurationError("MCP_SHOPS_JSON must contain valid JSON") from None
             if "CRONJOB_SERVER_URL" in os.environ:
                 raw["ingestion_url"] = os.environ["CRONJOB_SERVER_URL"]
             if "MCP_INTERNAL_URL" in os.environ:
