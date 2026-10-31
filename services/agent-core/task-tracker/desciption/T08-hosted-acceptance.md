@@ -98,12 +98,16 @@ Expose CLI `python -m scripts.demo_live_hosted --live --hosted --credentials-fil
   explicitly gated legacy and hosted live suites; all three xfails are the T05 public errors
   named above and are not counted as acceptance passes.
 - Scoped final command: `.venv/bin/pytest tests/runtime/test_hosted_live_gate.py
-  tests/integration/test_hosted_workflow.py -v`; final result is recorded with the implementation
-  SHA in the delivery addendum below.
+  tests/integration/test_hosted_workflow.py -v`: **47 passed, 3 xfailed**, exit 0.
 - Four independent-review findings reproduced RED, then fixed; final full offline CI above
   verifies the fixes and regressions. Local hash-helper execution is synthetic test evidence,
   never a hosted command claim.
-- Implementation SHA and final changed-path audit: delivery addendum after commit.
+- Result implementation commit: `e6487284fdfa416abfc26731a25ef7138df65752`
+  (`test(agent-core): verify hosted runtime acceptance`).
+- Final `git diff --name-only d1dbe63...e648728` audit: exactly eight T08-owned files under
+  `services/agent-core/` (two scripts, three test files, one fixture, one runbook, this description).
+  `git diff --cached --check` passed before commit; implementation commit left the worktree clean.
+- Branch/worktree are retained for the lead. No push, PR, merge or deploy was performed.
 
 
 
