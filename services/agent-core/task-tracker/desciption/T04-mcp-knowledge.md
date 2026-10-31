@@ -10,7 +10,7 @@
 
 **Spec:** [Agent Core Template Spec](../../agents_api_template_spec.md), sections 2–3, 7–9 and 11.
 
-**Tracker and global constraints:** [Task list](../task_list.md). Owner: MCP/knowledge developer. Status: **Not started**.
+**Tracker and global constraints:** [Task list](../task_list.md). Owner: MCP/knowledge developer. Status: **Ready for integration**.
 
 **Difficulty:** D4 — Hard. Real MCP transport, bounded schemas, scoped token validation, retries and history isolation cross several security boundaries. Knowledge fixtures are straightforward; safe tool execution and compatibility with real endpoints drive the difficulty.
 
@@ -45,16 +45,16 @@ T01 supplies an immutable runtime profile; T03 consumes published tool definitio
 
 ## Implementation checklist
 
-- [ ] **Worktree baseline:** Record the foundation SHA, read service `AGENTS.md`, run `make install`, the available baseline tests and `make lint` in this worktree. Verify MCP test fixtures allocate their own ports and runtime data.
-- [ ] **Contract tests first:** Create `tests/tools/test_schemas.py` for inclusive ISO dates, `start_date <= end_date`, maximum 90-day range, SKU length 1–64, limits 1–20 and result maximum 32 KiB. Assert rejection of undeclared identity, SQL, path, URL and arbitrary tool-name arguments.
-- [ ] **Fixtures and knowledge:** Create two shops and at least two users' data references compatible with T02. Use absolute dates and SKU-A baseline 100 orders/5 returns versus current 100/15. Include sizing-complaint evidence and an immutable knowledge manifest with ID/version/checksum/documents. Verify calculated rates 5%, 15% and a 10 percentage point change.
-- [ ] **Scoped credential tests first:** Add `tests/tools/test_credentials.py` for invalid signatures, expiry, wrong issuer/audience, mismatched shop/conversation and missing claims. Assert rejection before any repository or dataset access; model-supplied identity must never override signed scope.
-- [ ] **MCP servers:** Implement `/mcp/data` and `/mcp/knowledge-memory` factories with Streamable HTTP. Validate credentials and scope for every call. Provide lexical knowledge search, version references and current-conversation history through the injected repository; no unrestricted writes/deletes.
-- [ ] **Bridge/client:** Publish only allowlisted function tools, map to fixed MCP names, inject server-side scope/credentials/version, validate arguments/results and normalize protocol/tool errors. New tools discovered upstream remain unavailable until explicitly approved in configuration.
-- [ ] **Failure and endpoint tests:** Add `tests/tools/test_bridge.py` for `not_found` versus empty dataset, permission denial, malformed output, timeouts, unexpected redirects, unsupported URL schemes and metadata targets. Enforce 15-second call timeout and at most two retries only for transient read-only failures. Do not retry permission/validation errors.
-- [ ] **Real transport tests:** Add `tests/mcp/test_transport.py` with actual loopback HTTP calls to both servers. Prove cross-shop denial, history-owner isolation, correct bundle version, bounded output and deterministic metrics. An in-process function mock alone is not MCP protocol evidence.
-- [ ] **Remote profile:** Use the same schemas with a configurable real endpoint. Disable mock Data MCP in remote mode and fail on missing remote URL/auth compatibility. Give T01 tests showing existing conversations retain pinned profiles while new ones use the activated revision.
-- [ ] **Handoff:** Supply server factories, bridge factory, versioned schemas, auth documentation, fixtures and scoped test results. Request required runtime variables/dependencies from T01; do not edit shared build files independently.
+- [x] **Worktree baseline:** Record the foundation SHA, read service `AGENTS.md`, run `make install`, the available baseline tests and `make lint` in this worktree. Verify MCP test fixtures allocate their own ports and runtime data.
+- [x] **Contract tests first:** Create `tests/tools/test_schemas.py` for inclusive ISO dates, `start_date <= end_date`, maximum 90-day range, SKU length 1–64, limits 1–20 and result maximum 32 KiB. Assert rejection of undeclared identity, SQL, path, URL and arbitrary tool-name arguments.
+- [x] **Fixtures and knowledge:** Create two shops and at least two users' data references compatible with T02. Use absolute dates and SKU-A baseline 100 orders/5 returns versus current 100/15. Include sizing-complaint evidence and an immutable knowledge manifest with ID/version/checksum/documents. Verify calculated rates 5%, 15% and a 10 percentage point change.
+- [x] **Scoped credential tests first:** Add `tests/tools/test_credentials.py` for invalid signatures, expiry, wrong issuer/audience, mismatched shop/conversation and missing claims. Assert rejection before any repository or dataset access; model-supplied identity must never override signed scope.
+- [x] **MCP servers:** Implement `/mcp/data` and `/mcp/knowledge-memory` factories with Streamable HTTP. Validate credentials and scope for every call. Provide lexical knowledge search, version references and current-conversation history through the injected repository; no unrestricted writes/deletes.
+- [x] **Bridge/client:** Publish only allowlisted function tools, map to fixed MCP names, inject server-side scope/credentials/version, validate arguments/results and normalize protocol/tool errors. New tools discovered upstream remain unavailable until explicitly approved in configuration.
+- [x] **Failure and endpoint tests:** Add `tests/tools/test_bridge.py` for `not_found` versus empty dataset, permission denial, malformed output, timeouts, unexpected redirects, unsupported URL schemes and metadata targets. Enforce 15-second call timeout and at most two retries only for transient read-only failures. Do not retry permission/validation errors.
+- [x] **Real transport tests:** Add `tests/mcp/test_transport.py` with actual loopback HTTP calls to both servers. Prove cross-shop denial, history-owner isolation, correct bundle version, bounded output and deterministic metrics. An in-process function mock alone is not MCP protocol evidence.
+- [x] **Remote profile:** Use the same schemas with a configurable real endpoint. Disable mock Data MCP in remote mode and fail on missing remote URL/auth compatibility. Give T01 tests showing existing conversations retain pinned profiles while new ones use the activated revision.
+- [x] **Handoff:** Supply server factories, bridge factory, versioned schemas, auth documentation, fixtures and scoped test results. Request required runtime variables/dependencies from T01; do not edit shared build files independently.
 
 ## Verification and completion
 
@@ -71,3 +71,64 @@ Primary criteria: AC03, AC04 and AC07; support AC05, AC10, AC12–AC14. Mark **R
 ## Handoff record
 
 Record the actual worktree path, branch, foundation SHA, result commit SHA, changed paths, transport/security test results and blockers here. Confirm all task changes are under `services/agent-core/`. T01 updates the central tracker and integrates the handoff; preserve the worktree until its commits are integrated or otherwise retained and it is clean.
+
+
+### T04 module handoff (2026-10-31)
+
+- Worktree: `/tmp/shopops2026-agent-core/T04` (native-created worktree moved to the explicit
+  task fallback path); implementation directory: `services/agent-core/`.
+- Branch: `feat/agent-core-t04-mcp`; integration target: `feat/agent-core-template`.
+- Foundation: `9ce01a24f19acdfc4e5803faec1e1a3fa1fd678f`.
+- Shared amendment: T01 `94ef8f9` imported as `a244c9c`; no other T01 implementation imported.
+  Trusted permissions now come from persisted `Run.scope`; ownership remains tenant/shop/user.
+- Implementation result commit: `0f8d6b003d96f6ef7766a619c8bb352dfa48d533`. Handoff metadata follows
+  in a separate documentation commit, so the code commit remains independently reviewable.
+- Owned changes: `app/tools/`, `app/mcp/`, `contracts/tools/v1/`,
+  `contracts/mcp-integration.md`, `fixtures/business/returns-v1.json`,
+  `knowledge/returns-v1/`, `tests/tools/`, `tests/mcp/`, and this task description.
+  Shared contract changes are exclusively the imported T01 amendment. The central tracker,
+  application wiring, dependency files, image and other services are untouched by T04.
+- Python: 3.14.7; isolated service `.venv`. `make install` succeeded. The host's default
+  `python3` is 3.13; an ignored `.evidence/bin/python3` shim selects 3.14 for make commands.
+- Baseline health/contracts: 3 passed before the amendment; existing source lint passed.
+- Final `make ci PATH=<service>/.evidence/bin:/usr/local/bin:/usr/bin:/bin`: **103 passed**;
+  Ruff check/format passed. Tests use real TCP loopback ephemeral ports plus TestClient;
+  no OpenAI credentials or external service calls. Sandbox prevents loopback/TestClient
+  execution, so these tests ran with approved sandbox escalation.
+- Targeted coverage: 99 tool/MCP cases in the full run. Inclusive date/bounds, UTF-8 byte
+  limit, exact baseline, empty/not-found/upstream failures, credential claims/signature/
+  audience/expiry/owner/revision, trusted grants, metadata DNS (including mixed safe/unsafe
+  answers), redirects, retry budget, JSON/SSE, session cleanup and 150-message pagination.
+- One warning: upstream Starlette TestClient deprecates its current httpx adapter. No test
+  failed; shared dependency upgrades remain T01's responsibility.
+- Independent read-only review found four issues; regression tests reproduced and verified
+  fixes for wrong baseline interval, unbounded DELETE body reads, cleanup after errors,
+  and unrepresentable baseline dates. DELETE cleanup now runs in finally without reading
+  the body and within the remaining total budget. No deferred review findings.
+- `graphify update .` ran from the service directory (AST-only, ignored local graph outputs).
+- Changed-path audit: `git diff --name-only <foundation>...HEAD`, staged/untracked paths
+  and whitespace checks confirmed service-local paths only; the task branch/worktree is retained.
+
+### Integration prerequisites and implementation decisions
+
+See `contracts/mcp-integration.md` for full factory signatures, schemas, credential and
+endpoint policy. T01 must promote the existing `httpx==0.28.1` pin to runtime, mount the
+factories with the shared repository, include fixtures/knowledge in the image, retain trusted
+run grants, validate remote profiles at activation and use canonical mounted URLs. Foundation
+URL examples omit the trailing slash: use a coordinated new revision or exact-path dispatch;
+redirects are intentionally rejected and persisted revision contents must not be rewritten.
+
+The bridge/client implement the bounded MCP 2025-06-18 HTTP protocol with the already-present
+httpx dependency. History adapts the frozen forward-cursor repository to before_sequence with
+O(history) reads while retaining at most 20 messages. Data references from approved remote
+servers may be opaque; the bridge checks source types and response/query consistency, while
+T03 must validate that answer references are a subset of persisted successful tool results.
+A remote service remains responsible for the existence of its opaque evidence references.
+
+Production app mounting, SQLite-backed history ownership, administrative revision activation,
+volume/recovery checks, TLS/SNI against a real remote peer and live provider tool delivery are
+**unverified integration gates**, not module passes. T01/T02/T03 own those checks. MCP module
+transport, owner isolation, deterministic 5%/15%/+10-point data and local old/new endpoint
+pinning are verified. This task is **Ready for integration**, not end-to-end Done. Preserve
+this worktree and branch for the integration lead; no push, PR, merge or deployment is part
+of the T04 handoff.
