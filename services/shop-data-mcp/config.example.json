@@ -1,0 +1,44 @@
+{
+  "control_dsn": "host=PRIVATE_HOST dbname=shopops user=mcp_control password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
+  "membership_dsn": "host=PRIVATE_SOURCE_HOST dbname=source user=mcp_membership password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
+  "scopes": ["data:read"],
+  "public_url": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
+  "shops": {
+    "shopee-open-platform:1001": {
+      "query_dsn": "host=PRIVATE_HOST dbname=shopops user=shop_shopee1001 password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
+      "datasets": [
+        "order_economics",
+        "settlement_details",
+        "shop_daily",
+        "shop_window_metrics",
+        "product_review_metrics",
+        "inventory_risk",
+        "promotion_performance",
+        "issue_candidates"
+      ]
+    }
+  },
+  "ingestion_url": null,
+  "ingestion_token": null,
+  "cronjob_admin_phones": [
+    "+84900000001",
+    "+84900000002",
+    "+84900000003",
+    "+84900000004",
+    "+84900000005",
+    "+84900000006",
+    "+84900000007",
+    "+84900000008",
+    "+84900000009",
+    "+84900000010"
+  ],
+  "approval_url": null,
+  "approval_token": null,
+  "max_rows": 500,
+  "max_bytes": 1048576,
+  "workspace_bytes": 10485760,
+  "query_timeout_ms": 10000,
+  "ttl_seconds": 3600,
+  "refresh_lookback_days": 30,
+  "refresh_cooldown_seconds": 300
+}

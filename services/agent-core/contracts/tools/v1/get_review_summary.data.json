@@ -1,0 +1,65 @@
+{
+  "$defs": {
+    "Category": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "count": {
+          "minimum": 0,
+          "title": "Count",
+          "type": "integer"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "count",
+        "evidence"
+      ],
+      "title": "Category",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "sku": {
+      "title": "Sku",
+      "type": "string"
+    },
+    "start_date": {
+      "title": "Start Date",
+      "type": "string"
+    },
+    "end_date": {
+      "title": "End Date",
+      "type": "string"
+    },
+    "categories": {
+      "items": {
+        "$ref": "#/$defs/Category"
+      },
+      "maxItems": 20,
+      "title": "Categories",
+      "type": "array"
+    }
+  },
+  "required": [
+    "sku",
+    "start_date",
+    "end_date",
+    "categories"
+  ],
+  "title": "Reviews",
+  "type": "object"
+}

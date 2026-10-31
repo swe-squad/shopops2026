@@ -1,0 +1,15 @@
+[project]
+name = "agent-core"
+version = "0.1.0"
+requires-python = ">=3.14"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: opt-in real OpenAI and local MCP smoke test"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

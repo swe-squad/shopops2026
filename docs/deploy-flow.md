@@ -1,275 +1,110 @@
-# Flow: từ tạo service đến chạy trên CapRover (monorepo)
-
-`test-codex-env` (`swe-squad/test-codex-env`) là **monorepo**:
-
-- Mỗi service nằm trong một thư mục `services/<tên>/`.
-- Tất cả service dùng chung bộ workflow ở `.github/workflows/`.
-- Mỗi lần push hay mở PR, **chỉ những service có thay đổi** mới chạy CI và deploy.
-
-Guide này viết cho server CapRover hiện tại, lấy theo bản backup `captain.json`. Ví dụ là 2 service đang có trong repo:
-
-| Service | Template | Endpoint kiểm tra | App CapRover (dev) | Port |
-|---|---|---|---|---|
-| `ping-api` | go-gin | `GET /api/v1/ping` | `ping-api-dev` | 8080 |
-| `ping-web` | react-vite | `GET /ping` | `ping-web-dev` | 80 |
+# ShopOps: triển khai lên CapRover
 
-Mặc định mỗi service **chỉ có app dev**. Production là tuỳ chọn, xem [Thêm Production](#thêm-production-cho-một-service).
+Tài liệu này chỉ đường đến pipeline và nơi cấu hình vận hành của monorepo ShopOps. Đây không phải xác nhận rằng app, secrets, registry hay môi trường cloud đã được provision. Cấu hình từng client/API thuộc [client workspace](client-workspace.md); ranh giới runtime và phần chưa tích hợp thuộc [system architecture](system-architecture.md).
 
-## Server CapRover hiện tại
+## Nguồn chuẩn
 
-| Mục | Giá trị |
-|---|---|
-| Dashboard / `CAPROVER_SERVER` | `https://captain.cr.ngochoanielts.com` |
-| URL mặc định của app | `https://<app>.cr.ngochoanielts.com` |
-| Registry GHCR | `ghcr.io` (registry mặc định), hiện dùng PAT của `ielts-ngoc-hoan` |
-| Gọi nội bộ giữa các app | `srv-captain--<app>:<port>`, ví dụ `srv-captain--ielts-db:5432` |
+| Cần tìm | Nơi sở hữu |
+| --- | --- |
+| CI cho PR | [ci.yml](../.github/workflows/ci.yml) và [_ci.yml](../.github/workflows/_ci.yml) |
+| Deploy sau push hoặc chạy thủ công | [deploy.yml](../.github/workflows/deploy.yml) |
+| Deploy bản PR vào dev | [pr-deploy.yml](../.github/workflows/pr-deploy.yml) |
+| Build image, GHCR, môi trường và deploy | [_build-deploy.yml](../.github/workflows/_build-deploy.yml) |
+| Chọn service bị ảnh hưởng | [changed-services.sh](../.github/scripts/changed-services.sh) |
+| Ghi cấu hình GitHub environment | [setup-service.sh](../scripts/setup-service.sh) |
+| Stack, port, build args và kiểm tra từng service | `services/<service>/service.json`, `Makefile`, `Dockerfile`, `README.md` và `AGENTS.md` tương ứng |
 
----
+Workflow và script là nguồn chuẩn cho trigger, tên secret, tag image và quyền GitHub. Không sao chép chúng sang một cấu hình triển khai riêng.
 
-## Cách mọi thứ nối với nhau
+## Chọn đúng môi trường
 
-```mermaid
-flowchart LR
-    subgraph REPO["swe-squad/test-codex-env"]
-        S1[services/ping-api]
-        S2[services/ping-web]
-        WF[.github/workflows]
-    end
-    subgraph GH["GitHub"]
-        GA[Actions]
-        E1[(env codex-sea-dev<br/>CAPROVER_SERVER<br/>PING_API_DEV_* / PING_WEB_DEV_*)]
-    end
-    GHCR[(ghcr.io/swe-squad/ping-api<br/>ghcr.io/swe-squad/ping-web)]
-    subgraph CR["CapRover"]
-        A1[ping-api-dev]
-        A2[ping-web-dev]
-    end
+Làm trên feature branch, mở PR vào `develop`. Merge vào `develop` dùng GitHub environment `codex-sea-dev`; merge vào `main` dùng `codex-sea-prod`. Chuẩn bị app và secrets production cho mọi service bị ảnh hưởng trước khi merge vào `main`: thiếu cấu hình production làm deploy thất bại, không có cơ chế tự bỏ qua service chỉ có dev.
 
-    REPO -- git push develop --> GA
-    E1 -. secrets .-> GA
-    GA -- build + push --> GHCR
-    GA -- "API deploy (App Token)" --> CR
-    GHCR -- pull --> A1
-    GHCR -- pull --> A2
-```
+PR cùng repository có thể dùng `/deploy` hoặc `/deploy <service> ...` để thử trên **app dev dùng chung**, không tạo preview riêng. Bản PR có thể bị thay bởi deploy dev tiếp theo. Xem điều kiện người gọi, PR đang mở và chặn fork trong [PR Deploy](../.github/workflows/pr-deploy.yml).
 
-- **CapRover không tự đọc GitHub.** GitHub Actions là bên gọi API của CapRover, dùng secrets lưu trong GitHub environment:
-  - `CAPROVER_SERVER`: gọi vào server nào (dùng chung cho mọi service).
-  - `<SVC>_<DEV|PROD>_APP_NAME`: app nào, ví dụ `PING_API_DEV_APP_NAME`.
-  - `<SVC>_<DEV|PROD>_CAPROVER_TOKEN`: token chứng minh có quyền deploy, ví dụ `PING_API_DEV_CAPROVER_TOKEN`.
-- **Environment dùng chung:** mọi service dùng chung `codex-sea-dev` (develop) và `codex-sea-prod` (production). `<SVC>` là tên service viết hoa, `-` đổi thành `_`, nên mỗi service vẫn trỏ được tới app riêng của nó.
-- **CapRover pull image từ GHCR** bằng PAT đã cấu hình trong registry.
+Khi cần deploy lại mà không đổi code, dùng Actions → **Deploy** → **Run workflow**, chọn đúng branch và danh sách service. Để danh sách trống nghĩa là chọn tất cả. Branch `main` nhắm production; branch khác nhắm dev. Lựa chọn này có thể thay thế app đang chạy, nên xác nhận branch và service trước khi chạy.
 
----
+Đổi file dùng chung ngoài `services/` không tự chọn service cho CI/deploy. Nếu thay đổi chung cần kiểm tra hoặc phát hành lại service, chọn chúng một cách chủ động; xem [bộ chọn service](../.github/scripts/changed-services.sh) thay vì suy luận từ một lần chạy rỗng.
 
-## Checklist làm 1 lần
+## Chuẩn bị app và quyền truy cập
 
-### A. Registry GHCR (một lần cho cả server)
+Chọn repository từ Git remote của checkout đang làm việc, không dùng tên repository hoặc đường dẫn máy cá nhân trong ví dụ cũ. Tài khoản vận hành cần quyền quản lý environment/secrets của repository và app CapRover đúng môi trường; xin quyền từ chủ sở hữu khi thiếu, không đổi sang tài khoản hay app khác.
 
-Registry hiện tại dùng PAT của `ielts-ngoc-hoan`, nhiều khả năng không đọc được package của `swe-squad`. Tài khoản `minhvip08` là admin của cả 2 org, nên dùng PAT của tài khoản này:
+Dashboard CapRover được chỉ định trong [hướng dẫn repository](../AGENTS.md#caprover-host-and-domains). Tại **Apps**, chọn đúng app theo quy ước `<service>-dev` cho dev và `<service>` cho production. Kiểm tra tên app trước khi chỉnh cấu hình.
 
-- [ ] **Tạo PAT:** mở https://github.com/settings/tokens/new?scopes=read:packages&description=caprover-ghcr
-  - Loại classic, chỉ tick scope `read:packages`.
-  - Chọn expiration dài và đặt nhắc lịch thay token. Token hết hạn thì **mọi** app sẽ không pull được image.
-- [ ] **Kiểm tra token** (chạy trong terminal của bạn):
+- Lấy container port từ `service.json` của service, rồi đặt trong **App Configs**.
+- Các client public dùng HTTPS. API nội bộ bật **Do not expose as web app**, không public domain hoặc Port Mapping.
+- Giao tiếp giữa app trong cluster dùng địa chỉ nội bộ và runtime env tương ứng; cấu hình ShopOps nằm ở [client workspace](client-workspace.md#development-and-deployment).
+- Bật App Token riêng cho app cần deploy. Deployment token thuộc GitHub environment; runtime credentials thuộc CapRover **App Configs**. Không đưa giá trị vào repository, chat hoặc browser build args.
+- Khi image GHCR cần xác thực, registry credential của CapRover phải có quyền đọc đúng package. Kiểm tra quyền package/registry trong tài khoản được phép; không giả định một tài khoản cá nhân hoặc PAT cũ còn hợp lệ.
 
-  ```bash
-  read -s PAT
-  GH_TOKEN=$PAT gh api "orgs/ielts-ngoc-hoan/packages?package_type=container" -q '.[].name'   # thấy ielts-ngoc-hoan-be/fe
-  GH_TOKEN=$PAT gh api "orgs/swe-squad/packages?package_type=container" -q '.[].name'         # rỗng là được, miễn không 403
-  ```
+Dùng [setup-service.sh](../scripts/setup-service.sh) để ghi cấu hình dev hoặc cả dev/production theo interface của script, từ phiên terminal đã xác thực đúng repository. Script có thể bỏ qua biến đầu vào chưa được cấp; chạy xong không chứng minh cấu hình đã đủ. Đối chiếu kết quả với bước **Check CapRover secrets** của pipeline. Không đọc lại giá trị secret để viết tài liệu hoặc báo cáo.
 
-- [ ] **Cập nhật registry:** vào CapRover → **Cluster → Docker Registry Configuration**, sửa registry `ghcr.io`:
-  - Username: `minhvip08`
-  - Password: PAT vừa tạo
+App dùng dữ liệu bền vững cần volume và cấu hình instance phù hợp trước khi thay container. [Client workspace](client-workspace.md#development-and-deployment) sở hữu ràng buộc lưu trữ của các backend ShopOps; image rollback không khôi phục dữ liệu.
 
-  Giữ registry này là default, và chỉ để **một** registry cho `ghcr.io`.
-- [ ] **Kiểm tra app cũ:** redeploy thử app `ielts-api`, để chắc image cũ vẫn pull được.
+## Kiểm tra và tìm log
 
-### B. CapRover: tạo app dev cho mỗi service
+### Products đọc dữ liệu PostgreSQL hiện có
 
-Mở `https://captain.cr.ngochoanielts.com` → **Apps** → tạo `ping-api-dev` và `ping-web-dev`. Với **mỗi app**:
+Luồng dữ liệu của trang Products là browser → `shopops-api` → `cronjob-server` →
+`mock-data-server` → PostgreSQL. Browser không kết nối PostgreSQL và không sử dụng các cờ
+Connections trong RAM làm dữ liệu sản phẩm hoặc làm quyền truy cập.
 
-- [ ] **HTTP Settings:** bấm **Enable HTTPS**, rồi bật **Force HTTPS**.
-- [ ] **App Configs:** đặt **Container HTTP Port** bằng giá trị `port` trong `service.json` của service đó:
-  - `ping-api-dev` → `8080`
-  - `ping-web-dev` → `80`
+Với máy chủ PostgreSQL được chỉ định cho môi trường này, đặt `POSTGRES_PORT=15432` trong
+App Configs của **cả** `mock-data-server` và `cronjob-server`, cùng host/database và nguồn
+credentials đang được vận hành. Giữ các schema hiện có; không seed lại hoặc reset dữ liệu khi
+deploy giao diện. Port mặc định `5432` trong code là mặc định chung, không phải cấu hình cho
+listener `15432` này. Giá trị host/password cụ thể vẫn thuộc cấu hình runtime, không thuộc repo.
 
-  Bấm **Save & Update**. Env vars runtime (DB, key...) cũng thêm ở đây.
-- [ ] **App Configs → Environment Variables:** URL gọi nội bộ giữa các app (HTTP, mạng nội bộ của CapRover):
-  - `ping-web-dev`: `PING_API_URL=http://srv-captain--ping-api-dev:8080`
-  - `ping-api-dev`: `PING_2_URL=http://srv-captain--ping-2-dev:8000`
-
-  Trình duyệt chỉ gọi `https://ping-web-dev.../api/...`; nginx trong ping-web chuyển tiếp nội bộ sang ping-api,
-  nên không cần CORS và ping-api có thể bật **Do not expose as web app**.
-- [ ] **Deployment:** bật **App Token** rồi copy token. Không lưu token vào file.
-
-### C. GitHub: tạo environment và secrets
+| App dev | Cấu hình runtime cần kiểm tra |
+| --- | --- |
+| `mock-data-server-dev` | `POSTGRES_HOST`, `POSTGRES_PORT=15432`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, TLS theo server hiện có |
+| `cronjob-server-dev` | Cùng PostgreSQL ở port `15432`; `MOCK_DATA_SERVER_URL=http://srv-captain--mock-data-server-dev:8000` |
+| `shopops-api-dev` | `SHOP_CATALOG_MODE=source`, `CRONJOB_SERVER_URL=http://srv-captain--cronjob-server-dev:8000`, `SHOP_DATA_USER_ID` theo demo identity được cấp quyền; giữ `SHOP_API_TOKEN` hiện có |
+| `shopops-web-dev` | `API_URL=http://srv-captain--shopops-api-dev:8000` |
 
-Chạy trong terminal của bạn, từ root của repo. Gõ token trực tiếp, đừng dán vào chat:
+Production dùng app tương ứng không có hậu tố `-dev`; cung cấp URL runtime tương ứng, không
+dùng URL dev làm mặc định trong code. Danh tính catalog hiện là cấu hình server cho một workspace;
+không dùng số điện thoại do browser gửi làm quyền truy cập. Khi ghép registration/vault của AI
+engineer, thay mapping demo bằng verified principal theo [agent integration](agent-integration.md).
 
-```bash
-cd /home/simi/workspace/github/agentic/test-codex-env
+Image API mặc định bật source mode và từ chối startup khi thiếu URL/danh tính bắt buộc. Trước
+khi nghiệm thu bản deploy, chạy `python -m app.catalog_check` bên trong container `shopops-api`
+để kiểm tra đường HTTP đến các shop/sản phẩm trong dữ liệu bền vững. Lệnh chỉ đọc, không migration,
+seed hoặc thay đổi shop; chỉ báo trạng thái/tổng số/revision, không in credentials hay bản ghi.
+Xem [catalog setup và preflight](../services/shopops-api/README.md) cho tùy chọn dữ liệu rỗng.
+Sau đó mở **Products**, kiểm tra SKU/reviews/stock và xác nhận thay đổi nguồn hiện lên mà không
+cần reload trang. Các fixture của browser tests không được đóng gói vào image production.
 
-CAPROVER_SERVER=https://captain.cr.ngochoanielts.com \
-APP_NAME_DEVELOP=ping-api-dev CAPROVER_TOKEN_DEVELOP=<token ping-api-dev> \
-  scripts/setup-service.sh ping-api dev
+Hướng dẫn này chuẩn bị cấu hình theo port người vận hành chỉ định; không phải bằng chứng rằng
+App Configs hiện tại đã được đọc hay thay đổi. Phiên này không kiểm tra hoặc deploy lên server live.
 
-CAPROVER_SERVER=https://captain.cr.ngochoanielts.com \
-APP_NAME_DEVELOP=ping-web-dev CAPROVER_TOKEN_DEVELOP=<token ping-web-dev> \
-  scripts/setup-service.sh ping-web dev
-```
+Chọn đúng service, môi trường và commit khi kiểm tra một lần deploy:
 
-- [ ] Script tạo environment `codex-sea-dev` trên repo `swe-squad/test-codex-env` (nếu chưa có), và điền secrets của từng service vào đó.
+1. Trong GitHub → **Actions**, mở run **CI**, **Deploy** hoặc **PR Deploy** tương ứng. Kiểm tra danh sách service được chọn, job CI và bước deploy; [_build-deploy.yml](../.github/workflows/_build-deploy.yml) là đường đi từ CI đến GHCR và CapRover.
+2. Trong CapRover → **Apps** → app đích, đối chiếu image đã chọn với revision của run. Xem log app của đúng lần triển khai khi container lỗi; log Actions và log ứng dụng trả lời hai loại vấn đề khác nhau.
+3. Mở client HTTPS và kiểm tra luồng cần dùng qua client, gồm API same-origin và chat streaming khi liên quan. Không mở public domain cho API nội bộ chỉ để kiểm tra.
+4. Với thay đổi lưu trữ, kiểm tra dữ liệu vẫn còn sau khi thay container trong môi trường đã được phép kiểm thử.
 
-**Muốn làm tay trên web thay vì chạy script:** vào repo → **Settings → Environments → New environment**.
+Giới hạn log theo thời gian và lỗi cần điều tra; che dữ liệu người bán, token và thông tin cá nhân trước khi chia sẻ. Quyền xem log không tự cho phép restart, xóa dữ liệu hay đổi cấu hình. Nếu không có quyền xem run/app, dừng thao tác đó và yêu cầu quyền đúng phạm vi.
 
-1. Đặt tên `codex-sea-dev`. Thêm secrets:
+| Triệu chứng | Đường kiểm tra |
+| --- | --- |
+| Không có service được chọn | Kiểm tra diff và [bộ chọn service](../.github/scripts/changed-services.sh); dùng manual deploy khi thực sự cần phát hành lại. |
+| CI lỗi | Chạy kiểm tra do `Makefile` của service sở hữu; sửa lỗi trước khi deploy. |
+| Thiếu secrets hoặc deploy bị từ chối | Kiểm tra environment, tên app và quyền App Token theo [_build-deploy.yml](../.github/workflows/_build-deploy.yml); không in giá trị secret. |
+| CapRover không pull được image | Kiểm tra package tồn tại và quyền registry đọc đúng package. |
+| Client 502 hoặc không gọi được API | Kiểm tra container port, runtime upstream nội bộ và log app; dùng [cấu hình client](client-workspace.md#development-and-deployment). |
+| Chat không trả lời | Kiểm tra chat API và cấu hình provider riêng; deploy thành công không chứng minh tài khoản OpenAI có quyền dùng runtime. |
 
-   | Secret | Giá trị |
-   |---|---|
-   | `CAPROVER_SERVER` | `https://captain.cr.ngochoanielts.com` |
-   | `PING_API_DEV_APP_NAME` | `ping-api-dev` |
-   | `PING_API_DEV_CAPROVER_TOKEN` | App Token của `ping-api-dev` |
-   | `PING_WEB_DEV_APP_NAME` | `ping-web-dev` |
-   | `PING_WEB_DEV_CAPROVER_TOKEN` | App Token của `ping-web-dev` |
+## Khôi phục
 
-2. **Không** đặt `VITE_API_BASE_URL` trong tab **Variables**: để trống thì ping-web gọi `/api/` cùng origin.
-   Đặt URL của ping-api vào đây sẽ khiến trình duyệt gọi thẳng sang ping-api và bị chặn CORS ("Failed to fetch").
+Đường khôi phục qua repository là PR revert vào đúng branch môi trường, chạy kiểm tra rồi để pipeline triển khai lại service bị ảnh hưởng. Chạy lại workflow trên cùng branch vẫn dùng revision được chọn; ô `services` không phải đầu vào cho commit SHA tùy ý. Không dựa vào moving tag để xác định chính xác bản cũ.
 
-### D. Push code (lần đầu)
+Nếu khôi phục image trực tiếp ngoài pipeline, trước tiên xác nhận image cũ còn tồn tại, đúng app/môi trường, và tương thích với dữ liệu hiện tại; người vận hành phải có quyền cho thao tác đó. Sau đó đối chiếu lại repository và app để tránh lần deploy tiếp theo đưa lỗi trở lại. Không xem image rollback là phương án hoàn tác migration hoặc dữ liệu.
 
-Repo hiện chưa có commit nào. Lần push đầu sẽ deploy **mọi** service:
+## Kết nối từ sandbox OpenAI: thiết kế chưa provision
 
-```bash
-cd /home/simi/workspace/github/agentic/test-codex-env
-git add -A && git commit -m "feat: monorepo with ping-api and ping-web"
-git push -u origin main
-git checkout -b develop && git push -u origin develop
-```
+Mạng riêng `srv-captain--...` phục vụ app trong cluster; sandbox do OpenAI quản lý nằm ngoài mạng đó. Để runtime này gọi MCP của ShopOps, cần một ingress có thể truy cập từ bên ngoài, xác thực chặt và giới hạn đúng người dùng/shop/công cụ. Giữ tách quyền đọc dữ liệu và quyền ghi shop như [thiết kế runtime](system-architecture.md) yêu cầu.
 
-- [ ] **Push `main`:** deploy mọi service lên production. Service nào chưa có secrets `_PROD_` sẽ đỏ ở bước *Check CapRover secrets*.
-- [ ] **Push `develop`:** deploy `ping-api` → `ping-api-dev` và `ping-web` → `ping-web-dev`.
-
-### E. Kiểm tra
-
-- [ ] **GitHub → Actions → Deploy** (lần chạy của `develop`): job `changes` liệt kê `["ping-api","ping-web"]`. Hai job `ping-api` và `ping-web` đều xanh.
-- [ ] **CapRover → `ping-api-dev` → Deployment:** đang chạy `ghcr.io/swe-squad/ping-api:<sha7>`. Kiểm tra tương tự với `ping-web-dev`.
-- [ ] **Terminal:**
-
-  ```bash
-  curl https://ping-api-dev.cr.ngochoanielts.com/api/v1/ping   # {"message":"pong","service":"ping-api"}
-  curl https://ping-web-dev.cr.ngochoanielts.com/ping          # {"message":"pong","service":"ping-web"}
-  ```
-
-### F. AI review (một lần cho cả repo)
-
-- [ ] **Codex settings → Code review:** bật `swe-squad/test-codex-env`.
-  - Codex đọc `AGENTS.md` ở root (luật chung) và `services/<x>/AGENTS.md` (luật riêng của từng stack).
-
----
-
-## Một lần deploy diễn ra thế nào
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Dev as Bạn
-    participant GA as GitHub Actions
-    participant GHCR as GHCR
-    participant CR as CapRover
-
-    Dev->>GA: git push develop (sửa services/ping-api)
-    GA->>GA: job changes: changed-services.sh → ["ping-api"]
-    Note over GA: ping-web không đổi → không chạy
-    GA->>GA: _ci.yml: setup Go từ service.json → make ci
-    alt CI fail
-        GA-->>Dev: ❌ dừng, không deploy
-    end
-    GA->>GA: docker build services/ping-api
-    GA->>GHCR: push ghcr.io/swe-squad/ping-api:<sha7> + :latest-develop
-    GA->>CR: deploy (PING_API_DEV_* trong env codex-sea-dev)
-    CR->>GHCR: pull image
-    CR->>CR: start container mới, chuyển traffic, tắt container cũ
-    GA-->>Dev: ✅ xanh
-```
-
-| Trigger | Service nào | Deploy lên | Image tags |
-|---|---|---|---|
-| Push / merge vào `develop` | Service có thay đổi | `codex-sea-dev` | `<sha7>`, `latest-develop` |
-| Push / merge vào `main` | Service có thay đổi | `codex-sea-prod` | `<sha7>`, `latest-main` |
-| Comment `/deploy` trên PR | Service có thay đổi trong PR | `codex-sea-dev` | `<sha7>`, `pr-<số>` |
-| Comment `/deploy ping-web` | Chỉ service được ghi tên | `codex-sea-dev` | `<sha7>`, `pr-<số>` |
-| Actions → *Deploy* → Run workflow | Danh sách nhập vào (để trống = tất cả) | `main` → production, nhánh khác → develop | `<sha7>`, `latest-<branch>` |
-
-Khi nào một service được tính là "có thay đổi": có file thay đổi bên trong `services/<svc>/`. Thay đổi file ở root, như README hay docs, không deploy service nào.
-
-## Thêm service mới
-
-```
-/new-service python-fastapi report-api       # Claude Code (hoặc $new-service ... trong Codex)
-```
-
-Hoặc chạy tay:
-
-1. `scripts/new-service.sh python-fastapi report-api`: tạo `services/report-api/`.
-2. CapRover: tạo app `report-api-dev` (port `8000`), bật HTTPS và App Token.
-3. `CAPROVER_SERVER=... APP_NAME_DEVELOP=report-api-dev CAPROVER_TOKEN_DEVELOP=... scripts/setup-service.sh report-api dev`
-4. Commit, mở PR vào `develop`, rồi merge. Lần merge này deploy `report-api`.
-
-Không cần sửa workflow nào. Workflow tự nhận service mới nhờ file `service.json`.
-
-## Thêm Production cho một service
-
-1. **CapRover:** tạo app `ping-api` (không có `-dev`), cấu hình giống app dev. Thường sẽ gắn domain thật.
-2. **Terminal:** chạy lại script với giá trị production:
-
-   ```bash
-   CAPROVER_SERVER=https://captain.cr.ngochoanielts.com \
-   APP_NAME_DEVELOP=ping-api-dev    CAPROVER_TOKEN_DEVELOP=<token dev> \
-   APP_NAME_PRODUCTION=ping-api     CAPROVER_TOKEN_PRODUCTION=<token prod> \
-     scripts/setup-service.sh ping-api both
-   ```
-
-   Script ghi `PING_API_PROD_*` vào environment `codex-sea-prod` (tạo nếu chưa có).
-3. **GitHub:** vào Actions → *Deploy* → **Run workflow** trên `main`, ô services nhập `ping-api`, để deploy lần đầu. Từ đó trở đi, mỗi lần merge vào `main` có sửa `ping-api` là tự deploy production.
-
-Mọi service có thay đổi trên `main` đều deploy production, nên chuẩn bị app prod và secrets `_PROD_` trước khi merge service đó vào `main`.
-
-## Làm việc hằng ngày
-
-```mermaid
-flowchart LR
-    A[git checkout -b feature/x] --> B[Sửa services/ping-api, mở PR vào develop]
-    B --> C{CI cho ping-api + Codex review}
-    C -- muốn thử --> D["comment /deploy → ping-api-dev"]
-    C -- ok --> E[Merge → deploy ping-api-dev]
-    D --> E
-    E --> F[PR develop → main]
-    F --> G["Merge → production"]
-```
-
-- **PR:** chỉ service có thay đổi mới chạy CI. Trong tab Checks, job hiện tên theo service, ví dụ `ci / ping-api`.
-- **Comment `/deploy`:**
-  - Bot thả reaction 🚀, rồi comment ✅/❌ kèm danh sách service đã deploy.
-  - App dev giữ bản của PR cho tới lần merge vào `develop` tiếp theo.
-- **Rollback:**
-  - Vào Actions → *Deploy* → Run workflow trên commit cũ, ô services nhập tên service.
-  - Hoặc vào CapRover → app → **Deployment**, chọn version cũ rồi deploy lại.
-
-## Lỗi thường gặp
-
-| Triệu chứng | Nguyên nhân hay gặp | Cách sửa |
-|---|---|---|
-| Job `changes` ra `[]` nên không deploy gì | Push không đụng tới file nào trong `services/` | Bình thường. Muốn deploy thì vào Actions → Run workflow |
-| Fail ở *Deploy image to CapRover* (auth/token) | Environment `codex-sea-dev` thiếu hoặc sai `<SVC>_DEV_*` (bước *Check CapRover secrets* in ra tên secret thiếu) | Kiểm tra **Settings → Environments**, rồi **Re-run** |
-| CapRover báo `unauthorized`/`denied` khi pull | PAT của registry không đọc được `ghcr.io/swe-squad/*` | Làm lại mục A |
-| Deploy xanh nhưng mở web báo **502** | Container HTTP Port khác `port` trong `service.json` | Sửa trong App Configs |
-| Lỗi SSL hoặc không vào được | Chưa bấm Enable HTTPS cho app | Vào HTTP Settings của app |
-| `ping-web` báo "Failed to fetch" | `VITE_API_BASE_URL` trong `codex-sea-dev` đang có giá trị, trình duyệt gọi thẳng ping-api và bị chặn CORS | Xoá biến rồi deploy lại `ping-web` (biến nhúng lúc build) |
-| `/api/v1/ping` trả 502 | `PING_API_URL` (ping-web) hoặc `PING_2_URL` (ping-api) thiếu hoặc sai hostname | Đặt `http://srv-captain--<app>:<port>` trong App Configs, Save & Update |
-| Fail ở job `ci` | `make ci` của service fail | Chạy `make ci` trong `services/<svc>` ở local để xem lỗi |
-
----
-
-Tên các mục menu CapRover trong tài liệu này có thể hơi khác tuỳ phiên bản.
+Đây là yêu cầu kết nối của thiết kế, chưa phải endpoint đã cấu hình hay quyền đã cấp. Không public toàn bộ API nội bộ để giải quyết đường mạng; lựa chọn ingress, xác thực và provisioning cần được quyết định khi triển khai tích hợp đó.

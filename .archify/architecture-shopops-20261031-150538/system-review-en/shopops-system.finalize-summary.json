@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/system-candidate.json",
+    "sha256": "b9b3e72c5ce0f9e53841dae54c25b0fec3e883b5f3bb461756dabd42c8df4771",
+    "bytes": 9827
+  },
+  "artifact": {
+    "path": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/shopops-system.html",
+    "sha256": "43bb90a640284c9706b04e186f29d8abf1cada301fd3fc3fc1e853bdfa64c1ff",
+    "bytes": 855748
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/system-review-en/shopops-system.finalize.json",
+    "summaryReceipt": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/system-review-en/shopops-system.finalize-summary.json",
+    "browserCheckReceipt": "/home/khalee-dev/project/hackathon/shopops2026/.archify/architecture-shopops-20261031-150538/system-review-en/shopops-system.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-31T08:08:14.966Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 5899,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

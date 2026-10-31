@@ -1,85 +1,79 @@
-# Shopee AI On-Call Agent - ShopOps
+<p align="center">
+  <a href="https://codexhackathon.sea.com/">
+    <img src="https://codexhackathon.sea.com/_next/image?q=75&amp;url=%2FOfficial+_event_name.png&amp;w=1200" alt="Sea x OpenAI Regional Codex Hackathon Vietnam" width="850">
+  </a>
+</p>
 
-**An AI-powered operations agent that proactively detects, diagnoses, and resolves business-critical issues for Shopee sellers via Telegram.**
+<p align="center"><strong>SEA × OPENAI REGIONAL CODEX HACKATHON · VIETNAM</strong></p>
 
-## 1. Problem
+<p align="center"><img src="docs/brand/assets/logos/lockup-primary.png" alt="ShopOps" width="480"></p>
 
-Shopee sellers manually monitor daily operations through Seller Center. While the platform provides operational data, sellers still need to identify problems, determine root causes, and take corrective actions themselves.
+<h1 align="center">Clarity in the chaos.</h1>
 
-This reactive workflow leads to delayed responses, profit leakage, operational inefficiencies, and account-health risks.
+<p align="center"><strong>Your next move, made clear.</strong></p>
 
-## 2. Target Users
+<p align="center">A Telegram-first AI on-call agent for Shopee sellers.<br>Spot issues, triage them together, choose an action, and check the result.</p>
 
-- **Primary:** Small and medium Shopee sellers in Vietnam, processing 20–500 orders/day with teams of 1–5 people and limited operational or analytical resources.
-- **Secondary:** E-commerce agencies managing multiple Shopee shops.
+<p align="center"><a href="#the-solution--from-signal-to-verified-outcome">The solution</a> · <a href="#system-design--managed-agents-and-guarded-data">System design</a> · <a href="docs/README.md">Documentation</a></p>
 
-## 3. Solution
+## Why ShopOps
 
-A **Telegram-first AI operations agent** that continuously monitors shop performance, identifies actionable issues, recommends solutions, executes seller-approved actions, and verifies outcomes.
+Shopee sellers effectively run on-call operations manually. Seller Center provides data, but sellers still have to spot negative review spikes, loss-making vouchers, missed penalty points, and other threats to profit or account health themselves.
 
-**Core Loop: Detect → Classify → Plan → Approve → Execute → Verify → Learn**
+ShopOps serves small and mid-sized sellers in Vietnam: teams of **1–5 people handling around 20–500 orders a day**, usually without dedicated operations or data staff. Agencies managing multiple shops are the secondary audience.
 
-### 1. Detect — Proactive Monitoring
-Continuously analyze shop data to detect operational and financial anomalies:
+## The solution · From signal to verified outcome
 
-- **Customer Experience:** Negative review spikes, recurring complaints, increasing return rates.
-- **Profitability:** Loss-making vouchers, abnormal fees, payout discrepancies.
-- **Account Health:** Penalty points, cancellation spikes, late-shipment and SLA risks.
-- **Inventory:** Low-stock or out-of-stock products with high demand.
+**Detect → Classify → Plan → Seller Chooses → Execute → Verify → Learn**
 
-### 2. Classify — Root-Cause Analysis
-Correlate related signals into a single actionable incident.
+![ShopOps solution: detect, classify, plan, seller chooses, execute, verify, and learn with human–agent triage](docs/assets/solution-loop.png)
 
-Each incident includes:
-- Issue summary and probable root cause.
-- Supporting evidence and affected products/orders.
-- Severity, urgency, and estimated business impact.
+[Explore the product journey](docs/project-overview-pdr.md) · [Editable diagram](docs/assets/solution-loop.svg)
 
-*Example: Multiple complaints about tight-fitting shirts → "Product sizing runs small."*
+ShopOps connects reviews, orders, returns, cancellations, inventory, vouchers, payouts, fees, and penalty history. It groups related signals into an issue with evidence, a probable cause, severity, and urgency. In chat, the agent offers **2–3 actions** with expected impact, cost, risk, and reversibility. The seller chooses; ShopOps executes through an available Shopee API or an explicit mock server, then monitors success metrics and learns from the outcome.
 
-### 3. Plan — Action Recommendations
-Generate 2–3 actionable recommendations delivered through Telegram.
+Chat is the shared triage channel: the seller questions the agent's evidence, and the agent asks for context or a decision. The web client shows business intelligence and shop state after confirmed changes. Trust grows per issue and action: **suggest only → auto-execute with notification and rollback where supported → silent execution within explicitly pre-authorized limits**.
 
-Each recommendation specifies:
-- Expected impact and estimated cost.
-- Potential risks and reversibility.
-- Required permissions and execution scope.
+## System design · Managed agents and guarded data
 
-### 4. Approve — Human-in-the-Loop
-Sellers review recommendations and approve, reject, or modify actions directly through Telegram.
+![ShopOps target architecture: application sessions, OpenAI-managed runtime, and scoped MCP services](docs/assets/system-architecture.png)
 
-### 5. Execute — Controlled Automation
-Execute approved actions using Shopee APIs or a mock server, subject to integration capabilities and permissions.
+[Read the architecture design](docs/system-architecture.md) · [Editable diagram](docs/assets/system-architecture.svg)
 
-Maintain execution logs, enforce safety checks, and support rollback where technically feasible.
+The product server requests on-demand provisioning at registration using `agent-core` as the reusable agents-service boilerplate. Each registered user is assigned a dedicated agent team: **one orchestrator and 2–3 specialists**, with an exclusive OpenAI-hosted sandbox for their work. The [Agents API](https://developers.openai.com/api/docs/guides/agents-api/architecture) runs the managed Codex harness; ShopOps owns identity, user-to-session assignment, tool permissions, and business decisions. A user's team is a durable application assignment; physical environments follow the provider's lifecycle.
 
-### 6. Verify — Outcome Monitoring
-Automatically track predefined success metrics after execution.
+MCPs connect agents to shop data, domain knowledge, memory, searchable past conversations, and controlled shop operations. Isolation has two boundaries: **an exclusive runtime per user**, plus **identity authorization and mandatory tenant/shop/product query scoping in the services**. A sandbox or an agent-supplied ID never grants access to another user's data. See [system architecture](docs/system-architecture.md).
 
-Compare outcomes against baseline performance to determine whether the action resolved the issue or requires further intervention.
+Codex supports development through code generation, integration, and debugging, and selectively handles complex runtime tasks through the managed agent environment.
 
-### 7. Learn — Progressive Autonomy
-Adapt recommendations and automation permissions using historical outcomes, seller feedback, and demonstrated reliability.
+## Acknowledgments
 
-**Trust Levels:**
-1. **Advisory:** Recommend actions; require seller approval.
-2. **Supervised Automation:** Auto-execute approved action types with notifications and rollback when available.
-3. **Autonomous:** Execute low-risk, pre-authorized actions without requiring individual approval or routine notifications.
+Built for the [Sea × OpenAI Regional Codex Hackathon — Vietnam](https://codexhackathon.sea.com/), co-hosted by **Sea** and **OpenAI**. ShopOps serves Shopee merchants; **Shopee hosts the event and judges the hackathon**.
 
-## 4. Value Proposition
+## Explore the project
 
-**From reactive dashboards to proactive, closed-loop operations.**
+| Start here | Purpose |
+| --- | --- |
+| [Hackathon project write-up](docs/ShopOps-WIP-project-write-up.pdf) · [Editable source](docs/project-write-up.md) | Brief project summary for the Sea × OpenAI Regional Codex Hackathon |
+| [Documentation guide](docs/README.md) | Find the owning document for a question |
+| [Product and demo intent](docs/project-overview-pdr.md) | Seller problems, workflows, trust, and demo success |
+| [System architecture](docs/system-architecture.md) | Managed runtime, MCP boundaries, lifecycle, and isolation |
+| [Client setup](docs/client-workspace.md) | Run the existing independent web/chat clients and viewer |
+| [Feature development](docs/feature-development.md) | Extend a service and verify its integration |
+| [Deployment](docs/deploy-flow.md) | Shared monorepo CI/CD and CapRover deployment |
+| [Brand kit](docs/brand/README.md) | Logos, colors, voice, and reusable assets |
 
-- **Prevent Profit Leakage:** Detect financial losses and operational anomalies early.
-- **Protect Account Health:** Identify compliance, fulfillment, and penalty risks before escalation.
-- **Reduce Manual Work:** Automate monitoring, diagnosis, and repetitive operational tasks.
-- **Accelerate Decision-Making:** Deliver evidence-based recommendations through Telegram.
-- **Build Trustworthy Automation:** Increase autonomy gradually through measurable results and seller-defined controls.
+## What runs today
 
-## 5. Key Differentiator
+The repository contains separate browser and Telegram-style web chat clients, a presentation viewer, operations/chat backends, and an agent-core foundation. **The architecture above is the target design, not a claim of a fully connected live system.** Actual Telegram delivery, per-user provisioning, semantic archival, the shop-write MCP, and live integration require implementation or acceptance evidence. Current setup and limits belong to the [client guide](docs/client-workspace.md) and [agent-core README](services/agent-core/README.md).
 
 Unlike traditional dashboards and alerting tools, the Shopee AI On-Call Agent provides **end-to-end incident management**:
 
 **Monitoring → Diagnosis → Decision Support → Execution → Outcome Verification → Continuous Improvement**
 
 The goal is not merely to notify sellers when something goes wrong, but to **help resolve the issue, verify the result, and progressively automate recurring decisions.**
+
+## Data MCP design
+
+The Shop Data MCP is implemented in [services/shop-data-mcp](services/shop-data-mcp/README.md), with a [data engineer handoff](services/shop-data-mcp/HANDOFF.md). It is not deployed. See its [configuration contract](docs/shop-data-mcp-configuration.md), [design](plans/reports/research-20261031-data-mcp-design.md) and [implementation plan](plans/261031-shop-data-mcp/plan.md).
+For local commands, use the owning service README under [services](services/) and read its `AGENTS.md` before editing. The hackathon keeps the architecture focused: prove a seller's issue-to-verified-action journey, show the isolation boundaries, and label mock versus live evidence honestly.

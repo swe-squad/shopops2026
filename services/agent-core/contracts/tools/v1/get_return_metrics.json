@@ -1,0 +1,26 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "sku": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Sku",
+      "type": "string"
+    },
+    "start_date": {
+      "title": "Start Date",
+      "type": "string"
+    },
+    "end_date": {
+      "title": "End Date",
+      "type": "string"
+    }
+  },
+  "required": [
+    "sku",
+    "start_date",
+    "end_date"
+  ],
+  "title": "DateArgs",
+  "type": "object"
+}

@@ -1,0 +1,15 @@
+{
+  "+84900000001": {
+    "tenant_id": "tenant-a",
+    "user_id": "alice",
+    "shop_ids": [
+      "shop-a"
+    ],
+    "core_token": "local-alice",
+    "permissions": [
+      "orchestrator:provision",
+      "conversation:write",
+      "history:read"
+    ]
+  }
+}

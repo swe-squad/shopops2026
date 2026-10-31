@@ -1,0 +1,31 @@
+{
+  "bundle_id": "shopops-hosted-v1",
+  "bundle_version": "1.0.0",
+  "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+  "files": [
+    {
+      "path": "shopops-analysis/.codex-plugin/plugin.json",
+      "sha256": "b6a3557815b0475665ebf8c63a688f706a51ebebfba571b81b41174002f0a8b7"
+    },
+    {
+      "path": "shopops-analysis/references/specialists/data-analyst.md",
+      "sha256": "df1d2cf3b74075399e24f8ad8b86748b8792c9d8d7882c8a58489e1e6386fce1"
+    },
+    {
+      "path": "shopops-analysis/references/specialists/knowledge-analyst.md",
+      "sha256": "8360db399cd349f1e9938448464a7fbcea877ce76c4d940e66de9f9a9ef64154"
+    },
+    {
+      "path": "shopops-analysis/skills/knowledge-review/SKILL.md",
+      "sha256": "b49eaf54a8bfa1fbda26837c8dd377bce07058414004963f8ac05bb0a49700f1"
+    },
+    {
+      "path": "shopops-analysis/skills/returns-analysis/SKILL.md",
+      "sha256": "8a3aee6252ddbf54bc3d25457a8c0d538a388ebe16ed178f8d9f3c6e19fe2a5f"
+    },
+    {
+      "path": "shopops-analysis/skills/returns-analysis/scripts/summarize_returns.py",
+      "sha256": "641209c82bc9d723f483ca91d4556cd3c5450e1221a5eef886d36ff3ae7048f3"
+    }
+  ]
+}

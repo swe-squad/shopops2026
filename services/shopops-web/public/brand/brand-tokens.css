@@ -1,0 +1,27 @@
+/* ShopOps design tokens — brand-tokens.json is the canonical source. */
+:root {
+  --shopops-color-brand: #F4511E;
+  --shopops-color-brand-action: #B5310B;
+  --shopops-color-ink: #1C1B1A;
+  --shopops-color-canvas: #F9F6F0;
+  --shopops-color-surface: #FFFFFF;
+  --shopops-color-muted: #555960;
+  --shopops-color-border: #DCD6CF;
+  --shopops-color-focus: #005FCC;
+  --shopops-color-success-text: #08744D;
+  --shopops-color-warning-text: #8A4600;
+  --shopops-color-error-text: #A22C10;
+  --shopops-color-info: #4169B2;
+  --shopops-font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+  --shopops-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --shopops-space-1: 4px;
+  --shopops-space-2: 8px;
+  --shopops-space-3: 12px;
+  --shopops-space-4: 16px;
+  --shopops-space-6: 24px;
+  --shopops-space-8: 32px;
+  --shopops-radius-small: 4px;
+  --shopops-radius-medium: 8px;
+  --shopops-radius-large: 16px;
+  --shopops-radius-pill: 9999px;
+}

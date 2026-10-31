@@ -1,0 +1,14 @@
+{
+  "bindings": [
+    {
+      "id": "demo-commerce",
+      "version": "1",
+      "tenant_id": "tenant-a",
+      "user_id": "alice",
+      "shop_id": "shop-a",
+      "phone": "+84900000001",
+      "shop_key": "shopee-open-platform:1001",
+      "coverage_start": "2026-10-17"
+    }
+  ]
+}

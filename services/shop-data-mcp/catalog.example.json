@@ -1,0 +1,101 @@
+{
+  "datasets": [
+    {
+      "id": "order_economics",
+      "relation": "mcp_data.order_economics",
+      "layer": "mart",
+      "description": "Order economics from the published cronjob snapshot; shop/order grain.",
+      "columns": [
+        "order_id",
+        "gross_sales",
+        "contribution_margin",
+        "ordered_at",
+        "currency",
+        "status",
+        "financials_complete",
+        "actual_payout",
+        "expected_payout",
+        "payout_variance"
+      ],
+      "resource": "snapshot",
+      "semantics": {
+        "currency": "Row currency; money in major units. Group by currency before summing.",
+        "margin": "Operational estimate; missing cost means unknown",
+        "watermark": "get_operation.applied_source_revision identifies publication; no historical coverage claim",
+        "clock": "mart.settings.as_of is the pipeline event-time cutoff, independent of refresh time"
+      }
+    },
+    {
+      "id": "settlement_details",
+      "relation": "mcp_data.settlement_details",
+      "layer": "raw",
+      "description": "Sanitized normalized settlement fields; requires owner-approved raw access.",
+      "columns": [
+        "order_id",
+        "fee",
+        "captured_at"
+      ],
+      "time_column": "captured_at",
+      "resource": "snapshot",
+      "semantics": {
+        "grain": "shop/order",
+        "fee": "core.settlements.fee_amount in major currency units",
+        "captured_at": "Capture time of the settlement source document, not payment time"
+      }
+    },
+    {
+      "id": "shop_daily",
+      "relation": "mcp_data.shop_daily",
+      "layer": "mart",
+      "description": "Daily sales and margin by shop timezone and currency.",
+      "columns": ["business_date", "currency", "orders", "cancelled_orders", "unmapped_or_mixed_orders", "finance_complete_orders", "contribution_margin", "fulfilled_gross_sales"],
+      "resource": "snapshot",
+      "semantics": {"grain": "shop/business_date/currency", "clock": "Pipeline mart.settings.as_of"}
+    },
+    {
+      "id": "shop_window_metrics",
+      "relation": "mcp_data.shop_window_metrics",
+      "layer": "mart",
+      "description": "Recent and baseline cancellation, return and fee metrics.",
+      "columns": ["period", "currency", "orders", "cancelled_orders", "cancellation_rate", "fulfilled_orders", "returned_orders", "return_rate", "settled_orders", "effective_fee_rate"],
+      "resource": "snapshot",
+      "semantics": {"grain": "shop/period/currency", "rates": "Fractions; null when denominator is zero", "clock": "Pipeline mart.settings.as_of, recent_days and baseline_days"}
+    },
+    {
+      "id": "product_review_metrics",
+      "relation": "mcp_data.product_review_metrics",
+      "layer": "mart",
+      "description": "Aggregated review metrics; review bodies are excluded.",
+      "columns": ["sku", "period", "reviews", "negative_reviews", "negative_rate", "sizing_mentions"],
+      "resource": "snapshot",
+      "semantics": {"grain": "shop/sku/period", "negative_rate": "Fraction of ratings at most 2"}
+    },
+    {
+      "id": "inventory_risk",
+      "relation": "mcp_data.inventory_risk",
+      "layer": "mart",
+      "description": "Latest inventory and seven-day demand; stale observations remain visible.",
+      "columns": ["sku", "available", "oldest_location_observation", "daily_units", "days_of_cover"],
+      "resource": "snapshot",
+      "semantics": {"grain": "shop/sku", "nulls": "Unknown stock or no demand produces unknown coverage"}
+    },
+    {
+      "id": "promotion_performance",
+      "relation": "mcp_data.promotion_performance",
+      "layer": "mart",
+      "description": "Recent promotion economics; association does not establish causality.",
+      "columns": ["promotion_id", "currency", "orders", "finance_complete_orders", "loss_orders", "seller_discount", "contribution_margin"],
+      "resource": "snapshot",
+      "semantics": {"grain": "shop/promotion/currency", "currency": "Major units"}
+    },
+    {
+      "id": "issue_candidates",
+      "relation": "mcp_data.issue_candidates",
+      "layer": "mart",
+      "description": "Rule-based issue candidates for investigation, not confirmed causes.",
+      "columns": ["issue_key", "issue_type", "entity_key", "severity"],
+      "resource": "snapshot",
+      "semantics": {"grain": "shop/issue", "evidence": "Use approved aggregate datasets; free-text evidence is excluded"}
+    }
+  ]
+}

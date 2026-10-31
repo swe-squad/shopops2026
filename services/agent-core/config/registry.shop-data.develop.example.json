@@ -1,0 +1,188 @@
+{
+  "revisions": [
+    {
+      "revision": "returns-v1",
+      "template_id": "shopops",
+      "model": "fixture-only",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "mock-v1",
+      "data_mcp_url": "http://127.0.0.1:8000/mcp/data",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ]
+    },
+    {
+      "revision": "returns-hosted-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-astra",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "mock-v1",
+      "data_mcp_url": "http://127.0.0.1:8000/mcp/data",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      }
+    },
+    {
+      "revision": "returns-hosted-data-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-astra",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "shop-data-read-v1",
+      "data_mcp_url": "http://localhost:8003/mcp",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      },
+      "shop_data_binding": {
+        "id": "demo-commerce",
+        "version": "1",
+        "digest": "40539c2dd5967736595435c4ac8332ebb802ef9e2e62600f6f10f71e541072f2"
+      }
+    },
+    {
+      "revision": "returns-hosted-v2",
+      "template_id": "shopops",
+      "model": "gpt-6-astra",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "mock-v1",
+      "data_mcp_url": "http://127.0.0.1:8000/mcp/data",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.1.0",
+        "bundle_sha256": "df1c62dec281a08390ee2c7037c4b3da9b679d1c727032d8062d1d5827aacef2",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      }
+    },
+    {
+      "revision": "returns-hosted-data-dev-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-astra",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "shop-data-read-v1",
+      "data_mcp_url": "http://srv-captain--shop-data-mcp-dev:8000/mcp",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      },
+      "shop_data_binding": {
+        "id": "demo-commerce",
+        "version": "1",
+        "digest": "40539c2dd5967736595435c4ac8332ebb802ef9e2e62600f6f10f71e541072f2"
+      }
+    },
+    {
+      "revision": "returns-hosted-data-luna-dev-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-luna",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "shop-data-read-v1",
+      "data_mcp_url": "http://srv-captain--shop-data-mcp-dev:8000/mcp",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      },
+      "shop_data_binding": {
+        "id": "demo-commerce",
+        "version": "1",
+        "digest": "40539c2dd5967736595435c4ac8332ebb802ef9e2e62600f6f10f71e541072f2"
+      }
+    }
+  ],
+  "approved_remote_profiles": [
+    "shop-data-read-v1"
+  ]
+}
