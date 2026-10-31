@@ -3,6 +3,8 @@ from collections.abc import Callable
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.contracts import AUTH_RESPONSES
+
 
 class IncidentInput(BaseModel):
     title: str = Field(min_length=1, max_length=200, pattern=r".*\S.*")
@@ -15,7 +17,9 @@ class Incident(IncidentInput):
 
 
 def router(connect: Callable, authorize: Callable) -> APIRouter:
-    api = APIRouter(prefix="/api/operations", dependencies=[Depends(authorize)])
+    api = APIRouter(
+        prefix="/api/operations", dependencies=[Depends(authorize)], responses=AUTH_RESPONSES
+    )
 
     @api.get("/incidents", response_model=list[Incident])
     def list_incidents() -> list[dict]:

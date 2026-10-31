@@ -5,6 +5,8 @@ from urllib.parse import urlsplit
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, field_validator
 
+from app.contracts import AUTH_RESPONSES
+
 
 class NavigationInput(BaseModel):
     url: str = Field(min_length=1, max_length=2000)
@@ -41,7 +43,11 @@ class Navigation(NavigationInput):
 
 
 def router(connect: Callable, authorize: Callable) -> APIRouter:
-    api = APIRouter(prefix="/api/operations/navigation", dependencies=[Depends(authorize)])
+    api = APIRouter(
+        prefix="/api/operations/navigation",
+        dependencies=[Depends(authorize)],
+        responses=AUTH_RESPONSES,
+    )
 
     @api.get("", response_model=Navigation | None)
     def latest() -> dict | None:
