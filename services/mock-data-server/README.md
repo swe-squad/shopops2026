@@ -40,9 +40,11 @@ Windows uses `.venv\Scripts\python.exe` and PowerShell process environment
 variables. CLI commands do not load `.env` automatically. Demo database username
 and database name are `postgres`; supply the password at runtime.
 
-Migrations are explicit, transactional and checksummed. Startup validates config
-and requires migrations; it never seeds or resets data. Repeated seeding preserves
-edits. Seeding a nonempty, unseeded source is rejected.
+Migrations are transactional and checksummed. The Docker startup command runs
+`python -m app.cli migrate` before starting Uvicorn; direct local Uvicorn startup
+still requires the explicit migration command shown above. Startup never seeds
+or resets data. Repeated seeding preserves edits. Seeding a nonempty, unseeded
+source is rejected.
 
 ## Seed and identity
 
@@ -125,6 +127,13 @@ python scripts/test-mock-pipeline.py --suite all
 Docker tests create their own database credentials and containers; cleanup only
 touches resources created by that run. Images contain migrations/fixtures under
 `app/` and run as UID 1001. Access logs are disabled to avoid logging phone/query
-data. Run migration and seed commands from the image before starting the intended
-demo deployment. Set actual database host/TLS and credentials in CapRover App
-Configs. Deployment itself is outside this implementation.
+data. Set actual database host/TLS and credentials in CapRover App Configs before
+deployment. On every container start (including deploys and restarts), pending
+migrations run automatically before the API starts. Applied migrations are skipped
+after checksum validation; a migration failure prevents startup and is reported
+in container logs. The database must already exist, and its configured user needs
+permission to create and alter this service's schemas and tables.
+
+To populate demo data after the service starts, explicitly run
+`python -m app.cli seed --profile mvp` inside its container. Seeding is not part
+of automatic startup.

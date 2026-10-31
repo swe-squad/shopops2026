@@ -38,8 +38,9 @@ set +a
 Windows uses `.venv\Scripts\python.exe` and PowerShell process environment
 variables. CLI commands do not load `.env` automatically. Username/database are
 `postgres` for the requested demo; credentials remain runtime-only. PostgreSQL 17
-is used in verification. Migrations are explicit, transactional and checksummed;
-startup validates configuration and requires migrations.
+is used in verification. Migrations are transactional and checksummed. The Docker
+startup command runs `python -m app.cli migrate` before starting Uvicorn; direct
+local Uvicorn startup still requires the explicit migration command shown above.
 
 Deploy **one replica and one Uvicorn worker process**. A PostgreSQL advisory lock
 serializes work if another process starts accidentally. Keep the apps private.
@@ -163,4 +164,9 @@ After SQL view changes, regenerate checked-in read DTOs with
 The image packages migrations under `app/` and runs as UID 1001. Access logs are
 disabled; worker logs contain run IDs, stages, revisions and sanitized codes.
 Set actual database host/TLS and credentials in CapRover App Configs before
-deployment. This implementation does not deploy or implement MCP/audit systems.
+deployment. On every container start (including deploys and restarts), pending
+migrations run automatically before the API and worker start. Applied migrations
+are skipped after checksum validation; a migration failure prevents startup and
+is reported in container logs. The database must already exist, and its configured
+user needs permission to create and alter this service's schemas and tables.
+This implementation does not implement MCP/audit systems.

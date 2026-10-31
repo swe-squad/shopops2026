@@ -166,13 +166,7 @@ def main():
                 urls["proxy"] = "http://" + binding
                 ready(urls["proxy"])
             image = f"shopops-{service}:dev"
-            common = ["docker", "run", "--rm", "--network", network, *env_args, image]
-            command([*common, "python", "-m", "app.cli", "migrate"], env=env)
-            if alias == "source":
-                command(
-                    [*common, "python", "-m", "app.cli", "seed", "--profile", "mvp"],
-                    env=env,
-                )
+            # Start against an unmigrated database to verify the image's startup path.
             name = tag + "-" + alias
             command(
                 [
@@ -203,6 +197,20 @@ def main():
                 time.sleep(0.2)
             urls[alias] = "http://" + binding
             ready(urls[alias])
+            if alias == "source":
+                command(
+                    [
+                        "docker",
+                        "exec",
+                        name,
+                        "python",
+                        "-m",
+                        "app.cli",
+                        "seed",
+                        "--profile",
+                        "mvp",
+                    ]
+                )
         test_env = env | {
             "PAIR_SOURCE_URL": urls["source"],
             "PAIR_PROCESSOR_URL": urls["processor"],
