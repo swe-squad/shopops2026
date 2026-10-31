@@ -89,7 +89,24 @@ def test_every_entity_crud_through_facade(pair):
     for i in reversed(range(len(entries))):
         name, body, _, keys = entries[i]
         path = (admin if i < 3 else business) + name
-        pair.write("DELETE", path + "/record", params={k: body[k] for k in keys}, actor=phone)
+        delete_key = "delete-e2e-" + name
+        result = pair.write(
+            "DELETE",
+            path + "/record",
+            params={k: body[k] for k in keys},
+            actor=phone,
+            key=delete_key,
+        )
+        if name == "shops":
+            replay = pair.request(
+                "DELETE",
+                path + "/record",
+                params={k: body[k] for k in keys},
+                actor=phone,
+                key=delete_key,
+            )
+            assert replay.status_code == 202, replay.text
+            assert replay.json()["run_id"] == result["run_id"]
 
 
 def test_encoded_shopify_id_and_idempotency(pair):

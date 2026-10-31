@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from app.api.auth import current_access, visible_shops
 from app.api.common import APIError
-from app.api.contracts import Empty
+from app.api.contracts import Empty, Pagination
 from app.api.reads import pagination
 from app.jobs.store import accept
 from app.storage.db import connect
@@ -34,7 +34,12 @@ class Run(BaseModel):
     shop_counts: dict[str, dict[str, int]]
 
 
-def present(conn, row, grants):
+class RunPage(BaseModel):
+    data: list[Run]
+    pagination: Pagination
+
+
+def present(conn, row: dict, grants: dict | None) -> dict:
     result = dict(row)
     counts = (row["result"] or {}).get("shop_counts", {})
     if grants is not None:
@@ -50,7 +55,7 @@ def present(conn, row, grants):
     return Run.model_validate(result).model_dump()
 
 
-def register_inspection(app, admin):
+def register_inspection(app: FastAPI, admin: bool) -> None:
     prefix = "/v1/admin/sync-runs" if admin else "/v1/sync-runs"
 
     def listing(request: Request) -> dict:
@@ -79,7 +84,7 @@ def register_inspection(app, admin):
                 raise APIError(404, "NOT_FOUND")
             return present(conn, row, grants)
 
-    app.add_api_route(prefix, listing, methods=["GET"])
+    app.add_api_route(prefix, listing, methods=["GET"], response_model=RunPage)
     app.add_api_route(prefix + "/{run_id}", single, methods=["GET"], response_model=Run)
 
 

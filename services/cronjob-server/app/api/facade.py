@@ -4,7 +4,7 @@ from pydantic import ValidationError, create_model
 from app.api.auth import current_access, writable
 from app.api.common import APIError
 from app.api.contracts import Mutation, SourcePage, SourceResult
-from app.jobs.store import accept, resolve_mutation
+from app.jobs.store import accept, previous_intent, resolve_mutation
 from app.source.entities import RESOURCES, Record
 
 
@@ -53,16 +53,36 @@ def register_resource(app: FastAPI, resource) -> None:
             "GET", source_path + "/record", actor=identity(request, key), params=key
         )
 
-    def write(request, method, body=None, record=False):
+    def write(
+        request: Request, method: str, body: dict | None = None, record: bool = False
+    ) -> dict:
         key = keys(request) if record else {}
-        actor = identity(request, key if record else body)
+        authorization = None
+        idempotency_key = request.headers.get("Idempotency-Key", "")
+        if resource.name == "shops" and record:
+            grants = current_access(request)
+            actor = grants["user_id"]
+            prior = previous_intent(actor, idempotency_key)
+            if prior and prior["path"] == source_path + "/record" and prior["params"] == key:
+                authorization = prior["authorization"]
+            else:
+                current = request.app.state.source.request(
+                    "GET", source_path + "/record", actor=actor, params=key
+                )
+                authorization = {"merchant_id": current["data"]["merchant_id"]}
+            # A deleted shop's receipt is replayable only while its merchant grant remains current.
+            writable(resource, grants, authorization)
+        else:
+            actor = identity(request, key if record else body)
         intent = {
             "method": method,
             "path": source_path + ("/record" if record else ""),
             "params": key,
             "body": body,
         }
-        run = accept(actor, request.headers.get("Idempotency-Key", ""), "mutation", intent)
+        if authorization is not None:
+            intent["authorization"] = authorization
+        run = accept(actor, idempotency_key, "mutation", intent)
         result = resolve_mutation(run["run_id"], request.app.state.source)
         request.app.state.worker.wake()
         return result

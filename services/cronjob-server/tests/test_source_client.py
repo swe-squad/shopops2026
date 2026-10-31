@@ -5,6 +5,18 @@ from app.api.common import APIError
 from app.source.client import SourceClient
 
 
+def test_malformed_error_envelope_is_sanitized():
+    client = SourceClient(
+        "http://source",
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(409, json={"error": "untrusted error text"})
+        ),
+    )
+    with pytest.raises(APIError) as exc:
+        client.request("POST", "/v1/entities/products", body={})
+    assert exc.value.code == "SOURCE_REQUEST_REJECTED"
+
+
 def test_current_access_phone_is_encoded():
     def handler(request):
         assert request.url.params["user_id"] == "+84900000001"

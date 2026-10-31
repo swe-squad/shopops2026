@@ -25,6 +25,13 @@ def register(app: FastAPI) -> None:
             raise APIError(422, "INVALID_FILTER")
         intent = body.model_dump(mode="json", exclude_unset=True)
         with connect() as conn:
+            conn.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended(%s,8173604))", ("admin" + key,)
+            )
+            if conn.execute(
+                "SELECT 1 FROM sync.runs WHERE actor='admin' AND idempotency_key=%s", (key,)
+            ).fetchone():
+                raise APIError(409, "IDEMPOTENCY_CONFLICT")
             current = conn.execute(
                 "SELECT as_of,recent_days,baseline_days FROM mart.settings FOR UPDATE"
             ).fetchone()

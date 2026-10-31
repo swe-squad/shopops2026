@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from app.api.common import APIError, install_errors
 from app.api.facade import register
+from app.api.openapi import install_openapi
 from app.api.reads import register as register_reads
 from app.api.runs import register as register_runs
 from app.api.settings import register as register_settings
@@ -62,6 +63,7 @@ def create_app(*, source=None, start_worker: bool = True) -> FastAPI:
     def ping() -> dict[str, str]:
         return {"message": "pong", "service": SERVICE_NAME}
 
+    install_openapi(app)
     return app
 
 

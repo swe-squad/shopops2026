@@ -83,3 +83,29 @@ def test_settings_validation_idempotency_and_clock(database):
             ).status_code
             == 422
         )
+
+
+def test_admin_write_keys_cannot_cross_operation_boundaries(database):
+    from app.jobs.store import accept
+
+    migrate()
+    with TestClient(create_app(source=Grants(), start_worker=False)) as client:
+        response = client.patch(
+            "/v1/admin/mart-settings",
+            json={"recent_days": 3},
+            headers={"Idempotency-Key": "shared-key"},
+        )
+        assert response.status_code == 200
+        try:
+            accept("admin", "shared-key", "mutation", {})
+        except APIError as exc:
+            assert exc.code == "IDEMPOTENCY_CONFLICT"
+        else:
+            raise AssertionError("Settings key must not be reused for a different write")
+        accept("admin", "other-key", "mutation", {})
+        response = client.patch(
+            "/v1/admin/mart-settings",
+            json={"recent_days": 4},
+            headers={"Idempotency-Key": "other-key"},
+        )
+        assert response.status_code == 409

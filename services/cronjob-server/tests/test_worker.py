@@ -93,3 +93,36 @@ def test_interval_waits_after_queue_drain(database):
         assert str(conn.execute("SELECT as_of FROM mart.settings").fetchone()["as_of"]).startswith(
             "2026-10-30 17:00"
         )
+
+
+def test_source_inflight_conflict_remains_pending(database):
+    migrate()
+    run = accept(
+        "+84900000001",
+        "inflight",
+        "mutation",
+        {"method": "POST", "path": "/v1/entities/products", "body": {}},
+    )
+
+    class Busy:
+        def request(self, *args, **kwargs):
+            raise APIError(409, "MUTATION_IN_PROGRESS")
+
+    result = resolve_mutation(run["run_id"], Busy())
+    assert result["mutation_status"] == "pending"
+    assert result["sync_status"] == "pending_mutation"
+
+
+def test_second_worker_cannot_consume_while_global_lock_is_held(database):
+    migrate()
+    accept("+84900000001", "locked", "manual", {})
+    source = Source()
+    worker = Worker(source, interval=0, wait=lambda _: None)
+    with connect() as owner:
+        owner.execute("SELECT pg_advisory_lock(8173605)")
+        assert not worker.step()
+        assert source.calls == 0
+        with connect() as conn:
+            assert conn.execute("SELECT status FROM sync.runs").fetchone()["status"] == "queued"
+    assert worker.step()
+    assert source.calls == 1

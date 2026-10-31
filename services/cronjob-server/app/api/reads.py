@@ -51,6 +51,8 @@ def read(request, schema, table, grain, *, record_keys=None) -> dict:
     limit, offset = pagination(request)
     filters = dict(request.query_params) if record_keys is None else record_keys
     allowed = set(grain) | {"limit", "offset"}
+    if schema == "raw":
+        allowed.add("shop_key")
     if table in TIME_FIELDS:
         allowed |= {"date_from", "date_to"}
     if set(filters) - allowed:
@@ -70,7 +72,9 @@ def read(request, schema, table, grain, *, record_keys=None) -> dict:
         for name, value in filters.items():
             if name in {"limit", "offset"}:
                 continue
-            if name in {"date_from", "date_to"}:
+            if schema == "raw" and name == "shop_key":
+                where.append(sql.SQL("{}=%s").format(scope))
+            elif name in {"date_from", "date_to"}:
                 try:
                     value = date.fromisoformat(value)
                 except ValueError:
@@ -104,7 +108,7 @@ def read(request, schema, table, grain, *, record_keys=None) -> dict:
     }
 
 
-def register_core(app, resource):
+def register_core(app: FastAPI, resource) -> None:
     model = create_model(
         f"Core{resource.model.__name__}",
         __base__=resource.model,
@@ -132,7 +136,7 @@ def register_core(app, resource):
     app.add_api_route(path + "/record", single, methods=["GET"], response_model=Result[model])
 
 
-def register_mart(app, name, grain):
+def register_mart(app: FastAPI, name: str, grain: tuple[str, ...]) -> None:
     def listing(request: Request) -> dict:
         return read(request, "mart", name, grain)
 

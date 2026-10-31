@@ -3,7 +3,7 @@
 from collections import defaultdict
 from datetime import datetime
 
-from pydantic import TypeAdapter, ValidationError, create_model
+from pydantic import AwareDatetime, TypeAdapter, ValidationError, create_model
 
 from app.api.common import APIError
 from app.pipeline.connectors import TABLES, normalize_shop
@@ -24,7 +24,7 @@ def normalize(value: dict) -> dict:
         snapshot = Snapshot.model_validate(value).model_dump(mode="json")
         if snapshot["source_revision"] < 0:
             raise ValueError("Negative revision")
-        TypeAdapter(datetime).validate_python(snapshot["as_of"])
+        TypeAdapter(AwareDatetime).validate_python(snapshot["as_of"])
         core = {table: [] for table in TABLES}
         merchants = {r["merchant_id"] for r in snapshot["access"]["merchants"]}
         groups = defaultdict(list)
@@ -95,5 +95,5 @@ def normalize(value: dict) -> dict:
                 ):
                     raise ValueError("Invalid deletion scope")
         return {"snapshot": snapshot, "core": core, "access": snapshot["access"]}
-    except ValueError, KeyError, TypeError, OverflowError, ValidationError:
+    except ValueError, KeyError, TypeError, ArithmeticError, ValidationError:
         raise invalid() from None

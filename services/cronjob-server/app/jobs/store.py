@@ -9,12 +9,29 @@ from app.pipeline.publish import digest
 from app.storage.db import connect
 
 
+def previous_intent(actor: str, key: str) -> dict | None:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT request FROM sync.mutation_intents JOIN sync.runs USING(run_id) "
+            "WHERE actor=%s AND idempotency_key=%s",
+            (actor, key),
+        ).fetchone()
+        return row["request"] if row else None
+
+
 def accept(actor: str, key: str, trigger: str, intent: dict) -> dict:
     if not key or len(key) > 200:
         raise APIError(422, "INVALID_IDEMPOTENCY_KEY")
     fingerprint = digest({"trigger": trigger, "intent": intent})
     with connect() as conn:
         conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,8173604))", (actor + key,))
+        if (
+            actor == "admin"
+            and conn.execute(
+                "SELECT 1 FROM sync.settings_receipts WHERE idempotency_key=%s", (key,)
+            ).fetchone()
+        ):
+            raise APIError(409, "IDEMPOTENCY_CONFLICT")
         previous = conn.execute(
             "SELECT * FROM sync.runs WHERE actor=%s AND idempotency_key=%s FOR UPDATE",
             (actor, key),
@@ -90,6 +107,7 @@ def resolve_mutation(run_id, source) -> dict:
             transient = exc.status >= 500 or exc.code in {
                 "INVALID_SOURCE_RESPONSE",
                 "IDEMPOTENCY_IN_PROGRESS",
+                "MUTATION_IN_PROGRESS",
             }
             attempts = intent["attempts"] + 1
             if transient:

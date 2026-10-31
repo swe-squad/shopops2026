@@ -7,8 +7,13 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 condition = threading.Condition()
-state = {"hold_mutations": False, "hold_snapshots": False, "corrupt_snapshot": False,
-         "mutation_committed": False, "snapshot_captured": False}
+state = {
+    "hold_mutations": False,
+    "hold_snapshots": False,
+    "corrupt_snapshot": False,
+    "mutation_committed": False,
+    "snapshot_captured": False,
+}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -22,7 +27,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
-        except (BrokenPipeError, ConnectionResetError):
+        except BrokenPipeError, ConnectionResetError:
             pass
 
     def handle_request(self):
@@ -34,16 +39,23 @@ class Handler(BaseHTTPRequestHandler):
                     condition.notify_all()
                 self.reply(200, json.dumps(state).encode())
             return
-        headers = {k: v for k, v in self.headers.items() if k.lower() in {
-            "content-type", "idempotency-key", "x-demo-user-id"}}
-        request = urllib.request.Request("http://source:8000" + self.path,
-            data=body or None, headers=headers, method=self.command)
+        headers = {
+            k: v
+            for k, v in self.headers.items()
+            if k.lower() in {"content-type", "idempotency-key", "x-demo-user-id"}
+        }
+        request = urllib.request.Request(
+            "http://source:8000" + self.path,
+            data=body or None,
+            headers=headers,
+            method=self.command,
+        )
         try:
             with urllib.request.urlopen(request, timeout=35) as response:
                 status, result = response.status, response.read()
         except urllib.error.HTTPError as exc:
             status, result = exc.code, exc.read()
-        except (urllib.error.URLError, TimeoutError, ConnectionError):
+        except urllib.error.URLError, TimeoutError, ConnectionError:
             self.reply(503, b'{"error":{"code":"SOURCE_UNAVAILABLE"}}')
             return
         with condition:

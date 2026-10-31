@@ -52,7 +52,8 @@ class SourceClient:
         except ValueError:
             raise APIError(422, "INVALID_SOURCE_RESPONSE") from None
         if response.is_error:
-            code = payload.get("error", {}).get("code", "")
+            error = payload.get("error")
+            code = error.get("code", "") if isinstance(error, dict) else ""
             if not isinstance(code, str) or not re.fullmatch(r"[A-Z_]{1,80}", code):
                 code = "SOURCE_REQUEST_REJECTED"
             raise APIError(response.status_code, code)
