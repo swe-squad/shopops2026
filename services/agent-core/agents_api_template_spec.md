@@ -124,6 +124,13 @@ Use the `/api/v1` prefix, Pydantic schemas, and OpenAPI. All business endpoints 
 Concurrent provisioning must rely on a unique constraint. If the shop already has an orchestrator with a different revision, return `409 configuration_conflict`; revision updates are administrative operations outside the MVP API.
 
 Conversation creation is idempotent on `(tenant_id, shop_id, user_id, client_conversation_id)`. Messages are unique on `(conversation_id, client_message_id)`. Reusing a key with a different payload returns `409 idempotency_conflict`. Check for replay before checking whether the conversation is busy.
+Clients may supply `expected_config_revision` when creating/replaying a conversation. Core checks
+it atomically against the active shop revision before creating a new conversation; mismatch is
+`409 configuration_conflict`. Existing-key replay uses the pinned snapshot first: the same
+expected revision replays even after activation changes, while a different expected revision is
+`409 idempotency_conflict`. Omission preserves the original client contract. A provisioning
+preflight alone does not bind a later create request to that revision.
+
 
 Messages contain 1–8000 plain-text characters after trimming; the maximum request body size is 64 KiB. Client IDs are limited to 128 characters. `limit` ranges from 1–100, defaulting to 50. Cursors are opaque and scope-validated; do not use unbounded offsets.
 

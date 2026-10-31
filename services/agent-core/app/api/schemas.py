@@ -20,6 +20,7 @@ class ProvisionInput(Input):
 class ConversationInput(Input):
     orchestrator_id: Identifier
     client_conversation_id: Identifier
+    expected_config_revision: Identifier | None = None
 
 
 class MessageInput(Input):

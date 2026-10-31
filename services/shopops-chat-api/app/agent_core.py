@@ -1,6 +1,7 @@
 """Bounded HTTP-only application boundary. No provider SDK or upstream redirect handling."""
 
 import asyncio
+import json
 import re
 from datetime import datetime
 from typing import Literal
@@ -15,6 +16,20 @@ from app.contracts import Source
 
 class CoreError(Exception):
     pass
+
+
+class CoreRequestRejected(HTTPException):
+    """A definite HTTP application rejection, never a provider execution outcome."""
+
+    def __init__(self, status_code: int, code: str | None = None) -> None:
+        super().__init__(status_code, "Core request could not be completed.")
+        self.code = code
+        self.outbox_finished = False
+
+    @property
+    def terminal(self) -> bool:
+        # Busy/idempotency conflicts (and unrecognized conflicts) need reconciliation.
+        return self.status_code != 409 or self.code == "configuration_conflict"
 
 
 def identifier(value: str) -> str:
@@ -45,18 +60,32 @@ class CoreAPI:
             method, path, headers={"Authorization": f"Bearer {token}"}, json=body
         ) as response:
             if response.status_code not in {200, 201, 202}:
-                if response.status_code in {403, 404, 409, 410, 422}:
-                    raise HTTPException(
-                        response.status_code, "Core request could not be completed."
-                    )
+                if response.status_code in {400, 401, 403, 404, 409, 410, 413, 422}:
+                    code = None
+                    if response.status_code == 409:
+                        error_body = bytearray()
+                        async for chunk in response.aiter_bytes(chunk_size=65536):
+                            error_body.extend(chunk)
+                            if len(error_body) > 65536:
+                                raise CoreError("Invalid Core rejection")
+                        try:
+                            payload = json.loads(error_body)
+                            candidate = payload.get("error", {}).get("code")
+                            if candidate in {
+                                "configuration_conflict",
+                                "conversation_busy",
+                                "idempotency_conflict",
+                            }:
+                                code = candidate
+                        except ValueError, AttributeError, TypeError:
+                            pass
+                    raise CoreRequestRejected(response.status_code, code)
                 raise CoreError("Core unavailable")
             data = bytearray()
             async for chunk in response.aiter_bytes(chunk_size=65536):
                 data.extend(chunk)
                 if len(data) > 4 * 1048576:
                     raise CoreError("Core response too large")
-            import json
-
             result = json.loads(data)
             if not isinstance(result, dict):
                 raise CoreError("Invalid Core response")

@@ -153,6 +153,7 @@ class CoreStore(Store):
                     namespace TEXT NOT NULL, client_id TEXT NOT NULL, payload TEXT NOT NULL,
                     run_id TEXT, message_id TEXT, status TEXT NOT NULL DEFAULT 'pending',
                     owner TEXT, lease REAL NOT NULL DEFAULT 0,
+                    message_dispatched INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY(namespace,client_id)
                 );
                 CREATE UNIQUE INDEX IF NOT EXISTS core_one_pending ON core_outbox(namespace)
@@ -162,6 +163,15 @@ class CoreStore(Store):
                     metadata TEXT NOT NULL, PRIMARY KEY(namespace,id)
                 );
             """)
+
+            db.execute("BEGIN IMMEDIATE")
+            columns = {row["name"] for row in db.execute("PRAGMA table_info(core_outbox)")}
+            if "message_dispatched" not in columns:
+                # Older rows lack evidence of whether their message POST reached Core.
+                db.execute(
+                    "ALTER TABLE core_outbox ADD COLUMN"
+                    " message_dispatched INTEGER NOT NULL DEFAULT 1"
+                )
 
     def space(self, namespace: str, actor: str, configuration: str) -> dict:
         with self.connect() as db:
@@ -211,7 +221,8 @@ class CoreStore(Store):
                     raise BusyError("A turn is already being inspected.")
             elif key:
                 db.execute(
-                    "INSERT INTO core_outbox(namespace,client_id,payload) VALUES(?,?,?)",
+                    "INSERT INTO core_outbox(namespace,client_id,payload,message_dispatched)"
+                    " VALUES(?,?,?,0)",
                     (namespace, key, payload),
                 )
                 row = db.execute(
@@ -226,7 +237,7 @@ class CoreStore(Store):
             return dict(row) | {"owner": owner}
 
     def core_update(self, namespace: str, key: str, owner: str, **values) -> None:
-        if not set(values) <= {"run_id", "message_id", "status"}:
+        if not set(values) <= {"run_id", "message_id", "status", "message_dispatched"}:
             raise ValueError("Invalid update")
         with self.connect() as db:
             result = db.execute(

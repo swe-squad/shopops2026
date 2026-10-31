@@ -80,3 +80,20 @@ run `make install` there, then explicitly run `AGENT_CORE_LOOPBACK=1 .venv/bin/p
 application/worker with independent SQLite and an explicit fake provider; no external calls or
 hosted-execution proof are implied. Paid hosted acceptance remains UNVERIFIED until both live
 opt-ins, operator configuration and the two outstanding T08 proof gates are explicitly accepted.
+
+### T09 review corrections
+
+The adapter supplies `expected_config_revision` on every conversation create/replay. Core checks
+this in the same write transaction that selects the snapshot and inserts a conversation. A
+separate provisioning request cannot protect against an activation between HTTP calls. Existing
+conversation replay and follow-ups keep their pinned revision after a shop activation. Deploy
+the compatible Core API amendment before this adapter; an older Core refuses the extra field.
+
+An initial definite application rejection finishes the local submission as failed, with no
+assistant reply. Load history and submit corrected input with a new client ID. Conflicts needing
+reconciliation stay pending. A durable `message_dispatched` flag is saved before the message POST;
+if an earlier response was lost, a later rejection cannot establish that the original input was
+never accepted. Such work stays pending and blocks new input/cutover until its outcome is known.
+Older outbox tables migrate conservatively: existing rows lacking dispatch evidence are treated
+as possibly dispatched; newly created entries start unsubmitted. No provider call is replayed by
+this service, only the identical idempotent application request.
