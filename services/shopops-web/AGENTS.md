@@ -12,7 +12,7 @@ React + TypeScript SPA built with Vite, served by nginx (`nginx.conf`, SPA fallb
 
 ## Conventions
 
-- This standalone UI has no API integration yet. Add same-origin API configuration when a backend is selected.
+- The frontend proxies `/api/` to `shopops-api` using runtime `API_URL`; see README for local and CapRover setup.
 - Function components and hooks only; no class components.
 - Tests query by role/label (`getByRole`), not by CSS class or test id when avoidable.
 

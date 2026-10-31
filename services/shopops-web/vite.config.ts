@@ -6,8 +6,11 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 5173,
+    strictPort: true,
+    headers: { 'Content-Security-Policy': "frame-ancestors 'self' http://localhost:5175 http://127.0.0.1:5175" },
     proxy: {
-      '/api/': 'http://localhost:8080',
+      '/api/operations/': 'http://127.0.0.1:8000',
     },
   },
   test: {
