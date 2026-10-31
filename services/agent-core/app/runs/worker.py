@@ -105,6 +105,14 @@ class RunWorker:
             self.metrics["provider_errors"] += 1
         return await self._inspect(run, snapshot.session_id)
 
+    @staticmethod
+    def _setup_deadline(run: Run) -> datetime:
+        return min(
+            run.deadline,
+            (run.runtime_setup_started_at or run.created_at)
+            + timedelta(seconds=run.config.runtime_profile.setup_timeout_seconds),
+        )
+
     async def _consume(self, run: Run, snapshot: ProviderSnapshot) -> bool:
         """Use inspected required_actions/root state, never stream closure, as authority."""
         run = await self._current(run)
@@ -112,13 +120,17 @@ class RunWorker:
             return True
         if snapshot.environment is not None:
             c, _ = await self.repo.execution_context(run.id)
-            await self.repo.save_runtime(c.scope, c.id, snapshot.environment)
-            environment = snapshot.environment
-            expired = environment.state == "provisioning" and self.clock() >= min(
-                run.deadline,
-                (run.runtime_setup_started_at or run.created_at)
-                + timedelta(seconds=run.config.runtime_profile.setup_timeout_seconds),
+            previous_environment = await self.repo.get_runtime(c.scope, c.id)
+            setup_pending = (
+                previous_environment is None or previous_environment.state != "connected"
             )
+            environment = snapshot.environment
+            expired = (
+                setup_pending
+                and environment.state in ("provisioning", "connected")
+                and self.clock() >= self._setup_deadline(run)
+            )
+            await self.repo.save_runtime(c.scope, c.id, environment)
             if environment.state in ("failed", "unavailable") or expired:
                 if snapshot.root_status not in ("completed", "failed", "cancelled"):
                     snapshot = await self._cancel(run, snapshot)
@@ -277,8 +289,14 @@ class RunWorker:
             session_id = c.provider_session_id
             if session_id is None:
                 await self.repo.mark_submission(run.id, "session_creating")
+                run = await self._current(run)
+                creation_deadline = (
+                    self._setup_deadline(run)
+                    if run.config.runtime_profile.environment_type == "openai_hosted"
+                    else run.deadline
+                )
                 async with asyncio.timeout(
-                    max(0.01, (run.deadline - self.clock()).total_seconds())
+                    max(0.01, (creation_deadline - self.clock()).total_seconds())
                 ):
                     session = await self.provider.create_session(
                         run.config,
@@ -290,7 +308,11 @@ class RunWorker:
                     run.id, session_id, input_submitted=session.input_submitted
                 )
                 if session.environment is not None:
-                    await self.repo.save_runtime(c.scope, c.id, session.environment)
+                    # Connection is established by inspection, after IDs/receipt are durable.
+                    environment = session.environment
+                    if environment.state == "connected":
+                        environment = environment.model_copy(update={"state": "provisioning"})
+                    await self.repo.save_runtime(c.scope, c.id, environment)
                 if session.input_submitted:
                     # Persist the accepted input before inspecting any remote turn. No re-send.
                     await self.repo.mark_submission(run.id, "submitted")

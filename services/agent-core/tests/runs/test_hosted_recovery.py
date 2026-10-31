@@ -352,3 +352,108 @@ def test_setup_budget_starts_at_creation_not_enqueue(repo, scope, registry):
         assert current.runtime_setup_started_at == r.created_at + timedelta(seconds=30)
 
     asyncio.run(scenario())
+
+
+def test_late_connected_create_fails_setup_without_losing_session(repo, scope, registry):
+    from datetime import timedelta
+
+    from app.contracts.models import ApplicationResponse
+    from app.contracts.provider import ProviderSession, ProviderSnapshot
+    from app.contracts.runtime import ProviderEnvironment
+    from app.runs.worker import RunWorker
+    from app.storage.repositories import utcnow
+
+    async def scenario():
+        hosted(registry)
+        clock = [utcnow()]
+        repo.clock = lambda: clock[0]
+        c = await create(repo, scope, "hosted-test")
+        await repo.enqueue_message(scope, c.id, "m", "hello")
+        run = await repo.claim_next_run()
+
+        class Provider:
+            calls = 0
+
+            async def create_session(self, config, correlation_id, *, initial_input=None):
+                self.calls += 1
+                clock[0] += timedelta(seconds=65)
+                return ProviderSession(
+                    id="late-session",
+                    input_submitted=True,
+                    environment=ProviderEnvironment(id="late-env", state="connected"),
+                )
+
+            async def inspect_session(self, session_id):
+                return ProviderSnapshot(
+                    session_id=session_id,
+                    root_turn_id="root",
+                    root_status="completed",
+                    input_run_id=run.id,
+                    item_id="item",
+                    environment=ProviderEnvironment(id="late-env", state="connected"),
+                    response=ApplicationResponse(kind="clarification", text="Need a date"),
+                )
+
+            async def list_artifacts(self, session_id, turn_id):
+                return ()
+
+        provider = Provider()
+        await RunWorker(repo, provider, None, clock=lambda: clock[0]).execute(run)
+        result = await repo.get_run(scope, run.id)
+        assert result.state == "failed"
+        assert result.error == "environment_timeout"
+        saved = await repo.get_conversation(scope, c.id)
+        assert saved.provider_session_id == "late-session"
+        assert saved.status == "blocked"
+        assert (await repo.get_runtime(scope, c.id)).id == "late-env"
+        assert provider.calls == 1
+
+    asyncio.run(scenario())
+
+
+def test_connected_environment_has_no_second_setup_deadline(repo, scope, registry):
+    from datetime import timedelta
+
+    from app.contracts.models import ApplicationResponse
+    from app.contracts.provider import ProviderSnapshot
+    from app.contracts.runtime import ProviderEnvironment
+    from app.runs.worker import RunWorker
+    from app.storage.repositories import utcnow
+
+    class Provider:
+        async def list_artifacts(self, session_id, turn_id):
+            return ()
+
+    async def scenario():
+        hosted(registry)
+        clock = [utcnow()]
+        repo.clock = lambda: clock[0]
+        c = await create(repo, scope, "hosted-test")
+        await repo.enqueue_message(scope, c.id, "m", "hello")
+        run = await repo.claim_next_run()
+        await repo.mark_submission(run.id, "session_creating")
+        await repo.save_session_mapping(run.id, "session", input_submitted=True)
+        snapshot = ProviderSnapshot(
+            session_id="session",
+            root_turn_id="root",
+            root_status="running",
+            input_run_id=run.id,
+            environment=ProviderEnvironment(id="env", state="connected"),
+        )
+        worker = RunWorker(repo, Provider(), None, clock=lambda: clock[0])
+        clock[0] += timedelta(seconds=10)
+        assert not await worker._consume(await repo.get_run(scope, run.id), snapshot)
+        clock[0] += timedelta(seconds=80)
+        completed = snapshot.model_copy(
+            update={
+                "root_status": "completed",
+                "item_id": "item",
+                "response": ApplicationResponse(kind="clarification", text="Need a date"),
+            }
+        )
+        assert await worker._consume(await repo.get_run(scope, run.id), completed)
+        result = await repo.get_run(scope, run.id)
+        assert result.state == "completed"
+        assert result.error is None
+
+    asyncio.run(scenario())
