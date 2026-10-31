@@ -1,0 +1,5 @@
+{
+  "local-alice": {"tenant_id":"tenant-a","user_id":"alice","shop_ids":["shop-a","shop-b"],"permissions":["orchestrator:provision","conversation:write","history:read"]},
+  "local-bob": {"tenant_id":"tenant-a","user_id":"bob","shop_ids":["shop-a"],"permissions":["conversation:write","history:read"]},
+  "local-carol": {"tenant_id":"tenant-b","user_id":"carol","shop_ids":["shop-c"],"permissions":["conversation:write","history:read"]}
+}
