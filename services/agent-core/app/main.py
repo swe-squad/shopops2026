@@ -7,6 +7,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.responses import JSONResponse
 from starlette.types import ASGIApp
 
+from app.composition import build_configured_router, build_offline_provider
 from app.config.registry import Registry
 from app.config.settings import Settings
 from app.contracts.provider import AgentProvider
@@ -59,16 +60,18 @@ def create_app(
             )
             app.state.settings = config
             app.state.repository = repository
+            selected_provider = provider or build_offline_provider(config)
+            app.state.provider = selected_provider
             worker = (
                 RunWorker(
                     repository,
-                    provider,
+                    selected_provider,
                     bridge,
                     max_concurrent=config.max_concurrent_runs,
                     max_tool_calls=config.max_tool_calls_per_run,
                     mcp_timeout=config.mcp_timeout_seconds,
                 )
-                if provider and bridge
+                if selected_provider and bridge
                 else None
             )
             app.state.worker = worker
@@ -82,7 +85,13 @@ def create_app(
                 if child_router is not None:
                     await resources.enter_async_context(child_router.lifespan_context(asgi))
                 app.mount(path, asgi)
-            router = router_factory(repository, config, ready) if router_factory else api_router
+            router = (
+                router_factory(repository, config, ready)
+                if router_factory
+                else api_router
+                if api_router is not None
+                else build_configured_router(repository, config, ready)
+            )
             if router is not None:
                 app.include_router(router)
             app.state.adapters_ready = bool(

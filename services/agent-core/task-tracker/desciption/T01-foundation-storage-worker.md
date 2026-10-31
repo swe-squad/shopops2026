@@ -14,6 +14,8 @@
 
 **Difficulty:** D5 — Very hard. This task combines contract ownership, atomic persistence, concurrency, uncertain provider outcomes, restart recovery and final integration. Its foundation must ship as a small first commit so the other three workstreams can start.
 
+**OpenAI credentials:** Not required for foundation, worker tests, or offline integration. If the integration lead runs the optional live smoke with T03, follow [OpenAI API key by task](../task_list.md#openai-api-key-by-task); missing credentials leave AC13 unverified. Document `OPENAI_API_KEY` and `OPENAI_MODEL` in the service `.env.example` without real values.
+
 ## Repository scope and worktree
 
 Read the tracker's **Required repository workflow** and **Separate worktrees** sections before coding. Follow root/service instructions and the existing FastAPI template; all changes, including tooling and docs, stay inside `services/agent-core/`. Shared root files and other services are read-only.

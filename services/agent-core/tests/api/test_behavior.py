@@ -44,7 +44,11 @@ class RepositoryFake:
         ):
             raise NotFound()
         for record in self.conversations.values():
-            if record.scope == scope and record.client_id == client_conversation_id:
+            if (
+                record.scope.model_dump(exclude={"permissions"})
+                == scope.model_dump(exclude={"permissions"})
+                and record.client_id == client_conversation_id
+            ):
                 if record.orchestrator_id != orchestrator_id:
                     raise IdempotencyConflict()
                 return Record(record=record, created=False)
@@ -59,7 +63,9 @@ class RepositoryFake:
 
     async def get_conversation(self, scope, conversation_id):
         record = self.conversations.get(conversation_id)
-        if record is None or record.scope != scope:
+        if record is None or record.scope.model_dump(exclude={"permissions"}) != scope.model_dump(
+            exclude={"permissions"}
+        ):
             raise NotFound()
         return record
 

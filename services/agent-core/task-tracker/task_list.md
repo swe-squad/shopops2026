@@ -17,8 +17,8 @@ All implementation changes must stay inside `services/agent-core/`, the existing
 | ID | Task | Difficulty | Suggested owner | Status | Start dependency | Completion dependency |
 | --- | --- | --- | --- | --- | --- | --- |
 | T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Ready for integration | None | T02–T04 handoffs for final integration |
-| T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Not started | T01 foundation gate | T01 repositories and application wiring |
-| T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Not started | T01 foundation gate | T01 worker and T04 bridge for live smoke |
+| T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Ready for integration | T01 foundation gate | T01 repositories and application wiring |
+| T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Blocked | T01 foundation gate | T01 worker and T04 bridge for live smoke |
 | T04 | [MCP bridge, fixtures, and knowledge](desciption/T04-mcp-knowledge.md) | D4 — Hard | Owner 4 | Not started | T01 foundation gate | T01 history repository and application mounting |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
@@ -131,6 +131,21 @@ T01 publishes the following before T02–T04 start production code. The other ow
 
 T01 is delivered in stages, not as a prerequisite that must be fully completed before all other tasks. Its final integration depends on their handoffs; there is no circular start dependency.
 
+## OpenAI API key by task
+
+| Task | Needs `OPENAI_API_KEY`? | When |
+| --- | --- | --- |
+| T01 | No for foundation, worker, and offline integration | Only if the integration lead personally runs the opt-in live smoke with T03 |
+| T02 | No | Use local JWT keys and identity fixtures for auth/API tests |
+| T03 | Yes for live Agents API calls | The live adapter smoke test and live demo require `OPENAI_API_KEY` and `OPENAI_MODEL`; fake-provider and mocked-transport tests do not |
+| T04 | No for MCP/knowledge and offline tests | Use a synthetic local signing key for MCP credentials, not an OpenAI API key |
+
+**Local source:** The original checkout's repository-root `.env` is known to declare `OPENAI_API_KEY`. It is local and untracked; linked worktrees do not automatically inherit it, and its value, validity and Agents API permissions have not been verified. Do not assume the service, SDK, or test runner automatically loads that file. Never commit, print, log, or paste its contents, or copy the entire root `.env` to a worktree.
+
+For T03 live runs, supply `OPENAI_API_KEY` and `OPENAI_MODEL` to the process through the operator's environment or secret manager. Alternatively, the operator may configure a worktree-local, ignored `services/agent-core/.env` with the required values and explicitly load it using the service's documented configuration loader once implemented; merely creating the file does not prove it is loaded. The `.env.example` documents variable names and contains no real secrets. Production uses runtime secrets in CapRover. Never put the API key in an agent sandbox, prompt, MCP request, fixture, or test output.
+
+Before the live smoke, check only that both variable names are set without printing their values; verify account/model access and API permissions through the live test. If credentials, permissions or model access are unavailable, continue offline work and record AC13 as **unverified**, not passed. T02/T04 do not need access to T03's secrets. Dependency installation may require registry access but does not require an OpenAI API key.
+
 ## Review focus
 
 | Condition | Required behavior | Test owner |
@@ -181,3 +196,16 @@ Five P1 review findings were fixed with RED→GREEN regressions. See T01's hando
 commands and exact prerequisites. T02–T04 remain separate tasks; full offline MCP/API flow and AC13
 are unverified. One upstream TestClient deprecation warning remains. No credentials were copied,
 no remote push/deploy was performed, and all task changes stay inside the service directory.
+
+## T01–T03 integration checkpoint
+
+- Integration branch: `feat/agent-core-template`; isolated worktree: `/home/khalee-dev/.codex/worktrees/3913/shopops2026`.
+- T01 base: `5d6bd78`; T02 branch merged as `ea759a6`; T03 branch merged as `835fabb`. All implementation changes stay inside this service.
+- Default application startup now builds the T02 router using the same SQLite repository and selected fixture/JWT authenticator. Local/test fake-provider configuration selects T03's `FakeProvider`; explicit injected factories remain supported.
+- Integrated tests prove API → SQLite → worker → T03 fake provider → test-only bridge, trusted grant propagation, idempotent replay/conflict, session reuse, cross-user/tenant isolation, and history/receipts after reopening the DB. T02's repository fake now compares identity without treating mutable permissions as ownership.
+- The bridge used here is a test double, not T04's MCP transport. Readiness stays 503 without required MCP apps/bridge. No automatic live-to-fake fallback is enabled.
+- Validation: full offline pytest suite **96 passed, 2 skipped**; `make ci` passed on Python 3.14.7 (including Ruff lint/format). One upstream Starlette/httpx deprecation warning remains. Skips are the opt-in live gate and optional official-SDK compatibility test (SDK dependency is not yet pinned/installed in this integration environment).
+- Still pending: T04 bridge/MCP handoff, real loopback MCP workflow, coordinated initial-input session contract amendment, OpenAI SDK dependency pin, and AC13 live smoke. T03 remains Blocked for live execution; T01/T02 are not declared fully Done.
+- Ruling: integrate existing modules and verify the offline boundary now; preserve the documented live-session blocker instead of silently changing the provider contract or introducing a sandbox. No push or deployment was performed.
+
+- Independent read-only integration review found no concrete P0/P1 findings; it did not run its own tests. Verification above was run by the integration implementer.

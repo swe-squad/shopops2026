@@ -14,6 +14,8 @@
 
 **Difficulty:** D4 — Hard. Provider session/turn semantics, async stream recovery, pending actions, SDK compatibility and grounded output normalization must agree with the worker contract. Live access can block acceptance even when offline adapter tests pass.
 
+**OpenAI credentials:** The live adapter smoke test and demo require `OPENAI_API_KEY` and `OPENAI_MODEL` in the running process. Offline fake-provider and mocked-transport tests require neither. The original checkout's root `.env` declares the key name, but is not automatically available or loaded in this worktree; its validity and permissions are unverified. Supply variables through the operator's environment/secret manager, or an ignored worktree-local service `.env` explicitly loaded by a documented loader. Never print, copy the entire root `.env`, or commit credentials. See [OpenAI API key by task](../task_list.md#openai-api-key-by-task).
+
 ## Repository scope and worktree
 
 Read the tracker's **Required repository workflow** and **Separate worktrees** sections before coding. Use the existing Python 3.14 FastAPI service layout, service-local test environment and pinned dependency conventions. All source, fixtures, tests and scripts stay inside `services/agent-core/`; do not introduce a root SDK package, workflow or shared dependency file.

@@ -14,6 +14,8 @@
 
 **Difficulty:** D4 — Hard. Real MCP transport, bounded schemas, scoped token validation, retries and history isolation cross several security boundaries. Knowledge fixtures are straightforward; safe tool execution and compatibility with real endpoints drive the difficulty.
 
+**OpenAI credentials:** `OPENAI_API_KEY` is not required for MCP/knowledge development or offline tests. Use a synthetic local `MCP_TOKEN_SIGNING_KEY` for scoped credential tests; it is separate from the OpenAI key. T03 supplies OpenAI credentials only for the integrated live smoke. See [OpenAI API key by task](../task_list.md#openai-api-key-by-task).
+
 ## Repository scope and worktree
 
 Read the tracker's **Required repository workflow** and **Separate worktrees** sections before coding. Implement MCP modules inside the existing FastAPI service and keep its testing/dependency conventions. All schemas, data, knowledge and documentation stay inside `services/agent-core/`; do not create a separate MCP service, root package or workflow in this task.

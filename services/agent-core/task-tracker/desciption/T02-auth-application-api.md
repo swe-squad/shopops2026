@@ -14,6 +14,8 @@
 
 **Difficulty:** D3 — Moderate. The endpoint structure is conventional, but JWT verification, ownership checks, response sanitization and replay-before-busy behavior require careful tests. Database transactions and worker recovery remain T01 responsibilities.
 
+**OpenAI credentials:** `OPENAI_API_KEY` is not required for this task or its offline tests. Use local synthetic JWT keys and fixture identities; see [OpenAI API key by task](../task_list.md#openai-api-key-by-task).
+
 ## Repository scope and worktree
 
 Read the tracker's **Required repository workflow** and **Separate worktrees** sections before coding. Follow the existing FastAPI app factory, Pydantic/type-hint conventions, TestClient, service-local `.venv` and Makefile. All changes stay inside `services/agent-core/`; root files, shared templates/workflows and other services are read-only.

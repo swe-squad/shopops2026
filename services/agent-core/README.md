@@ -174,3 +174,11 @@ service without workflow changes. Dev setup requires CapRover app agent-core-dev
 AGENT_CORE_DEV_APP_NAME / AGENT_CORE_DEV_CAPROVER_TOKEN, and shared CAPROVER_SERVER. Production needs
 app agent-core and matching PROD secrets before merge to main. These are deployment prerequisites;
 T01 does not create them, push branches, or invoke /deploy. Completed integration targets develop.
+
+## T01–T03 integration status
+
+The default app factory now mounts the application API with the configured fixture/JWT authenticator and the same SQLite repository used by the worker. In local/test mode, `AGENT_PROVIDER=fake` selects the delivered T03 fake provider. Other factories/providers can still be injected explicitly.
+
+T04 MCP applications and a tool bridge are still required to start a complete worker workflow. Without them, `/ready` and `/api/v1/ready` return 503. Tests exercise the T01–T03 workflow with an explicitly named test-only bridge; they do not prove MCP acceptance. The live Agents API session-creation contract remains blocked, and no live-to-fake fallback is used. Runtime configuration is read from environment variables; the app does not implicitly load the original checkout's root `.env`.
+
+Run the combined checks from this service directory with `.venv/bin/pytest` and `make lint`. The new `tests/integration/test_task_integration.py` checks persisted messages, follow-ups, trusted permissions, replay/conflict behavior and isolation against real SQLite.
