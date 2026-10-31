@@ -3,14 +3,18 @@ import { BrowserIcon } from './browser-icon'
 import { IncidentFeed } from './incident-feed'
 import { IncidentForm } from './incident-form'
 import { useIncidents } from './use-incidents'
+import { ConnectionsPage } from './connections-page'
+import { connectionPage } from './browser-url'
+import type { MockConnectors } from './use-mock-connectors'
 
-export function ShopClient({ token, url, onNavigate, reload = 0, active = true }: { token: string; url: URL; onNavigate: (url: string) => void; reload?: number; active?: boolean }) {
+export function ShopClient({ token, connectors, url, onNavigate, reload = 0, active = true }: { token: string; connectors: MockConnectors; url: URL; onNavigate: (url: string) => void; reload?: number; active?: boolean }) {
   const data = useIncidents(token, reload)
   const prefix = useId()
   const page = useRef<HTMLDivElement>(null)
   const previousPath = useRef(url.pathname)
   const scrolledTarget = useRef('')
-  const knownPage = ['/shop', '/shop/', '/shop/overview', '/shop/incidents'].includes(url.pathname)
+  const connectorPage = connectionPage(url.pathname)
+  const knownPage = !!connectorPage || ['/shop', '/shop/', '/shop/overview', '/shop/incidents'].includes(url.pathname)
   const incidentsPage = url.pathname === '/shop/incidents'
   const shownIncidents = incidentsPage || url.hash ? data.incidents : data.incidents.slice(0, 5)
 
@@ -34,8 +38,10 @@ export function ShopClient({ token, url, onNavigate, reload = 0, active = true }
   }, [url.pathname, url.hash, data.loading, active])
 
   return <section className="shop-client" aria-label="Shop workspace">
-    <nav className="shop-nav" aria-label="Shop pages">{[['Overview', '/shop/overview'], ['Incidents', '/shop/incidents']].map(([label, path]) => <a key={path} href={path} aria-current={(incidentsPage ? path === '/shop/incidents' : knownPage && path === '/shop/overview') ? 'page' : undefined} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onNavigate(path) } }}>{label}</a>)}<span className="workspace-mode">Manual workspace</span></nav>
+    <nav className="shop-nav" aria-label="Shop pages">{[['Overview', '/shop/overview'], ['Incidents', '/shop/incidents'], ['Connections', '/shop/connections']].map(([label, path]) => <a key={path} href={path} aria-current={(connectorPage ? path === '/shop/connections' : incidentsPage ? path === '/shop/incidents' : knownPage && path === '/shop/overview') ? 'page' : undefined} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onNavigate(path) } }}>{label}</a>)}<span className="workspace-mode">Manual workspace</span></nav>
     <div className="shop-page" ref={page} tabIndex={0} aria-label="Shop page content">
+      {connectorPage && <ConnectionsPage page={connectorPage} data={connectors} active={active} reload={reload} onNavigate={onNavigate} />}
+      <div hidden={!!connectorPage}>
       {!knownPage ? <div className="unavailable-page"><span className="empty-symbol"><BrowserIcon name="globe" /></span><h1>This shop page is not available.</h1><p>Choose a workspace page to continue.</p><button className="secondary-button" onClick={() => onNavigate('/shop/overview')}>Go to overview</button></div> : <div className="shop-page-inner">
         <h1>{incidentsPage ? 'Incident log' : 'Shop overview'}</h1>
         <aside className="connection-note"><BrowserIcon name="list" /><p>Shop data is not connected. Add incidents manually.</p></aside>
@@ -48,6 +54,7 @@ export function ShopClient({ token, url, onNavigate, reload = 0, active = true }
           <IncidentForm saving={data.saving} error={data.saveError} onSave={data.addIncident} />
         </div>
       </div>}
+      </div>
     </div>
   </section>
 }

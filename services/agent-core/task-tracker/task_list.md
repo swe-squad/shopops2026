@@ -28,7 +28,7 @@ and task description. It does not start implementation or change the T01–T08 o
 | T06 | [OpenAI-hosted provider and lifecycle](desciption/T06-hosted-provider.md) | D5 — Very hard | Provider developer | Ready for integration | Published T05 runtime foundation SHA | T05 wiring and T07 bundle for integrated live execution |
 | T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Ready for integration | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
 | T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Ready for integration | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
-| T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | In progress | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
+| T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | Ready for integration | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
 | T10 | [Connect Agent Core to Shop Data MCP and the data pipeline](desciption/T10-data-pipeline-integration.md) | D5 — Very hard | Data integration developer | Ready for integration | Published Data MCP contract and pipeline handoff; contract tests may start now | Accepted T09 fixes, real PostgreSQL/MCP pipeline acceptance and separately gated hosted evidence |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
@@ -381,7 +381,7 @@ inferred from any offline count.
 ## Chat client integration follow-up (T09)
 
 **Task:** [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md).
-**Status:** In progress — two P1 review findings open; not ready for merge; hosted acceptance UNVERIFIED. **Difficulty:** D5 — Very hard.
+**Status:** Ready for integration — T09-R01/R02 resolved offline; hosted acceptance UNVERIFIED. **Difficulty:** D5 — Very hard.
 **Scope:** one demo phone user, one configured shop, one logical shop orchestrator; no OTP.
 **Planning baseline:** `53d094e`, the
 `develop` merge of PR #8. This supersedes the earlier draft-delivery note for that PR only;
@@ -436,28 +436,39 @@ below reopens it for two P1 corrections; real hosted acceptance and both T08 pro
 UNVERIFIED/unaccepted. No paid call, merge or deployment was used for implementation verification.
 
 
-### T09 independent review: two P1 findings open
+### T09 independent review: two P1 findings resolved offline
 
-Reviewed code: `7ee2b35`. **Current status: In progress; not ready for merge.** The detailed
+Reviewed code: `7ee2b35`. **Original review decision: In progress; not ready for merge.** The detailed
 reproductions and closure checklists are in
 [T09 independent review](desciption/T09-chat-client-integration.md#independent-review-of-7ee2b35).
 
 | Finding | Priority | Status | Required result |
 | --- | --- | --- | --- |
-| T09-R01 | P1 | Open | Explicit Core 422 rejection must not retain a pending outbox that blocks corrected input/history/cutover; unknown outcomes remain recoverable |
-| T09-R02 | P1 | Open | Activating another revision between login and first message must not create a conversation under an unexpected revision while the adapter still records the old one |
+| T09-R01 | P1 | Resolved offline (`e34056f`) | Explicit Core 422 rejection must not retain a pending outbox that blocks corrected input/history/cutover; unknown outcomes remain recoverable |
+| T09-R02 | P1 | Resolved offline (`311aa4e`, `e34056f`) | Activating another revision between login and first message must not create a conversation under an unexpected revision while the adapter still records the old one |
 
 Fresh review verification: chat API **93 passed / 1 skipped**, chat UI **48 passed** plus build,
 Core **428 passed / 2 skipped**, explicit real-Core offline loopback **1 passed**. Both P1 cases
-were reproduced offline outside the existing happy-path suite. Step 8 is reopened. Close each
-finding only with its regression, fix commit and fresh verification; no product fix is claimed
-by this review-note update. Hosted acceptance remains a separate unverified gate.
+were reproduced offline outside the existing happy-path suite. That review reopened step 8.
+The correction checkpoint below closes both findings with regressions, fix commits and fresh
+verification. Hosted acceptance remains a separate unverified gate.
 
+
+### T09 review correction checkpoint
+
+T09-R01/R02 are resolved offline by Core `311aa4e` and chat API `e34056f`; the task returns to
+Ready for integration. Fresh Core CI:431 passed/2 live skipped. Fresh chat API CI:104 passed/
+4 loopback skipped; explicit scoped acceptance:33 passed with all four real-Core loopback cases.
+Definite fresh rejection no longer strands input; durable dispatch tracking/migration protects
+unknown prior outcomes. Expected revision is checked atomically when creating a conversation;
+existing pinned replay and old clients are preserved. Both corrected images and network-isolated
+migration/revision checks pass. Deploy compatible Core before the adapter. Hosted/T08 proof gates
+remain UNVERIFIED; no paid call, merge or deployment was performed. See T09's correction record.
 
 ## Commerce data integration follow-up (T10)
 
 **Task:** [Connect Agent Core to Shop Data MCP and the data pipeline](desciption/T10-data-pipeline-integration.md).
-**Status:** Not started. **Difficulty:** D5 — Very hard. **Scope:** one demo user, one selected
+**Status:** Ready for integration (offline; deployment and hosted acceptance pending). **Difficulty:** D5 — Very hard. **Scope:** one demo user, one selected
 shop, read-only analytical data, existing text/report conversation flow.
 
 Target: `shopops-chat → shopops-chat-api → agent-core → shop-data-mcp → cronjob derived PostgreSQL`.
@@ -477,5 +488,5 @@ proves a data mutation + synchronization changes the answer. Existing shop-level
 not interchangeable with arbitrary SKU/date metrics; changing only DATA_MCP_URL is insufficient.
 
 Use branch `feat/agent-core-data-mcp`, native worktree label `agent-core-data-mcp`, Git fallback
-`/tmp/shopops2026-agent-core/T10`. This planning change creates no implementation worktree/code.
-Documentation branch: `docs/agent-core-data-integration-task`; existing T09 work remains untouched.
+`/tmp/shopops2026-agent-core/T10`. Implementation `0ba1bcb`, handoff `978aa8f`; see the task
+description for CI, real PostgreSQL/HTTP acceptance and remaining hosted gates.

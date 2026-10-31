@@ -40,7 +40,7 @@ test('real streamed reply opens the active browser tab and preserves independent
   expect((await navigation).status()).toBe(201)
   await expect(browser.getByLabel('Browser address')).toHaveValue(/\/shop\/incidents$/)
   await expect(browser.getByRole('tab', { selected: true })).toHaveAccessibleName('Incidents — tab 2')
-  await expect(browser.getByRole('tab', { name: 'Overview — tab 1', exact: true })).toBeVisible()
+  await expect(browser.getByRole('tab', { name: 'Connections — tab 1', exact: true })).toBeVisible()
   expect(page.url()).toBe('http://localhost:5175/')
   await page.screenshot({ path: testInfo.outputPath('workspace-desktop.png') })
 

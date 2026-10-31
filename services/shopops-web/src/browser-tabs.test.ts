@@ -19,7 +19,7 @@ describe('browser navigation history', () => {
     state = browserTabsReducer(state, { type: 'navigate', value: 'https://example.com/new' })
     const tab = state.tabs[0]
     expect(tab.history).toEqual([
-      `${window.location.origin}/shop/overview`, `${window.location.origin}/shop/incidents`, 'https://example.com/new',
+      `${window.location.origin}/shop/connections`, `${window.location.origin}/shop/incidents`, 'https://example.com/new',
     ])
     expect(browserTabsReducer(state, { type: 'move', offset: 1 }).tabs[0]).toEqual(tab)
     for (const value of ['javascript:alert(1)', 'https://user:secret@example.com', 'https://exa\nmple.com/']) {

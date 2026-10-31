@@ -1,6 +1,10 @@
 # shopops-web
 
 React + TypeScript SPA built with Vite, served by nginx (`nginx.conf`, SPA fallback, `/health`).
+`mock/runtime.ts` runs a Node HTTP mock alongside nginx in the same container;
+`mock/connectors.ts` also serves local Vite requests. Connector state is two public
+demo flags in process RAM, shared across browsers and reset on restart, with no
+database or browser persistence. Do not use these flags to authorize operations.
 
 ## Commands
 
@@ -13,6 +17,9 @@ React + TypeScript SPA built with Vite, served by nginx (`nginx.conf`, SPA fallb
 ## Conventions
 
 - The frontend proxies `/api/` to `shopops-api` using runtime `API_URL`; see README for local and CapRover setup.
+- `/api/mock/` is the explicit exception: nginx proxies it to the same container's
+  loopback Node process without credentials. Keep runtime/handler tests in `mock/`;
+  preserve nginx startup validation, port 80, and shutdown/failure propagation.
 - Function components and hooks only; no class components.
 - Tests query by role/label (`getByRole`), not by CSS class or test id when avoidable.
 

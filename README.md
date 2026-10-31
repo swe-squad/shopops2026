@@ -67,9 +67,13 @@ Built for the [Sea × OpenAI Regional Codex Hackathon — Vietnam](https://codex
 
 The repository contains separate browser and Telegram-style web chat clients, a presentation viewer, operations/chat backends, and an agent-core foundation. **The architecture above is the target design, not a claim of a fully connected live system.** Actual Telegram delivery, per-user provisioning, semantic archival, the shop-write MCP, and live integration require implementation or acceptance evidence. Current setup and limits belong to the [client guide](docs/client-workspace.md) and [agent-core README](services/agent-core/README.md).
 
-For local commands, use the owning service README under [services](services/) and read its `AGENTS.md` before editing. The hackathon keeps the architecture focused: prove a seller's issue-to-verified-action journey, show the isolation boundaries, and label mock versus live evidence honestly.
+Unlike traditional dashboards and alerting tools, the Shopee AI On-Call Agent provides **end-to-end incident management**:
+
+**Monitoring → Diagnosis → Decision Support → Execution → Outcome Verification → Continuous Improvement**
+
+The goal is not merely to notify sellers when something goes wrong, but to **help resolve the issue, verify the result, and progressively automate recurring decisions.**
 
 ## Data MCP design
 
 The Shop Data MCP is implemented in [services/shop-data-mcp](services/shop-data-mcp/README.md), with a [data engineer handoff](services/shop-data-mcp/HANDOFF.md). It is not deployed. See its [configuration contract](docs/shop-data-mcp-configuration.md), [design](plans/reports/research-20261031-data-mcp-design.md) and [implementation plan](plans/261031-shop-data-mcp/plan.md).
-
+For local commands, use the owning service README under [services](services/) and read its `AGENTS.md` before editing. The hackathon keeps the architecture focused: prove a seller's issue-to-verified-action journey, show the isolation boundaries, and label mock versus live evidence honestly.

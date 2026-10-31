@@ -1,10 +1,20 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { createConnectorHandler } from './mock/connectors.ts'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), {
+    name: 'mock-connectors',
+    configureServer(server) {
+      const handle = createConnectorHandler()
+      server.middlewares.use((request, response, next) => {
+        if (request.url?.startsWith('/api/mock/')) handle(request, response)
+        else next()
+      })
+    },
+  }],
   server: {
     port: 5173,
     strictPort: true,
