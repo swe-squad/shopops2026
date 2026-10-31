@@ -170,3 +170,38 @@ are skipped after checksum validation; a migration failure prevents startup and
 is reported in container logs. The database must already exist, and its configured
 user needs permission to create and alter this service's schemas and tables.
 This implementation does not implement MCP/audit systems.
+# MCP integration
+
+The optional MCP bridge exposes `POST /v1/refreshes` and
+`GET /v1/operations/{operation_id}?subject=...&shop_key=...`.
+Apply migration `006_mcp_refreshes.sql` before starting the updated service.
+Set `MCP_SERVICE_TOKEN` to a separate credential matching shop-data-mcp's
+`ingestion_token`, and set `MCP_SUBJECT_USERS_JSON` to an operator-managed mapping
+from trusted JWT subjects to source users (synthetic example:
+`{"agent-a":"+84900000001"}`). Without these values access is denied. Each request
+checks the bearer credential, current source membership and published shop ownership.
+The legacy `X-Demo-User-Id` header does not authenticate the MCP bridge.
+
+POST accepts `subject`, `shop_key`, `resource="snapshot"`, timezone-aware `start`/`end`
+and `idempotency_key`. It atomically stores ownership/request/run, rejects changed
+payload reuse (409), enforces a 300-second shop cooldown (429), a 100-run queue budget,
+and a 365-day lookback ceiling. Receipts are retained for retries. Repeated requests
+return the same operation. Polling requires the same subject/shop and current membership.
+
+This pipeline synchronizes the entire source snapshot; the requested window is audit
+context, not a source filter or historical backfill promise. States map queued/running/
+succeeded/failed to queued/processing/**snapshot_ready**/failed. Successful polling
+includes `refresh_mode="full_snapshot"`, `applied_source_revision`, and `coverage=null`.
+The event-time cutoff in `mart.settings` does not change on refresh. No raw approval is
+implied. The pipeline marks publication and run success in the same transaction.
+
+MCP reads use a separate restricted login per shop in this service's derived database.
+Apply shop-data-mcp's `002-pipeline-access.sql` after cronjob migrations and initial sync,
+then provision its query roles and catalog. Never hand agents the writer credentials.
+Set the MCP caller's `CRONJOB_SERVER_URL` to the private cluster URL
+`http://srv-captain--cronjob-server-dev:8000` (dev) or
+`http://srv-captain--cronjob-server:8000` (production); localhost is for local tests.
+
+Keep cronjob-server and mock-data-server private with **Do not expose as web app** and
+no Port Mapping. Their legacy demo/admin routes are not public authenticated APIs.
+The MCP bridge does not make those existing routes safe to expose publicly.

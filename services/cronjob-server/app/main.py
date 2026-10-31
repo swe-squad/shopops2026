@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from app.api.common import APIError, install_errors
 from app.api.facade import register
+from app.api.mcp import register as register_mcp
 from app.api.openapi import install_openapi
 from app.api.reads import register as register_reads
 from app.api.runs import register as register_runs
@@ -43,6 +44,7 @@ def create_app(*, source=None, start_worker: bool = True) -> FastAPI:
     register(app)
     register_reads(app)
     register_runs(app)
+    register_mcp(app)
     register_settings(app)
 
     @app.get("/health/live")
