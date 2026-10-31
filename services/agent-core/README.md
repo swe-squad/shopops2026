@@ -463,3 +463,18 @@ Astra revisions remain unchanged. Reconcile pending work and activate this revis
 using the stopped-app maintenance workflow before changing the chat namespace.
 New conversations select Luna; existing conversations keep their original model.
 Account access and Agents API compatibility require a separate live check.
+
+### Four existing demo shops
+
+The develop registry and shop-data bindings append three dedicated demo identities
+(`local-demo-002` through `local-demo-004`) and immutable Luna revisions for the
+four-account chat demo. Existing Alice credentials, revisions and binding remain
+unchanged. See the [consumer routing setup](../shopops-chat-api/README.md#four-synthetic-phone-accounts)
+and [CapRover consumer preset](config/caprover-chat-api.env.example).
+
+Before enabling the consumer routes, verify source membership for each phone and
+configure Data MCP with the existing restricted query role and required datasets
+for `shopee-open-platform:1001`, `shopee-open-platform:1002`, `lazada:1001`,
+`shopify:1001`. Do not clone another account's live runtime or rewrite stored
+conversation revisions. Registration reuses each owner's logical orchestrator;
+the first accepted message creates that owner's provider session.

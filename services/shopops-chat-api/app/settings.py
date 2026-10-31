@@ -1,8 +1,26 @@
+import json
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Self
 from urllib.parse import urlsplit
+
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+
+
+class CoreRoute(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+    shop_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
+    config_revision: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
+
+
+def demo_routes() -> dict[str, CoreRoute]:
+    try:
+        return TypeAdapter(dict[str, CoreRoute]).validate_python(
+            json.loads(os.environ.get("AGENT_CORE_DEMO_ROUTES_JSON", "{}")), strict=True
+        )
+    except ValueError, TypeError:
+        raise RuntimeError("Invalid AGENT_CORE_DEMO_ROUTES_JSON") from None
 
 
 @dataclass(frozen=True)
@@ -19,6 +37,7 @@ class Settings:
     core_shop: str = ""
     core_revision: str = ""
     shop_url: str = ""
+    core_routes: dict[str, CoreRoute] = field(default_factory=dict)
 
     @classmethod
     def from_env(cls) -> Self:
@@ -34,6 +53,7 @@ class Settings:
             core_shop=os.environ.get("AGENT_CORE_SHOP_ID", ""),
             core_revision=os.environ.get("AGENT_CORE_CONFIG_REVISION", ""),
             shop_url=os.environ.get("SHOPOPS_API_URL", ""),
+            core_routes=demo_routes(),
         )
 
     def validate(self) -> None:

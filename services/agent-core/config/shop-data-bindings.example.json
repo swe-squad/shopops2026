@@ -9,6 +9,36 @@
       "phone": "+84900000001",
       "shop_key": "shopee-open-platform:1001",
       "coverage_start": "2026-10-17"
+    },
+    {
+      "id": "demo-commerce-002",
+      "version": "1",
+      "tenant_id": "tenant-demo-002",
+      "user_id": "demo-002",
+      "shop_id": "shop-demo-002",
+      "phone": "+84900000002",
+      "shop_key": "shopee-open-platform:1002",
+      "coverage_start": "2026-10-17"
+    },
+    {
+      "id": "demo-commerce-003",
+      "version": "1",
+      "tenant_id": "tenant-demo-003",
+      "user_id": "demo-003",
+      "shop_id": "shop-demo-003",
+      "phone": "+84900000003",
+      "shop_key": "lazada:1001",
+      "coverage_start": "2026-10-17"
+    },
+    {
+      "id": "demo-commerce-004",
+      "version": "1",
+      "tenant_id": "tenant-demo-004",
+      "user_id": "demo-004",
+      "shop_id": "shop-demo-004",
+      "phone": "+84900000004",
+      "shop_key": "shopify:1001",
+      "coverage_start": "2026-10-17"
     }
   ]
 }

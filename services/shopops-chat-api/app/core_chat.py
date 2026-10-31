@@ -19,7 +19,7 @@ from app.agent_core import CoreAPI, CoreError, CoreRequestRejected, identifier
 from app.chat import sse
 from app.contracts import STREAM_RESPONSES, Artifact, ChatEvent, Message, MessageInput, Source
 from app.demo_auth import DemoAuth, PhoneInput
-from app.settings import Settings
+from app.settings import CoreRoute, Settings
 from app.store import BusyError, CoreStore
 
 
@@ -35,9 +35,20 @@ class CoreChat:
     async def db(self, method: str, *args, **kwargs):
         return await asyncio.to_thread(lambda: getattr(self.store, method)(*args, **kwargs))
 
+    def target(self, who: dict) -> CoreRoute:
+        route = self.config.core_routes.get(who["core_token"])
+        if route is None:
+            route = CoreRoute(
+                shop_id=self.config.core_shop, config_revision=self.config.core_revision
+            )
+        if route.shop_id not in who["shop_ids"]:
+            raise HTTPException(404, "Not found")
+        return route
+
     def namespace(self, who: dict) -> tuple[str, str, str]:
+        route = self.target(who)
         configuration = json.dumps(
-            [self.config.core_url.rstrip("/"), self.config.core_shop, self.config.core_revision]
+            [self.config.core_url.rstrip("/"), route.shop_id, route.config_revision]
         )
         actor = json.dumps([who["tenant_id"], who["user_id"]])
         return hashlib.sha256((actor + configuration).encode()).hexdigest(), actor, configuration
@@ -46,31 +57,33 @@ class CoreChat:
         return await self.db("space", *self.namespace(who))
 
     async def provision(self, who: dict, space: dict) -> None:
+        route = self.target(who)
         token, ns = who["core_token"], space["namespace"]
         if not space["orchestrator"]:
             result = await self.api.request(
                 "POST",
-                f"shops/{identifier(self.config.core_shop)}/orchestrator",
+                f"shops/{identifier(route.shop_id)}/orchestrator",
                 token,
-                {"template_id": "shopops", "config_revision": self.config.core_revision},
+                {"template_id": "shopops", "config_revision": route.config_revision},
             )
             space["orchestrator"] = identifier(result["orchestrator_id"])
-            if result.get("config_revision") != self.config.core_revision:
+            if result.get("config_revision") != route.config_revision:
                 raise CoreError("Configuration conflict")
             await self.db("core_space_update", ns, orchestrator=space["orchestrator"])
 
     async def ensure(self, who: dict, space: dict) -> str:
+        route = self.target(who)
         await self.provision(who, space)
         token, ns = who["core_token"], space["namespace"]
         if not space["conversation"]:
             result = await self.api.request(
                 "POST",
-                f"shops/{identifier(self.config.core_shop)}/conversations",
+                f"shops/{identifier(route.shop_id)}/conversations",
                 token,
                 {
                     "orchestrator_id": space["orchestrator"],
                     "client_conversation_id": space["client_id"],
-                    "expected_config_revision": self.config.core_revision,
+                    "expected_config_revision": route.config_revision,
                 },
             )
             space["conversation"] = identifier(result["conversation_id"])
@@ -308,8 +321,7 @@ def create_core_app(config: Settings, transport=None) -> FastAPI:
         if credentials is None:
             raise HTTPException(401, "Unauthorized")
         who = await asyncio.to_thread(chat.auth.resolve, credentials.credentials)
-        if config.core_shop not in who["shop_ids"]:
-            raise HTTPException(404, "Not found")
+        chat.target(who)
         return who
 
     identity_dependency = Depends(authorized)
@@ -357,8 +369,7 @@ def create_core_app(config: Settings, transport=None) -> FastAPI:
         who = chat.auth.identities.get(item.phone_number)
         if who is None:
             raise HTTPException(401, "Unauthorized")
-        if config.core_shop not in who["shop_ids"]:
-            raise HTTPException(404, "Not found")
+        chat.target(who)
         space = await chat.space(who)
         await chat.provision(who, space)
         return await asyncio.to_thread(chat.auth.login, item.phone_number)
@@ -452,5 +463,14 @@ def create_core_app(config: Settings, transport=None) -> FastAPI:
 
     from app.navigation import add_navigation
 
-    add_navigation(app, config, authorized, transport)
+    async def navigation_authorized(
+        credentials: HTTPAuthorizationCredentials | None = bearer_dependency,
+    ) -> dict:
+        who = await authorized(credentials)
+        # The operations mailbox still belongs to the original configured workspace.
+        if chat.target(who).shop_id != config.core_shop:
+            raise HTTPException(403, "Shop navigation is unavailable for this account.")
+        return who
+
+    add_navigation(app, config, navigation_authorized, transport)
     return app
