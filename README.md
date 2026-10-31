@@ -2,6 +2,8 @@
 
 **An AI-powered operations agent that proactively detects, diagnoses, and resolves business-critical issues for Shopee sellers via Telegram.**
 
+The current clients are a standalone shop browser app and a separate Telegram-style mobile orchestrator chat app. A presentation-only viewer can display both independent apps in one tab. See [client setup and service boundaries](docs/client-workspace.md).
+
 ## 1. Problem
 
 Shopee sellers manually monitor daily operations through Seller Center. While the platform provides operational data, sellers still need to identify problems, determine root causes, and take corrective actions themselves.
