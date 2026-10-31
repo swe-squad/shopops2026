@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BrowserPane } from './browser-pane'
 import { catalog, shops } from './test/catalog-fixtures'
@@ -151,14 +151,17 @@ describe('browser tabs', () => {
     const incident = { id: 7, title: 'Carrier handoff', detail: '', created_at: '2026-10-31T09:00:00Z' }
     vi.stubGlobal('fetch', vi.fn(async () => json([incident])))
     render(<BrowserPane token="workspace-secret" requestedUrl={{ url: '/shop/incidents#incident-7', sequence: 7 }} />)
-    await panel().findByRole('heading', { name: incident.title })
     const content = panel().getByLabelText('Shop page content')
-    content.scrollTop = 180
     // A different position would cause a repeated deep-link scroll to move the reader.
-    vi.spyOn(content, 'getBoundingClientRect').mockReturnValue({ top: 100 } as DOMRect)
+    const bounds = vi.spyOn(content, 'getBoundingClientRect').mockReturnValue({ top: 100 } as DOMRect)
+    await panel().findByRole('heading', { name: incident.title })
+    // Wait for the initial scroll effect before simulating the reader's own scroll.
+    await waitFor(() => expect(bounds).toHaveBeenCalledTimes(1))
+    content.scrollTop = 180
     fireEvent.click(screen.getByRole('button', { name: 'New browser tab' }))
     await panel().findByRole('heading', { name: incident.title })
     fireEvent.click(screen.getByRole('tab', { name: 'Incidents — tab 1' }))
     expect(content.scrollTop).toBe(180)
+    expect(bounds).toHaveBeenCalledTimes(1)
   })
 })
