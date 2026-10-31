@@ -95,7 +95,7 @@ def verify_execution(
             and item.get("id")
         ):
             try:
-                words = shlex.split(item["command"])
+                words = _command_words(item["command"])
             except ValueError, KeyError:
                 continue
             # Compound shell syntax needs a richer verifier; leave it unverified.
@@ -174,6 +174,16 @@ def verify_execution(
         "root_completion_verified": True,
         "boundary_probe_verified": probe,
     }
+
+
+def _command_words(command: str) -> list[str]:
+    """Unwrap one observed system bash invocation; never execute shell text."""
+    if not isinstance(command, str):
+        return []
+    words = shlex.split(command)
+    if len(words) == 3 and words[0] in {"/bin/bash", "/usr/bin/bash"} and words[1] == "-lc":
+        return shlex.split(words[2])
+    return words
 
 
 def _plain_path(value: str) -> bool:

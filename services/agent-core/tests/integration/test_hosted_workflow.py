@@ -533,7 +533,8 @@ def test_saved_proof_accepts_real_shaped_items_and_rejects_prompt_claims():
         "fake_knowledge",
     ],
 )
-def test_saved_proof_rejects_incomplete_or_uncorrelated_evidence(damage):
+@pytest.mark.parametrize("wrapped", [False, True])
+def test_saved_proof_rejects_incomplete_or_uncorrelated_evidence(damage, wrapped):
     from scripts.hosted_smoke import EvidenceInvalid, verify_execution
 
     proof = saved_execution()
@@ -569,6 +570,11 @@ def test_saved_proof_rejects_incomplete_or_uncorrelated_evidence(damage):
         proof["children"][1]["items"][0]["content"][0]["text"] = (
             "knowledge:returns-v1:1:nonexistent"
         )
+    if wrapped:
+        import shlex
+
+        for item in proof["items"]:
+            item["command"] = shlex.join(["/bin/bash", "-lc", item["command"]])
     with pytest.raises(EvidenceInvalid):
         verify_execution(**proof, require_probe=damage == "missing_probe")
 
@@ -933,3 +939,29 @@ def test_smoke_failure_diagnostics_are_safe_and_identify_stage(error):
         error if error == "environment_timeout" else "internal_error"
     )
     assert "private" not in json.dumps(evidence)
+
+
+@pytest.mark.parametrize("shell", ["/bin/bash", "/usr/bin/bash"])
+def test_saved_proof_accepts_exact_system_bash_wrapper(shell):
+    import shlex
+
+    from scripts.hosted_smoke import verify_execution
+
+    proof = saved_execution()
+    for item in proof["items"]:
+        item["command"] = shlex.join([shell, "-lc", item["command"]])
+    result = verify_execution(**proof, require_probe=False)
+    assert result["helper_execution_verified"] and result["skill_reads_verified"]
+
+
+@pytest.mark.parametrize("shell", ["/workspace/bash", "bash", "/bin/sh"])
+def test_saved_proof_rejects_unapproved_shell_wrapper(shell):
+    import shlex
+
+    from scripts.hosted_smoke import EvidenceInvalid, verify_execution
+
+    proof = saved_execution()
+    for item in proof["items"]:
+        item["command"] = shlex.join([shell, "-lc", item["command"]])
+    with pytest.raises(EvidenceInvalid):
+        verify_execution(**proof, require_probe=False)
