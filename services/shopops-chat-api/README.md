@@ -39,9 +39,12 @@ ownership. Unknown numbers do not register users or shops. Demo auth is refused 
 local/test. Tokens are random, expire after one hour, are stored only as hashes, and are kept
 only in browser memory. Lock revokes the session; reload requires login again.
 
-First successful login idempotently provisions/retrieves the shop's logical orchestrator and
-persists its ID before issuing a session. Login alone creates no OpenAI session or run. First
-message idempotently creates/reuses the conversation; Core owns provider execution/history.
+Each successful demo login creates a fresh page-scoped chat correlation and idempotently
+retrieves the shop's reusable orchestrator configuration. Browser tokens stay in memory: a full
+page reload requires login and starts with empty history. Within the same page/token, follow-ups,
+Load conversation, and backend restarts keep the same conversation. An older page's pending work
+is not resent or discarded and cannot block a newly opened page. Login alone creates no OpenAI
+session or run; the first message creates the new owned conversation.
 The operator must activate the intended immutable hosted registry revision in Core separately;
 selecting an adapter setting does not activate it. Existing conversations retain their revision.
 

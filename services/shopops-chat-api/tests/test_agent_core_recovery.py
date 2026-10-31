@@ -42,7 +42,7 @@ def test_lost_receipt_exact_replay_restart(tmp_path, boundary):
         if boundary != "orchestrator":
             assert "error" in response.text
     with TestClient(create_app(settings, httpx.MockTransport(transport))) as c:
-        headers = login(c)
+        # Restarting the backend keeps the existing page token and correlation.
         history = c.get("/api/chat/messages", headers=headers)
         assert history.status_code == 200
         assert history.json()[-1]["id"] == M
