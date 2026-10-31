@@ -1,0 +1,30 @@
+{
+  "as_of": "2026-10-31T00:00:00+07:00",
+  "provenance": "data_preparation/data_mock_sample/*/core; selected shop 1001 records",
+  "users": 10,
+  "merchants": 7,
+  "shops": 21,
+  "unique_orders": 140,
+  "visible_orders_per_user": 20,
+  "orders_per_platform": {
+    "shopee-open-platform": 7,
+    "lazada": 7,
+    "shopify": 6
+  },
+  "scenarios": {
+    "baseline_completed": "100000",
+    "baseline_comparison": "100024",
+    "returned_order": "100072",
+    "promotion_loss_fees_review": "100294",
+    "overdue_shipment": "100326",
+    "cancellation": "100330",
+    "recent_comparison": "100301 (Shopee/Lazada)"
+  },
+  "supporting_scenarios": [
+    "inventory snapshots and low stock",
+    "account-health penalties for Shopee/Lazada",
+    "Shopify account-health unsupported",
+    "products with constant demo costs",
+    "cumulative settlement with refund and payout evidence"
+  ]
+}
