@@ -1,0 +1,50 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "screenshots/chat-375x812.png",
+    "outline": [
+      "div#root \"shopops. Agent chat YOUR ON-CALL COMPANI\" @ x0 y0 375x812",
+      "  div.app-shell.standalone-chat \"shopops. Agent chat YOUR ON-C @ x0 y0 375x812",
+      "    header.workspace-header \"shopops. Agent chat\" @ x0 y0 375x69",
+      "    main.chat-unlock \"YOUR ON-CALL COMPANION Your next move, m\" @ x0 y69 375x743",
+      "      div.chat-welcome \"YOUR ON-CALL COMPANION Your next move, m\" @ x16 y101 343x216",
+      "      section.unlock-card \"Open your agent chat Use the same works @ x16 y317 343x344"
+    ],
+    "findings": [],
+    "height": 812
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "screenshots/chat-768x1024.png",
+    "outline": [
+      "div#root \"shopops. Agent chat YOUR ON-CALL COMPANI\" @ x0 y0 768x1024",
+      "  div.app-shell.standalone-chat \"shopops. Agent chat YOUR ON-C @ x64 y0 640x1024",
+      "    header.workspace-header \"shopops. Agent chat\" @ x65 y0 638x69",
+      "    main.chat-unlock \"YOUR ON-CALL COMPANION Your next move, m\" @ x65 y69 638x955",
+      "      div.chat-welcome \"YOUR ON-CALL COMPANION Your next move, m\" @ x89 y101 590x216",
+      "      section.unlock-card \"Open your agent chat Use the same works @ x89 y317 590x306"
+    ],
+    "findings": [],
+    "height": 1024
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "screenshots/chat-1440x900.png",
+    "outline": [
+      "div#root \"shopops. Agent chat YOUR ON-CALL COMPANI\" @ x0 y0 1440x900",
+      "  div.app-shell.standalone-chat \"shopops. Agent chat YOUR ON-C @ x400 y0 640x900",
+      "    main.chat-unlock \"YOUR ON-CALL COMPANION Your next move, m\" @ x401 y69 638x831",
+      "      div.chat-welcome \"YOUR ON-CALL COMPANION Your next move, m\" @ x425 y101 590x216",
+      "      section.unlock-card \"Open your agent chat Use the same works @ x425 y317 590x306"
+    ],
+    "findings": [
+      {
+        "severity": "error",
+        "type": "main-narrow",
+        "target": "main.chat-unlock \"YOUR ON-CALL COMPANION Your next move, m\"",
+        "message": "main content is 638px wide (44% of the viewport)"
+      }
+    ],
+    "height": 900
+  }
+]

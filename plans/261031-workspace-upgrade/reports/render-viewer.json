@@ -1,0 +1,41 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "screenshots/viewer-375x812.png",
+    "outline": [
+      "div#root \"shopops. Browser Chat Shop browser \u21bb \u2197\" @ x0 y0 375x812",
+      "  div.viewer \"shopops. Browser Chat Shop browser \u21bb \u2197\" @ x0 y0 375x812",
+      "    header.viewer-header \"shopops. Browser Chat\" @ x0 y0 375x55",
+      "    main.viewer-main \"Shop browser \u21bb \u2197\" @ x0 y55 375x757",
+      "      div.workspace-grid \"Shop browser \u21bb \u2197\" @ x8 y55 359x749"
+    ],
+    "findings": [],
+    "height": 812
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "screenshots/viewer-768x1024.png",
+    "outline": [
+      "div#root \"shopops. Workspace Browser Chat Shop bro\" @ x0 y0 768x1024",
+      "  div.viewer \"shopops. Workspace Browser Chat Shop bro\" @ x0 y0 768x1024",
+      "    header.viewer-header \"shopops. Workspace Browser Chat\" @ x0 y0 768x52",
+      "    main.viewer-main \"Shop browser \u21bb \u2197\" @ x0 y52 768x972",
+      "      div.workspace-grid \"Shop browser \u21bb \u2197\" @ x16 y52 736x956"
+    ],
+    "findings": [],
+    "height": 1024
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "screenshots/viewer-1440x900.png",
+    "outline": [
+      "div#root \"shopops. Workspace Shop browser \u21bb \u2197 Agen\" @ x0 y0 1440x900",
+      "  div.viewer \"shopops. Workspace Shop browser \u21bb \u2197 Agen\" @ x0 y0 1440x900",
+      "    header.viewer-header \"shopops. Workspace\" @ x0 y0 1440x52",
+      "    main.viewer-main \"Shop browser \u21bb \u2197 Agent chat \u21bb \u2197\" @ x0 y52 1440x848",
+      "      div.workspace-grid \"Shop browser \u21bb \u2197 Agent chat \u21bb \u2197\" @ x16 y52 1408x836"
+    ],
+    "findings": [],
+    "height": 900
+  }
+]

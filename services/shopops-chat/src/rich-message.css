@@ -1,0 +1,18 @@
+.rich-message { min-width: 0; max-width: 100%; line-height: 1.6; }
+.rich-message > :first-child { margin-top: 0; }
+.rich-message > :last-child { margin-bottom: 0; }
+.rich-message p { margin: var(--s2) 0; white-space: pre-wrap; }
+.rich-message h1, .rich-message h2, .rich-message h3 { font-size: var(--text-input); margin: var(--s3) 0 var(--s2); letter-spacing: -.02em; }
+.rich-message h4, .rich-message h5, .rich-message h6 { font-size: var(--text-body); margin: var(--s2) 0; }
+.rich-message ul, .rich-message ol { padding-left: var(--s6); margin: var(--s2) 0; }
+.rich-message blockquote { border-left: var(--focus-width) solid var(--line); margin: var(--s2) 0; padding-left: var(--s3); color: var(--muted); }
+.rich-message code { padding: 2px var(--s1); background: var(--paper); border-radius: var(--radius-small); font-family: var(--shopops-font-mono); font-size: var(--text-small); }
+.rich-message pre { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; margin: var(--s2) 0; border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s3); background: var(--paper); }
+.rich-message pre code { padding: 0; white-space: pre; overflow-wrap: normal; }
+.markdown-table { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; margin: var(--s2) 0; border: 1px solid var(--line); border-radius: var(--radius); }
+.markdown-table table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: var(--text-small); font-variant-numeric: tabular-nums; }
+.markdown-table th, .markdown-table td { border: 1px solid var(--line); padding: var(--s2) var(--s3); text-align: left; min-width: 72px; max-width: 240px; overflow-wrap: anywhere; }
+.markdown-table th { background: var(--paper); font-weight: 600; }
+.rich-message a { overflow-wrap: anywhere; text-decoration-thickness: 1px; }
+.rich-message a:hover { text-decoration-thickness: 2px; }
+.image-placeholder { color: var(--muted); font-size: var(--text-small); }
