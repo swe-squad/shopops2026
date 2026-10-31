@@ -88,7 +88,11 @@ class Settings(StrictConfiguration):
     membership_dsn: SecretStr = Field(
         description="Read-only login to the authoritative access.user_shop_access view"
     )
-    scopes: set[Literal["data:read", "raw:request", "raw:read", "data:refresh"]] = Field(
+    scopes: set[
+        Literal[
+            "data:read", "raw:request", "raw:read", "data:refresh", "cronjob:read", "cronjob:write"
+        ]
+    ] = Field(
         default_factory=lambda: {"data:read"},
         description="Server-controlled capabilities for phone callers; raw still needs approval",
     )
@@ -107,8 +111,21 @@ class Settings(StrictConfiguration):
     refresh_cooldown_seconds: int = Field(default=300, ge=1)
     ingestion_url: str | None = None
     ingestion_token: SecretStr | None = None
+    cronjob_admin_phones: set[str] = Field(
+        default_factory=set,
+        description="Operator allowlist for cronjob admin CRUD; also requires cronjob scopes",
+    )
     approval_url: str | None = None
     approval_token: SecretStr | None = None
+
+    @field_validator("cronjob_admin_phones")
+    @classmethod
+    def valid_admin_phones(cls, values: set[str]) -> set[str]:
+        import re
+
+        if any(not re.fullmatch(r"\+[1-9][0-9]{7,14}", value) for value in values):
+            raise ValueError("Admin identities must be E.164 phone numbers")
+        return values
 
     @field_validator("scopes")
     @classmethod
@@ -133,7 +150,11 @@ class Settings(StrictConfiguration):
                 catalog = Catalog.model_validate(json.loads(Path(catalog_path).read_text()))
                 raw["datasets"] = [d.model_dump() for d in catalog.datasets]
             settings = cls.model_validate(raw)
-            if settings.ingestion_url is not None or settings.ingestion_token is not None:
+            if (
+                settings.ingestion_url is not None
+                or settings.ingestion_token is not None
+                or settings.scopes & {"cronjob:read", "cronjob:write"}
+            ):
                 from app.upstream import Upstream
 
                 Upstream(

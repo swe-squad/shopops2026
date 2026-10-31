@@ -20,6 +20,7 @@
   },
   "ingestion_url": null,
   "ingestion_token": null,
+  "cronjob_admin_phones": [],
   "approval_url": null,
   "approval_token": null,
   "max_rows": 500,

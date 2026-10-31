@@ -8,6 +8,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
 from app.auth import Principal, principal
+from app.cronjob import register_cronjob_tools
 from app.responses import ApprovalCreated, OperationStatus
 from app.service import DataService
 
@@ -236,4 +237,5 @@ def build_server(service: DataService) -> MCPServer:
 
         return await run(request)
 
+    register_cronjob_tools(server, service)
     return server

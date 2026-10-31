@@ -19,6 +19,14 @@ The catalog example targets PR #6's derived schema through `migrations/002-pipel
 
 `list_shops`, `search_catalog`, `describe_dataset`, `query_mart`, `request_raw_access`, `query_raw`, `create_temp_mart`, `query_temp_mart`, `read_result`, `drop_temp_mart`, `request_refresh`, `get_operation`.
 
+Cronjob CRUD adds 70 typed tools: `cronjob_list_<resource>`, `cronjob_get_<resource>`,
+`cronjob_create_<resource>`, `cronjob_update_<resource>`, and `cronjob_delete_<resource>`
+for all 14 source resources, plus `cronjob_get_sync_run`. Enable `cronjob:read` and
+`cronjob:write` in operator `scopes`; admin resources additionally require
+`cronjob_admin_phones`. These capabilities default off and give access to source
+records outside the analytical catalog/grant workflow. See [CRUD configuration,
+resource keys and examples](CRONJOB.md).
+
 Use catalog IDs in SQL, e.g. `SELECT sum(gross_sales) AS sales FROM order_economics`. A raw grant restricts projected columns and the mandatory `[start,end)` time predicate. All raw grants are revalidated after execution and on result access. Saved artifacts bind the exact source grant; changes/revocation deny access even after materialization. Temporary results are queried as table `temp`; columns are text, so cast numeric fields explicitly. Results are capped, paginated and expire. Cleanup of expired rows occurs when the same shop next saves a result; access is denied immediately at expiry. Operators may also schedule deletion of expired `mcp_control.results` rows.
 
 The supported SQL subset includes projections, arithmetic, aggregates, filters, joins and selected casts. CTEs, arbitrary functions, custom types, system relations, writes and role changes are rejected. Unsupported queries fail closed. Two query slots are available per process; set replica/global database limits for total VPS capacity. A result's `truncated` flag must not be ignored when using it as a temporary mart.

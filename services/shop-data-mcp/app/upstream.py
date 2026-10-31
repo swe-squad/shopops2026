@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 import re
 from typing import Any
 
@@ -11,6 +12,14 @@ MAX_RESPONSE_BYTES = 1024 * 1024
 REQUEST_TIMEOUT_SECONDS = 15
 _GET_PATH = re.compile(r"/v1/(?:operations|grants)/[A-Za-z0-9_-]{1,128}")
 _POST_PATHS = {"/v1/refreshes", "/v1/raw-access-requests"}
+
+
+def _omit_request_url(record: logging.LogRecord) -> bool:
+    # HTTPX logs complete URLs at INFO; CRUD query keys can contain phone numbers.
+    return not str(record.msg).startswith("HTTP Request:")
+
+
+logging.getLogger("httpx").addFilter(_omit_request_url)
 
 
 class IntegrationError(ValueError):
@@ -50,19 +59,38 @@ class Upstream:
             raise IntegrationError("Integration configuration is invalid")
         return str(url).rstrip("/")
 
+    def allows(self, method: str, path: str) -> bool:
+        return bool(
+            (method == "POST" and path in _POST_PATHS)
+            or (method == "GET" and _GET_PATH.fullmatch(path))
+        )
+
     async def request(
         self,
         method: str,
         path: str,
         body: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        *,
+        phone: str | None = None,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         base_url = self._configured_url()
-        if not (
-            (method == "POST" and path in _POST_PATHS)
-            or (method == "GET" and _GET_PATH.fullmatch(path))
-        ):
+        if not self.allows(method, path):
             raise IntegrationError("Integration request is invalid")
+        headers = {
+            "Authorization": f"Bearer {self._token}",
+            "Accept": "application/json",
+            "Accept-Encoding": "identity",
+        }
+        if phone is not None:
+            if not re.fullmatch(r"\+[1-9][0-9]{7,14}", phone):
+                raise IntegrationError("Integration identity is invalid")
+            headers["X-Demo-User-Id"] = phone
+        if idempotency_key is not None:
+            if not re.fullmatch(r"[!-~]{1,200}", idempotency_key):
+                raise IntegrationError("Integration idempotency key is invalid")
+            headers["Idempotency-Key"] = idempotency_key
         try:
             # An outer deadline also bounds servers that trickle bytes below the read timeout.
             async with asyncio.timeout(REQUEST_TIMEOUT_SECONDS):
@@ -77,11 +105,7 @@ class Upstream:
                         base_url + path,
                         json=body,
                         params=params,
-                        headers={
-                            "Authorization": f"Bearer {self._token}",
-                            "Accept": "application/json",
-                            "Accept-Encoding": "identity",
-                        },
+                        headers=headers,
                     ) as response:
                         if not 200 <= response.status_code < 300:
                             raise IntegrationError("Integration request failed")

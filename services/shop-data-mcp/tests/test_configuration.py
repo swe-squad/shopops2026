@@ -70,6 +70,24 @@ def test_invalid_server_capabilities_fail_startup(split_config, scopes):
         Settings.load()
 
 
+def test_cronjob_capabilities_require_integration_and_admin_allowlist_is_validated(split_config):
+    config, _, operator_file, _ = split_config
+    config["scopes"] += ["cronjob:read", "cronjob:write"]
+    operator_file.write_text(json.dumps(config))
+    with pytest.raises(ConfigurationError):
+        Settings.load()
+    config["ingestion_url"] = "http://localhost:8001"
+    config["ingestion_token"] = "test-service-token"
+    config["cronjob_admin_phones"] = ["+84900000001"]
+    operator_file.write_text(json.dumps(config))
+    assert Settings.load().cronjob_admin_phones == {"+84900000001"}
+    config["cronjob_admin_phones"] = ["invalid-private-value"]
+    operator_file.write_text(json.dumps(config))
+    with pytest.raises(ConfigurationError) as error:
+        Settings.load()
+    assert "invalid-private-value" not in str(error.value)
+
+
 def test_legacy_inline_catalog_still_loads(split_config, monkeypatch):
     config, catalog, operator_file, _ = split_config
     config.update(catalog)

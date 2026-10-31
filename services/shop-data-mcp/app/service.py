@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from sqlglot import exp, parse_one
 
 from app.auth import Principal
+from app.cronjob import CronjobUpstream
 from app.database import Database
 from app.query import compile_query
 from app.settings import Settings
@@ -25,6 +26,7 @@ class DataService:
 
         self.approval = Upstream(settings.approval_url, secret(settings.approval_token))
         self.ingestion = Upstream(settings.ingestion_url, secret(settings.ingestion_token))
+        self.cronjob = CronjobUpstream(settings.ingestion_url, secret(settings.ingestion_token))
 
     def catalog(self, who: Principal) -> list:
         permitted = self.settings.shops[who.shop].datasets
