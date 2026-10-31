@@ -106,3 +106,11 @@ The template must demonstrate that:
 The first version covers the Agents backend and the components needed to demonstrate its workflows.
 
 The complete user interface, ETL and Data Mart implementation, phone-based authentication, and shop CRUD operations are owned by the other components of the system.
+
+## 8. Hosted Runtime Extension — 2026-10-31
+
+The next template milestone must use the Managed Codex Harness through Agents API with an `openai_hosted` sandbox, actual Python execution, versioned approved skills, two harness-created specialist roles, and scoped downloadable report artifacts. Keep the existing `none` profile for compatibility; its live smoke establishes only the conversation/tool baseline.
+
+The application retains identity, persistence and internal MCP function handlers. Specialists analyze validated root-supplied evidence because the current API does not support function tools in subagents. Do not expose private cluster endpoints or backend credentials to the sandbox.
+
+Normative design, limits and acceptance AC15–AC22: [Managed runtime spec](agents_api_managed_runtime_spec.md). Implementation ownership, difficulty and separate worktrees: [T05–T08 in the task tracker](task-tracker/task_list.md#hosted-runtime-extension-t05t08). The original addition was documentation only; current T05–T08 modules are integrated offline and hosted live acceptance remains unaccepted with exact evidence gaps recorded. See the tracker for verification and live evidence.

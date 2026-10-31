@@ -15,6 +15,7 @@ COPY --chown=app:app config ./config
 COPY --chown=app:app knowledge ./knowledge
 COPY --chown=app:app fixtures ./fixtures
 COPY --chown=app:app contracts ./contracts
+COPY --chown=app:app runtime-bundles ./runtime-bundles
 COPY --chown=app:app scripts ./scripts
 USER app
 

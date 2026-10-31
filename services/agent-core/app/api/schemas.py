@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
@@ -23,6 +23,7 @@ class ConversationInput(Input):
 
 
 class MessageInput(Input):
+    output_mode: Literal["text", "report"] = "text"
     client_message_id: Identifier
     content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=8000)]
 

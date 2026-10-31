@@ -58,7 +58,11 @@ def add_conversations(router: APIRouter, repository: Repository, identity) -> No
         scope, _ = await find_scoped(repository, auth, conversation_id)
         require_permission(auth, "conversation:write")
         result = await repository.enqueue_message(
-            scope, conversation_id, body.client_message_id, body.content
+            scope,
+            conversation_id,
+            body.client_message_id,
+            body.content,
+            **({"output_mode": body.output_mode} if body.output_mode != "text" else {}),
         )
         return EnqueueOutput(
             message_id=result.message.id,

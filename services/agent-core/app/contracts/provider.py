@@ -3,10 +3,12 @@ from contextlib import AbstractAsyncContextManager
 from typing import Literal, Protocol
 
 from app.contracts.models import ApplicationResponse, ConfigSnapshot, Record
+from app.contracts.runtime import ProviderArtifact, ProviderEnvironment
 from app.contracts.tools import PendingToolCall, ToolResult
 
 
 class ProviderSession(Record):
+    environment: ProviderEnvironment | None = None
     id: str
     input_submitted: bool = False
 
@@ -18,6 +20,7 @@ class ProviderItem(Record):
 
 
 class ProviderSnapshot(Record):
+    environment: ProviderEnvironment | None = None
     session_id: str
     root_turn_id: str | None = None
     root_status: Literal[
@@ -32,8 +35,21 @@ class ProviderSnapshot(Record):
 class ProviderEvent(Record):
     id: str
     session_id: str
-    turn_id: str
-    kind: Literal["status", "tool_pending", "completed", "failed", "cancelled"]
+    turn_id: str | None
+    kind: Literal[
+        "status",
+        "tool_pending",
+        "completed",
+        "failed",
+        "cancelled",
+        "environment.provisioning",
+        "environment.connected",
+        "environment.failed",
+        "subagent.started",
+        "subagent.completed",
+        "command.started",
+        "command.completed",
+    ]
     is_root: bool = True
 
 
@@ -43,6 +59,13 @@ class ProviderEventStream(Protocol):
 
 
 class AgentProvider(Protocol):
+    async def list_artifacts(
+        self, session_id: str, turn_id: str
+    ) -> tuple[ProviderArtifact, ...]: ...
+    async def read_artifact(
+        self, session_id: str, artifact_id: str, *, max_bytes: int
+    ) -> bytes: ...
+
     async def create_session(
         self, config: ConfigSnapshot, correlation_id: str, *, initial_input: str | None = None
     ) -> ProviderSession: ...

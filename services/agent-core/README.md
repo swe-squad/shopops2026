@@ -1,5 +1,7 @@
 # agent-core
 
+Hosted runtime roadmap: [Managed Codex Harness / OpenAI-hosted extension spec](agents_api_managed_runtime_spec.md), [T05–T08 task tracker](task-tracker/task_list.md#hosted-runtime-extension-t05t08). T05–T08 modules are integrated offline for hosted sandbox execution, approved skills, delegation and scoped artifacts. End-to-end hosted acceptance is tracked separately by T08; the original live smoke verifies the `none` conversation/tool profile.
+
 FastAPI/Python 3.14 foundation for a durable, scoped ShopOps agent service on port 8000.
 T01 supplies contracts, configuration, SQLite storage, scheduling/recovery, lifecycle and packaging.
 T02 supplies auth/API routes, T03 supplies fake/live Agents API adapters, and T04 supplies MCP/tools.
@@ -246,3 +248,60 @@ AC13 was verified with `gpt-6-astra`: three completed turns, 5%/15% metrics and 
 source-grounded knowledge, follow-up in one session, and confirmed remote/local cleanup. This is
 synthetic local integration evidence; real shop data, external Data MCP/JWT deployment settings,
 and CapRover deployment still require their own configuration and checks.
+
+## Hosted runtime foundation (T05)
+
+Runtime profiles are immutable registry revision data. Legacy snapshots normalize to
+`conversation-v1` / `none` independently of the active revision. `RUNTIME_BUNDLE_PATH` defaults to
+`runtime-bundles`; it is an operator-controlled service-local directory, never a request parameter.
+`config/registry-hosted.example.json` pins the shipped T07 bundle version `1.0.0` and verified
+SHA-256. Its `gpt-6-astra` model is an explicit example, not a default: set OPENAI_MODEL explicitly
+and publish a new matching registry revision before using another model. The example's loopback
+MCP URLs are local/test only; dev deployments need approved cluster endpoints throughout the
+registry. The legacy default registry remains unchanged. The image includes runtime-bundles/.
+RUNTIME_BUNDLE_PATH must name an existing relative directory inside this service; absolute paths,
+parent traversal and symlink escapes fail before provider I/O. Both startup validation and live
+session creation use the selected directory.
+
+Message submission accepts `output_mode=text|report` (default text). Report is invalid for legacy
+profiles and participates in replay/conflict checks. Hosted report answers need a validated root
+report; clarification/cannot_answer can finish without a report. Artifacts are listed at
+`GET /api/v1/runs/{run_id}/artifacts` and downloaded as attachments at
+`GET /api/v1/artifacts/{artifact_id}/content`, using `history:read` and the existing identity scope.
+Provider IDs, bundle payloads and paths are never public inputs.
+
+Schema migration 002 preserves existing rows, adds runtime ownership and artifact metadata, and
+keeps one SQLite owner. Unknown remote outcomes retain blocking/recovery mappings. Provider
+cleanup and bundle packaging are integrated; final T08 hosted evidence remains separately tracked.
+No hosted result is inferred from offline tests. See `contracts/managed-runtime.md`.
+
+The durable setup budget is 60 seconds within the run deadline. First observed connection after
+that budget fails even if the provider now reports connected; established sessions do not receive
+a second setup deadline. Known session/environment IDs are retained for cleanup and recovery.
+
+
+## Hosted acceptance (T08)
+
+The hosted CLI is separate from the original `none` smoke and requires both acknowledgements:
+
+```bash
+OPENAI_MODEL=<supported-model> .venv/bin/python -m scripts.demo_live_hosted --live --hosted \
+  --credentials-file <existing-ignored-file> --evidence .evidence/live-hosted.json
+```
+
+The explicit loader reads only key/model; it never copies credentials into the worktree or sandbox.
+This is billable model/container work using synthetic fixtures, at most two small sandboxes and three
+application turns. The runner verifies actual saved commands, approved skill/helper bytes, two child
+identities, scoped report metrics, follow-up and isolation. It always attempts remote cleanup; unknown
+outcomes preserve recovery state. Default CI skips both live tests; enabling legacy live alone cannot
+enable hosted execution. A live failure includes only its fixed stage and safe run status/error.
+See [hosted acceptance and recovery](contracts/hosted-acceptance.md) and the tracker for current
+verification. A connected sandbox alone does not satisfy end-to-end hosted acceptance.
+
+
+Current integrated checks: 428 offline tests passed; both live suites skipped by default; Docker
+build and recorded volume recreation passed. Four authorized hosted attempts were cleaned up.
+The final attempt verified the approved helper and skill reads, but exact boundary-probe proof and
+child role binding remain unverified (`instructions=null`). Full hosted acceptance is NOT ACCEPTED;
+artifact/follow-up/isolation live checks did not run past that proof gate. See the tracker before
+merging or treating this template as accepted for a real integration.

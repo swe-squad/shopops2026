@@ -19,7 +19,11 @@ from app.tools.credentials import Credentials
 
 
 def build_configured_router(
-    repository: Repository, settings: Settings, readiness: Callable[[], Awaitable[bool]]
+    repository: Repository,
+    settings: Settings,
+    readiness: Callable[[], Awaitable[bool]],
+    *,
+    provider: AgentProvider | None = None,
 ) -> APIRouter:
     if settings.auth_mode == "fixture":
         authenticator = FixtureAuthenticator(app_env=settings.app_env)
@@ -29,7 +33,9 @@ def build_configured_router(
             issuer=settings.auth_issuer,
             audience=settings.auth_audience,
         )
-    return build_api_router(repository, authenticator.authenticate, readiness)
+    return build_api_router(
+        repository, authenticator.authenticate, readiness, artifact_provider=provider
+    )
 
 
 def build_configured_provider(
@@ -47,6 +53,7 @@ def build_configured_provider(
             repository.load_sources,
             api_key=settings.openai_api_key,
             model=settings.openai_model,
+            bundle_root=settings.runtime_bundle_root,
         )
     return None
 
@@ -55,6 +62,16 @@ def build_configured_bridge(
     repository: Repository, registry: Registry, settings: Settings
 ) -> MCPToolBridge:
     snapshots = registry.snapshots()
+    # Validate every pinned hosted bundle before any session can be created.
+    for snapshot in snapshots:
+        profile = snapshot.runtime_profile
+        if profile.environment_type == "openai_hosted":
+            from app.agents.runtime_bundle import build_runtime_bundle
+            from app.providers.hosted_runtime import build_hosted_environment
+
+            build_hosted_environment(
+                profile, build_runtime_bundle(profile, bundle_root=settings.runtime_bundle_root)
+            )
     client = MCPClient(
         allowed_urls=frozenset(
             url

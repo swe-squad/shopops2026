@@ -61,6 +61,7 @@ class Sessions:
 
     async def delete(self, session_id):
         self.deleted = True
+        return {"id": session_id, "deleted": True}
 
 
 def adapter():
