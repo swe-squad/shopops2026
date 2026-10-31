@@ -4,7 +4,7 @@
 
 Create a reusable template for the Agents component using **OpenAI Agents API**. The template must support development with mock data and allow integration with real services later.
 
-Initial assumption for this template: **one orchestrator per shop**, with separate conversation sessions for individual users. Confirm the provisioning owner (shop or user) with the registration team.
+Confirmed target: **one dedicated logical agent team per registered user**, with one orchestrator and 2–3 specialists in OpenAI-hosted environments reserved for that user. The product server owns registration and requests provisioning using this boilerplate. This supersedes the earlier per-shop assumption; existing code/contracts still require the [integration alignment work](../../docs/agent-integration.md).
 
 ## 2. Functional Requirements
 
@@ -52,17 +52,17 @@ The orchestrator owns user interaction and must support delegation to specialist
 
 ### 2.6. Registration and Provisioning
 
-- Accept a request to provision an orchestrator for a shop.
+- Accept a trusted product-server request to provision a registered user's team in an OpenAI-hosted environment; shop access is a separate authorization dimension.
 - Associate the instance with its template, knowledge bundle, and MCP configuration.
 - Return an `orchestrator_id`.
-- Handle repeated registration requests without creating duplicate orchestrators.
+- Handle repeated registration requests without creating duplicate user teams or retrying an uncertain provider creation blindly.
 - Create a separate session for each conversation.
 
 ## 3. Minimum Application API
 
 | Capability | Purpose |
 | --- | --- |
-| Provision orchestrator | Create or return the orchestrator instance for a shop. |
+| Provision user team | Create or return the registered user's logical team and its provisioning state. |
 | Create conversation | Start a new application conversation. |
 | Send message | Submit a request or continue a conversation. |
 | Get events or results | Retrieve progress and final responses. |
@@ -93,7 +93,7 @@ Secrets must be supplied through environment variables or the system's secret ma
 
 The template must demonstrate that:
 
-1. Provisioning a shop returns an orchestrator; repeated requests return the same instance.
+1. Product-server registration provisions a user-owned team; repeated requests return the same logical assignment, and another user cannot access its live session or environment.
 2. A user can ask for business data and receive the expected result from the mock Data MCP.
 3. A user can ask a business question and receive an answer grounded in the sample knowledge bundle.
 4. Follow-up questions retain the relevant conversation context.

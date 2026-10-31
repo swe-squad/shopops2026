@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1020" role="img" aria-labelledby="title desc">
+<title id="title">ShopOps — managed agents, guarded shop data</title>
+<desc id="desc">Target architecture. ShopOps applications exchange sessions and events with the OpenAI-managed Codex harness and a dedicated user sandbox. Scoped MCP services authorize identity and constrain every query. ShopOps owns data services; OpenAI owns the agent runtime. Connections are logical, not deployed network routes.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1 7 4 1 7" fill="none" stroke="#1C1B1A" stroke-width="1.2"/></marker></defs>
+<style>text{font-family:Inter,Arial,sans-serif;fill:#1C1B1A} .title{font-size:31px;font-weight:700}.head{font-size:24px;font-weight:600}.body{font-size:20px}.small{font-size:18px;fill:#555960}.label{font-size:19px;fill:#555960}.arrow{fill:none;stroke:#1C1B1A;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect width="1440" height="1020" fill="#F9F6F0"/>
+<text x="48" y="58" class="title">shopops<tspan fill="#F4511E">.</tspan> Managed agents. Guarded shop data.</text>
+<text x="48" y="91" class="small">Target design · Logical boundaries · Provisioning and live integrations require verification</text>
+
+<text x="48" y="160" class="head">ShopOps application</text>
+<rect x="535" y="126" width="857" height="370" rx="8" fill="none" stroke="#555960" stroke-width="1.7" stroke-dasharray="9 7"/>
+<text x="560" y="165" class="head">Provisioned and managed by OpenAI</text>
+<rect x="48" y="204" width="302" height="257" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="70" y="243" class="head">Chat + session gateway</text>
+<text x="70" y="281" class="body">Human ↔ agent triage</text>
+<text x="70" y="310" class="body">Identity and approvals</text>
+<text x="70" y="339" class="body">User → team assignment</text>
+<text x="70" y="368" class="body">Web: BI + shop state</text>
+<rect x="560" y="204" width="302" height="257" rx="8" fill="#DCE5F5" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="582" y="243" class="head">OpenAI Agents API</text>
+<text x="582" y="281" class="body">Managed Codex agent</text>
+<text x="582" y="310" class="body">1 orchestrator</text>
+<text x="582" y="339" class="body">2–3 specialist subagents</text>
+<text x="582" y="368" class="body">Sessions, events, recovery</text>
+<rect x="1060" y="204" width="308" height="257" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="1082" y="243" class="head">User sandbox</text>
+<text x="1082" y="281" class="body">Exclusive to one user</text>
+<text x="1082" y="310" class="body">Code, skills, files</text>
+<text x="1082" y="339" class="body">Team shares workspace</text>
+<text x="1082" y="368" class="body">Lifecycle ≠ user lifetime</text>
+<path d="M358 274H549" class="arrow"/>
+<text x="395" y="256" class="label">Sessions</text>
+<path d="M550 396H359" class="arrow"/>
+<text x="375" y="377" class="label">Events + output</text>
+<path d="M870 274H1049" class="arrow"/>
+<text x="902" y="256" class="label">Tool calls</text>
+<path d="M1050 396H871" class="arrow"/>
+<text x="898" y="377" class="label">Tool results</text>
+<path d="M1214 496L1214 562" marker-start="url(#arrow)" class="arrow"/>
+<text x="925" y="537" class="label">Scoped MCP calls + results</text>
+<rect x="48" y="562" width="1344" height="118" rx="8" fill="#FFFFFF" stroke="#B5310B" stroke-width="2"/>
+<text x="72" y="600" class="head">ShopOps MCP boundary</text>
+<text x="72" y="635" class="body">Layer 1: verified identity + permissions     →     Layer 2: mandatory tenant / shop / product query scope</text>
+<text x="72" y="662" class="small">A sandbox, phone header, or model-supplied shop ID is not authorization.</text>
+<path d="M265 680L265 725" class="arrow"/>
+<path d="M720 680L720 725" class="arrow"/>
+<path d="M1175 680L1175 725" class="arrow"/>
+<rect x="48" y="728" width="434" height="147" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="70" y="767" class="head">Data MCP</text>
+<text x="70" y="805" class="body">Read evidence from raw data / mart</text>
+<text x="70" y="834" class="body">Typed tools; bounded results</text>
+<rect x="503" y="728" width="434" height="147" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="525" y="767" class="head">Knowledge + memory MCP</text>
+<text x="525" y="805" class="body">Domain knowledge and user memory</text>
+<text x="525" y="834" class="body">Scoped semantic turn-history recall</text>
+<rect x="958" y="728" width="434" height="147" rx="8" fill="#FFFFFF" stroke="#1C1B1A" stroke-width="1.6"/>
+<text x="980" y="767" class="head">Shop operations MCP</text>
+<text x="980" y="805" class="body">Approved listing / operation changes</text>
+<text x="980" y="834" class="body">Audit, verify, revert where supported</text>
+<text x="48" y="922" class="body">Connectors → raw data → data mart</text>
+<text x="503" y="922" class="body">~10 min idle: archive safe segments</text>
+<text x="958" y="922" class="body">Shopee API or explicit mock server</text>
+<text x="48" y="974" class="small">ShopOps services remain independently deployed on CapRover; hosted agents need a reachable, authenticated MCP ingress.</text>
+</svg>

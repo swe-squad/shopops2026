@@ -1,5 +1,7 @@
 # Extending the independent ShopOps clients
 
+The [system architecture](system-architecture.md) and [data/MCP design](data-and-mcp.md) define the confirmed target. This guide describes the existing foundation; its shared-workspace access does not implement the target per-user isolation.
+
 Read [client setup](client-workspace.md), [brand guidelines](brand/design-guidelines.md), and the owning service's `AGENTS.md`. Browser, Telegram-style chat and viewer remain three separate apps. Integrate through API contracts; never import application code from another service.
 
 ## Choose the owner

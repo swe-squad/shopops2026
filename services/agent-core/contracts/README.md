@@ -1,5 +1,13 @@
 # Shared foundation contract v1
 
+> Alignment note: this document records the earlier starter implementation. The confirmed target
+> makes agent-core a reusable agents-service boilerplate invoked by the product server during user
+> registration, with dedicated per-user OpenAI-hosted teams. Shop-shared configuration, deferred
+> sandboxes/specialists, and polling-only delivery below are not target product decisions. Follow
+> the [integration checklist](../../../docs/agent-integration.md) to reconcile contracts and consumers together; this note
+> does not change the implemented API or claim live acceptance.
+
+
 Python contracts in `app/contracts/` are the source of truth. All I/O interfaces are async;
 SQLite uses `asyncio.to_thread` and a separate connection per short transaction.
 Models are Pydantic frozen records with forbidden extra fields. JSON uses UTF-8, UUID
