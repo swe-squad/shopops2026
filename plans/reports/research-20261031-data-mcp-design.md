@@ -1,6 +1,6 @@
 # ShopOps data MCP: proposed design
 
-Research date: 2026-10-31, Asia/Ho_Chi_Minh. Revised with owner decisions: PostgreSQL on VPS, Codex Agents API, temporary ad hoc marts, automatic fresh pulls, data protection as priority. Status: proposed implementation design; no service scaffold or live integration implemented.
+Research date: 2026-10-31, Asia/Ho_Chi_Minh. Revised with owner decisions: PostgreSQL on VPS, Codex Agents API, temporary ad hoc marts, automatic fresh pulls, data protection as priority. Status: proposed implementation design; no service scaffold or live integration implemented. Deployment decisions: public authenticated MCP HTTPS with direct OpenAI connection; private PostgreSQL; dev only. See the [configuration contract](../../docs/shop-data-mcp-configuration.md) and [validated implementation plan](../261031-shop-data-mcp/plan.md).
 
 ## Navigation
 
@@ -23,7 +23,7 @@ Research date: 2026-10-31, Asia/Ho_Chi_Minh. Revised with owner decisions: Postg
 
 ## Evidence and choices
 
-Repository evidence:
+Repository evidence (historical inspection in the original checkout; `data_mock_sample/` is absent from this feature worktree and is an explicit schema/fixture dependency):
 
 - `README.md` describes a Telegram-first operational agent with seller approval.
 - `data_mock_sample/README.md` documents PostgreSQL raw/core/mart layers, composite shop keys, source-document links, synthetic data, unknown-value semantics and limited historical reconstruction.
@@ -182,7 +182,7 @@ Mask buyer contact/address fields at the accessible projection before query exec
 
 ## Delivery and open questions
 
-Next: settle the integration questions below, then create the service plan and scaffold. Implement all three paths with real adapters; use fixtures for deterministic verification and label them synthetic. Do not substitute fixtures for live-service integration claims.
+Next: follow the implementation plan and acquire the missing integration contracts before scaffolding live adapters. Implement all three paths with real adapters; use fixtures for deterministic verification and label them synthetic. Do not substitute fixtures for live-service integration claims.
 
 Verification must include novel analytical queries, join-fanout mistakes, unsupported capabilities, cross-shop attacks, raw access through alternate relations, forged/expired/revoked grants, changed approval scope, unauthorized result-handle access, retry deduplication and collection/processing failures. Measure calls, tokens returned, latency and answer correctness on representative investigations before setting budgets. No runtime tests were run for this design-only report.
 
@@ -190,5 +190,5 @@ Open questions:
 
 1. What PostgreSQL version/schema and ingestion/processing API contracts should implementation target? Engine is settled as PostgreSQL on VPS.
 2. Where is the trusted owner identity/raw-approval workflow implemented? Agent host is settled as Codex Agents API.
-3. Will the Agents API connect directly over authenticated HTTPS or through a self-hosted environment? This determines MCP exposure; PostgreSQL stays private.
-4. Should initial deployment cover dev only or dev + production? Temporary-only marts and automatic bounded refresh are settled.
+3. Resolved: direct OpenAI connection over authenticated public HTTPS; PostgreSQL stays private.
+4. Resolved: dev only. Temporary-only marts and automatic bounded refresh are settled. Ingestion/processing and owner identity/raw-approval integrations do not exist yet; remind owner before live implementation and deployment.

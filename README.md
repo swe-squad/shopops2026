@@ -83,3 +83,7 @@ Unlike traditional dashboards and alerting tools, the Shopee AI On-Call Agent pr
 **Monitoring → Diagnosis → Decision Support → Execution → Outcome Verification → Continuous Improvement**
 
 The goal is not merely to notify sellers when something goes wrong, but to **help resolve the issue, verify the result, and progressively automate recurring decisions.**
+
+## Data MCP design
+
+The Shop Data MCP is planned, not deployed. See its [configuration contract](docs/shop-data-mcp-configuration.md), [design](plans/reports/research-20261031-data-mcp-design.md) and [implementation plan](plans/261031-shop-data-mcp/plan.md).
