@@ -1,20 +1,24 @@
 import { Fragment, useLayoutEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { displayTime } from './browser-url'
+import { ArtifactDownload } from './artifact-download'
 import { ChatActionsMenu } from './chat-actions-menu'
 import { conversationDay } from './conversation-date'
 import { RichMessage } from './rich-message'
 import { useChatController } from './use-chat-controller'
 import { useConversationScroll } from './use-conversation-scroll'
 
-export function ChatClient({ token, onNavigate, onLock, navigation }: {
+export function ChatClient({ token, onNavigate, onLock, navigation, reports = false, demo = false }: {
   token: string
+  reports?: boolean
+  demo?: boolean
   onNavigate: (url: string) => void
   onLock: () => void
   navigation: { notice: string; failed: boolean; retry: () => void; dismiss: () => void }
 }) {
   const chat = useChatController(token)
   const [draft, setDraft] = useState('')
+  const [outputMode, setOutputMode] = useState<'text' | 'report'>('text')
   const composer = useRef<HTMLTextAreaElement>(null)
   const { conversation, content, awayFromLatest, hasNewContent, onScroll, jumpToLatest } = useConversationScroll(chat.messages, chat.loading, chat.error)
 
@@ -31,7 +35,7 @@ export function ChatClient({ token, onNavigate, onLock, navigation }: {
     if (!text || chat.loading || chat.sending || chat.stopped) return
     jumpToLatest()
     setDraft('')
-    void chat.send(text)
+    void chat.send(text, outputMode)
     composer.current?.focus({ preventScroll: true })
   }
 
@@ -58,6 +62,7 @@ export function ChatClient({ token, onNavigate, onLock, navigation }: {
               {day && day.key !== previousDay?.key && <div className="conversation-day"><time dateTime={day.key}>{day.label}</time></div>}
               <article className={`chat-bubble ${message.role === 'assistant' ? 'assistant-bubble' : 'user-bubble'}`} aria-label={message.role === 'assistant' ? 'Agent message' : 'Your message'}>
                 {message.text ? <RichMessage text={message.text} onNavigate={onNavigate} /> : <span className="typing-indicator" aria-label={chat.sending ? 'Agent is thinking' : 'No response received'}>{chat.sending ? 'Thinking…' : 'No response received'}</span>}
+                {reports && message.artifacts?.map(artifact => <ArtifactDownload key={artifact.id} artifact={artifact} token={token} />)}
                 <time dateTime={message.created_at}>{displayTime(message.created_at)}</time>
               </article>
             </Fragment>
@@ -75,6 +80,8 @@ export function ChatClient({ token, onNavigate, onLock, navigation }: {
       </aside>}
       {chat.sending && <div className="stream-status"><span role="status"><span className="response-dot" aria-hidden="true" />Agent is responding…</span><button type="button" className="text-button" onClick={chat.stop}>Stop response</button></div>}
       {chat.stopped && !chat.loading && <div className="recovery-status" role="group" aria-label="Conversation recovery"><span>Load history to continue</span><button type="button" className="text-button" onClick={reload}>Load conversation</button></div>}
+      {demo && chat.stopped && <p role="status">Viewing stopped. The agent may still be working; load history to check.</p>}
+      {reports && <label className="report-choice">Response format <select value={outputMode} onChange={event => setOutputMode(event.target.value as 'text' | 'report')} disabled={chat.loading || chat.sending || chat.stopped}><option value="text">Text</option><option value="report">Report</option></select></label>}
       <form className="chat-composer" onSubmit={submit}>
         <label htmlFor="chat-message" className="sr-only">Message</label>
         <textarea id="chat-message" ref={composer} rows={1} maxLength={2000} value={draft} onChange={event => setDraft(event.target.value)} placeholder="Message" disabled={chat.loading || chat.stopped} aria-describedby="composer-hint"

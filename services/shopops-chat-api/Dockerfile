@@ -11,7 +11,8 @@ RUN pip install -r requirements.txt
 
 RUN useradd --system --uid 1001 app && mkdir /data && chown app:app /data
 COPY --chown=app:app app ./app
+COPY --chown=app:app fixtures ./fixtures
 USER app
 
 EXPOSE 8000
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --no-access-log --proxy-headers --forwarded-allow-ips='*'"]

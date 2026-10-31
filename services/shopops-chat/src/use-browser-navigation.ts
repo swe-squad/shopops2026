@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { browserUrl } from './browser-url'
 import { authHeaders, checkResponse } from './workspace-api'
 
-export function useBrowserNavigation(token: string) {
+export function useBrowserNavigation(token: string, demo = false) {
   const [notice, setNotice] = useState('')
   const [failed, setFailed] = useState(false)
   const current = useRef<AbortController | null>(null)
@@ -19,7 +19,7 @@ export function useBrowserNavigation(token: string) {
     setNotice('Sending link to your shop browser…')
     setFailed(false)
     try {
-      const response = await fetch('/api/operations/navigation', {
+      const response = await fetch(demo ? '/api/chat/navigation' : '/api/operations/navigation', {
         method: 'POST', headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }), signal: controller.signal,
       })

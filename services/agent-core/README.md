@@ -317,3 +317,19 @@ The final attempt verified the approved helper and skill reads, but exact bounda
 child role binding remain unverified (`instructions=null`). Full hosted acceptance is NOT ACCEPTED;
 artifact/follow-up/isolation live checks did not run past that proof gate. See the tracker before
 merging or treating this template as accepted for a real integration.
+
+
+## T09 chat adapter fixture
+
+The single demo phone in `shopops-chat-api` uses the existing `local-alice` credential,
+restricted by that adapter to `shop-a`. Existing Core fixtures and permissions are unchanged.
+The first successful login ensures only the configured logical orchestrator. Core creates its
+provider session/environment on first input. Operator activation of an immutable hosted revision
+is still required; hosted proof gates from T08 remain UNVERIFIED.
+
+`tests/chat_loopback.py` is a test-only process fixture using the actual Core app, worker and its
+own SQLite database with an explicit synthetic provider/tools. It refuses external network
+connections and is not shipped as a production app. Install Core's private Python3.14 test
+environment, then run the chat API's `AGENT_CORE_LOOPBACK=1` offline acceptance separately from
+independent service CI. Report/download and restart results from this fixture prove the HTTP
+application boundary, not real skill, specialist or sandbox execution.

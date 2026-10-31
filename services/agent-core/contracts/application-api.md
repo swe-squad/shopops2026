@@ -110,3 +110,21 @@ and returns items with local id, run_id, filename, media_type, size, sha256 and 
 `GET /artifacts/{artifact_id}/content` resolves local scoped ownership before provider access;
 foreign IDs are 404, unavailable content 410, invalid payload 502, transient I/O 503. Responses
 use attachment disposition and nosniff; no provider redirect or user-selected path is accepted.
+
+
+## T09 atomic conversation revision guard
+
+Conversation creation accepts optional `expected_config_revision` (nonempty trimmed identifier,
+at most128 characters). The chat adapter supplies its configured immutable revision on every
+create/replay. Within the same SQLite write transaction as conversation creation, Core compares
+the expected revision to the shop orchestrator's active revision. A mismatch returns409
+`configuration_conflict` before inserting a conversation. An earlier provisioning call is not
+an atomic guarantee: administrative activation may happen between HTTP requests.
+
+Replay looks up the existing scoped client conversation key first. A matching expected revision
+returns that same conversation/snapshot even after a different shop revision is activated.
+A different orchestrator or expected revision on the same key returns409 `idempotency_conflict`.
+This preserves recovery of a lost create receipt without silently adopting a new revision.
+Omitting the field retains the existing API behavior for older clients. The HTTP response shape
+is unchanged. Deploy this compatible Core amendment before the new chat adapter; an older Core
+rejects the extra field rather than providing the revision guarantee.

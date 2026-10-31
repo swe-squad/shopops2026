@@ -229,3 +229,43 @@ def test_live_source_loader_filters_session_turn_and_failed_results(repo, scope)
         assert await repo.load_sources("s", "other") == ()
 
     asyncio.run(exercise())
+
+
+def test_expected_conversation_revision_is_checked_atomically(repo, scope, registry):
+    from app.contracts.errors import ConfigurationConflict, IdempotencyConflict
+
+    async def execute():
+        orchestrator = (await repo.provision(scope, "shopops", "returns-v1")).record
+        pinned = (
+            await repo.create_conversation(
+                scope, orchestrator.id, "pinned", expected_config_revision="returns-v1"
+            )
+        ).record
+        registry.register(
+            registry.get("shopops", "returns-v1").model_copy(update={"revision": "returns-v2"})
+        )
+        await repo.activate_revision(scope, "shopops", "returns-v2")
+        with pytest.raises(ConfigurationConflict):
+            await repo.create_conversation(
+                scope, orchestrator.id, "new", expected_config_revision="returns-v1"
+            )
+        replay = await repo.create_conversation(
+            scope, orchestrator.id, "pinned", expected_config_revision="returns-v1"
+        )
+        assert not replay.created and replay.record.id == pinned.id
+        assert replay.record.config.revision == "returns-v1"
+        with pytest.raises(IdempotencyConflict):
+            await repo.create_conversation(
+                scope, orchestrator.id, "pinned", expected_config_revision="returns-v2"
+            )
+        # The rejected create did not reserve its key or create a mismatched snapshot.
+        await repo.activate_revision(scope, "shopops", "returns-v1")
+        recovered = await repo.create_conversation(
+            scope, orchestrator.id, "new", expected_config_revision="returns-v1"
+        )
+        assert recovered.created and recovered.record.config.revision == "returns-v1"
+        await repo.activate_revision(scope, "shopops", "returns-v2")
+        legacy = await repo.create_conversation(scope, orchestrator.id, "legacy-client")
+        assert legacy.record.config.revision == "returns-v2"
+
+    run(execute())

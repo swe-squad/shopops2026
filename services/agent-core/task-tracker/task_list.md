@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use `superpowers:executing-plans` for inline implementation, or `superpowers:subagent-driven-development` when delegation is explicitly selected. Checkboxes track implementation progress. This tracker does not authorize implementation or deployment by itself.
 
-**Goal:** Preserve the delivered T01–T04 conversation/tool baseline and deliver the hosted runtime extension through T05–T08, with explicit ownership and integration gates.
+**Goal:** Preserve the delivered T01–T04 conversation/tool baseline and deliver the hosted runtime extension through T05–T08, with explicit ownership and integration gates, then connect the existing chat client through T09.
 
 **Architecture:** FastAPI exposes scoped conversation APIs. A durable SQLite-backed worker coordinates the Agents API provider and application function tools bridged to internal MCP services.
 
@@ -10,7 +10,11 @@
 
 **Spec:** [Agent Core Template Spec](../agents_api_template_spec.md).
 
-All implementation changes must stay inside `services/agent-core/`, the existing repository path (plural `services`, not `service`). Paths in task descriptions are relative to this service directory. A worktree contains the full repository, but its implementation working directory is `<worktree>/services/agent-core/`. T01–T04 statuses describe the delivered conversation/tool baseline; T05–T08 have delivered their offline modules; hosted live acceptance is tracked separately below. Owner numbers are role placeholders, not assignments to named people.
+For T01–T08, all implementation changes must stay inside `services/agent-core/`, the existing repository path (plural `services`, not `service`). Paths in task descriptions are relative to this service directory. A worktree contains the full repository, but its implementation working directory is `<worktree>/services/agent-core/`. T01–T04 statuses describe the delivered conversation/tool baseline; T05–T08 have delivered their offline modules; hosted live acceptance is tracked separately below. Owner numbers are role placeholders, not assignments to named people.
+
+T09 is a separate client-integration milestone. Its proposed cross-service implementation scope is
+explicitly listed in its description; this task-creation change edits only this service's tracker
+and task description. It does not start implementation or change the T01–T08 ownership boundary.
 
 ## Task list
 
@@ -24,6 +28,7 @@ All implementation changes must stay inside `services/agent-core/`, the existing
 | T06 | [OpenAI-hosted provider and lifecycle](desciption/T06-hosted-provider.md) | D5 — Very hard | Provider developer | Ready for integration | Published T05 runtime foundation SHA | T05 wiring and T07 bundle for integrated live execution |
 | T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Ready for integration | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
 | T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Ready for integration | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
+| T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | Ready for integration | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
 
@@ -370,3 +375,91 @@ remains intact. No uncommitted task files were copied.
 T08 now consumes the committed integration fixes and wiring. The original handoff records above
 remain historical module evidence; actual live acceptance is recorded separately and cannot be
 inferred from any offline count.
+
+
+## Chat client integration follow-up (T09)
+
+**Task:** [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md).
+**Status:** Ready for integration — T09-R01/R02 resolved offline; hosted acceptance UNVERIFIED. **Difficulty:** D5 — Very hard.
+**Scope:** one demo phone user, one configured shop, one logical shop orchestrator; no OTP.
+**Planning baseline:** `53d094e`, the
+`develop` merge of PR #8. This supersedes the earlier draft-delivery note for that PR only;
+merging did not close the T08 live-proof gaps.
+
+The selected integration keeps `shopops-chat` and its existing same-origin backend boundary:
+`shopops-chat → shopops-chat-api → agent-core → OpenAI Agents API (openai_hosted)`.
+The chat API adapts one-user phone demo login (no OTP), the configured owner/shop scope, durable application IDs,
+run polling, history, navigation and downloads;
+Agent Core alone owns provider sessions, tool execution, runtime recovery and report validation.
+
+T09 can implement contract, UI and offline integration tests immediately from this committed
+baseline. Its full hosted acceptance depends on T08's exact probe evidence and child-role proof
+being accepted; unavailable evidence must remain unverified. The single demo identity, existing scope-denial checks, honest
+SSE/cancellation behavior and legacy database cutover are pinned in the task description.
+
+Use a separate implementation branch `feat/shopops-chat-agent-core`, worktree label
+`shopops-chat-agent-core`; Git fallback `/tmp/shopops2026-agent-core/T09`. Prefer a native managed
+worktree and record its actual path. No T09 implementation worktree or code is created by this
+planning change. The documentation branch is `docs/agent-core-chat-integration-task`, reusing the
+clean managed worktree `/home/khalee-dev/.codex/worktrees/3913/shopops2026`; the original dirty
+checkout and all module task worktrees are preserved.
+
+
+### T09 single-user scope amendment
+
+The user reduced the current demo to **one user and one shop**. Use the existing `local-alice`
+Core fixture for the one configured phone/owner and selected `shop-a`; it already has all three
+required permissions. Existing Core identities and permissions, including `local-bob`, remain
+unchanged. The earlier two-user fixture requirement/additional-identity proposal is superseded.
+First login ensures the shop's logical orchestrator idempotently; re-login reuses it, and the first
+message starts the provider session through Core. Keep foreign-resource/invalid-session negative
+checks without adding a second supported demo login or a user/shop registration system.
+
+Implementation worktree now exists at `/tmp/shopops2026-agent-core/T09` on
+`feat/shopops-chat-agent-core`, based on `fd3be2f`; preserve its owner's uncommitted test work.
+This updates the earlier planning-time worktree note. This amendment changes task documents only.
+
+
+### T09 offline implementation handoff
+
+Implemented on `feat/shopops-chat-agent-core` at `/tmp/shopops2026-agent-core/T09`, base `fd3be2f`,
+with the `479c27f` single-owner amendment. Backend `0f32e6e`, frontend `ba5f3eb`; the following
+Core test/handoff commit records final support/evidence. Chat API CI:93 passed/1 loopback skipped;
+explicit real-Core offline loopback:1 passed; frontend CI:48 passed; Core CI:428 passed/2 live skipped.
+Both chat images built; network-isolated API volume recreation and desktop/mobile browser checks pass.
+Existing Core identities/permissions and unrelated clients remain unchanged. Review's lease-expiry
+finding was fixed with an observed RED→GREEN regression. Service-local AST graphs updated.
+See the T09 handoff for commands, scope, the separate loopback opt-in ruling and evidence limits.
+T09 was reported Ready for integration at the original offline handoff. The independent review
+below reopens it for two P1 corrections; real hosted acceptance and both T08 proof gates remain
+UNVERIFIED/unaccepted. No paid call, merge or deployment was used for implementation verification.
+
+
+### T09 independent review: two P1 findings resolved offline
+
+Reviewed code: `7ee2b35`. **Original review decision: In progress; not ready for merge.** The detailed
+reproductions and closure checklists are in
+[T09 independent review](desciption/T09-chat-client-integration.md#independent-review-of-7ee2b35).
+
+| Finding | Priority | Status | Required result |
+| --- | --- | --- | --- |
+| T09-R01 | P1 | Resolved offline (`e34056f`) | Explicit Core 422 rejection must not retain a pending outbox that blocks corrected input/history/cutover; unknown outcomes remain recoverable |
+| T09-R02 | P1 | Resolved offline (`311aa4e`, `e34056f`) | Activating another revision between login and first message must not create a conversation under an unexpected revision while the adapter still records the old one |
+
+Fresh review verification: chat API **93 passed / 1 skipped**, chat UI **48 passed** plus build,
+Core **428 passed / 2 skipped**, explicit real-Core offline loopback **1 passed**. Both P1 cases
+were reproduced offline outside the existing happy-path suite. That review reopened step 8.
+The correction checkpoint below closes both findings with regressions, fix commits and fresh
+verification. Hosted acceptance remains a separate unverified gate.
+
+
+### T09 review correction checkpoint
+
+T09-R01/R02 are resolved offline by Core `311aa4e` and chat API `e34056f`; the task returns to
+Ready for integration. Fresh Core CI:431 passed/2 live skipped. Fresh chat API CI:104 passed/
+4 loopback skipped; explicit scoped acceptance:33 passed with all four real-Core loopback cases.
+Definite fresh rejection no longer strands input; durable dispatch tracking/migration protects
+unknown prior outcomes. Expected revision is checked atomically when creating a conversation;
+existing pinned replay and old clients are preserved. Both corrected images and network-isolated
+migration/revision checks pass. Deploy compatible Core before the adapter. Hosted/T08 proof gates
+remain UNVERIFIED; no paid call, merge or deployment was performed. See T09's correction record.

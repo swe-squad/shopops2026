@@ -44,7 +44,14 @@ def add_conversations(router: APIRouter, repository: Repository, identity) -> No
         scope = shop_scope(auth, shop_id)
         require_permission(auth, "conversation:write")
         result = await repository.create_conversation(
-            scope, body.orchestrator_id, body.client_conversation_id
+            scope,
+            body.orchestrator_id,
+            body.client_conversation_id,
+            **(
+                {"expected_config_revision": body.expected_config_revision}
+                if body.expected_config_revision is not None
+                else {}
+            ),
         )
         response.status_code = 201 if result.created else 200
         return ConversationOutput(conversation_id=result.record.id)
