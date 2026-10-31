@@ -9,6 +9,10 @@ ProviderArtifact, ArtifactRecord. ArtifactRecord.id is a local UUID; provider_id
 RuntimeBundle.inline_plugin is private and excluded from serialization. Network access is disabled.
 Only shopops-hosted-v1 with a pinned bundle ID/version/SHA256, small container, two subagents and
 60-second setup is accepted. Limits are two artifacts and 1048576 bytes per file or stricter.
+The packager retains bundle version `1.0.0` in its original directory and registers version `1.1.0`
+in `runtime-bundles/shopops-hosted-v1.1/` with a separate exact inventory and SHA-256. The appended
+`returns-hosted-v2` example revision opts into the product-investigation skill; saved revisions and
+the closed report-v1 are unchanged. See [investigation integration limits](product-investigation.md).
 
 All Repository methods below are async. Exact types are exported by app/contracts/repository.py:
 

@@ -22,6 +22,30 @@ For new features, follow [client development patterns](feature-development.md) a
 
 Each client holds its own workspace token in memory and unlocks independently, including inside the viewer. Frontend requests stay same-origin through that client's nginx/Vite proxies. The browser frontend talks only to operations. The chat frontend talks to the chat backend for messages and to the operations backend solely to publish link-navigation requests. The viewer has no API proxy and receives no tokens. Its reload controls reload one client document without resetting the other.
 
+## Product inspection
+
+The browser's **Products** destination opens a Shopee-inspired product gallery and detail view.
+`/shop/products?shop_key=...&sku=...` selects an exact shop/SKU, including when received through
+the navigation mailbox. Shop selection, product search, reviews, related orders and related returns
+remain inside the independent browser app. Image URLs are optional; missing or rejected images
+show a placeholder. Displayed sale prices are historical observations, not current listing prices.
+A return on a related order does not establish that the selected SKU was returned.
+When a browser document opens an explicit `/shop/...` URL, its first successful mailbox read
+establishes a baseline instead of replacing that entry with an older stored target. Later navigation
+events still open in the active tab. The ordinary app entry continues to receive the latest target.
+
+The browser reads authenticated catalog endpoints in `shopops-api`, which calls the private
+`cronjob-server` source facade over HTTP. Catalog responses use a coherent source revision and
+show fetch time separately from stock observation time. Visible active product views refresh every
+two seconds; hidden tabs pause and refresh when resumed. A failed refresh keeps prior records with
+an explicit warning. Preparing an investigation question only creates a per-tab draft for the
+separate chat; it sends no message and grants no shop-write permission.
+
+Catalog integration defaults to disabled. The [operations API setup](../services/shopops-api/README.md)
+owns its required source URL and server-side workspace identity mapping. That mapping is for the
+existing single workspace; it does not implement registered-user identity or per-user vaults.
+The [agent integration checklist](agent-integration.md) owns that separate integration boundary.
+
 ## Links between apps
 
 When a user clicks a chat link, the chat client posts the safe URL to `POST /api/operations/navigation`. The operations service persists the latest navigation with a monotonically increasing identifier. The browser client polls the authenticated mailbox once per second and opens a new navigation event in its own browser view. This works for independently opened windows without sharing JavaScript state, tokens in URLs, or relying on `window.opener`. Each window must be unlocked for the same workspace. This development access model supports one workspace; targeted multi-user navigation requires scoped identity.

@@ -26,6 +26,24 @@ FILES = (
     "shopops-analysis/skills/returns-analysis/SKILL.md",
     "shopops-analysis/skills/returns-analysis/scripts/summarize_returns.py",
 )
+# Each published version has its own immutable directory and exact inventory.
+REGISTERED_BUNDLES = {
+    BUNDLE_VERSION: (BUNDLE_ID, PLUGIN_DESCRIPTION, FILES),
+    "1.1.0": (
+        "shopops-hosted-v1.1",
+        "Scoped ShopOps product investigations, returns analysis and versioned knowledge review.",
+        tuple(
+            sorted(
+                (
+                    *FILES,
+                    "shopops-analysis/references/investigation/refresh-and-freshness.md",
+                    "shopops-analysis/references/investigation/six-pain-workflows.md",
+                    "shopops-analysis/skills/product-investigation/SKILL.md",
+                )
+            )
+        ),
+    ),
+}
 
 
 def _object(pairs: list[tuple[str, object]]) -> dict:
@@ -48,16 +66,17 @@ def _read(path: Path, limit: int) -> bytes:
 
 
 def _build(profile: RuntimeProfile, *, bundle_root: Path | None = None) -> RuntimeBundle:
-    if profile.profile_id != BUNDLE_ID or profile.bundle_version != BUNDLE_VERSION:
+    if profile.profile_id != BUNDLE_ID or profile.bundle_id != BUNDLE_ID:
         raise ValueError("unregistered bundle")
+    bundle_directory, description, files = REGISTERED_BUNDLES[profile.bundle_version]
     directory = bundle_root if bundle_root is not None else BUNDLE_ROOT
-    root = directory / BUNDLE_ID
+    root = directory / bundle_directory
     if directory.is_symlink() or root.is_symlink() or not root.is_dir():
         raise ValueError("invalid bundle root")
     actual = set()
     directories = {
         str(parent)
-        for name in FILES
+        for name in files
         for parent in PurePosixPath(name).parents
         if str(parent) != "."
     }
@@ -69,7 +88,7 @@ def _build(profile: RuntimeProfile, *, bundle_root: Path | None = None) -> Runti
         if not stat.S_ISREG(mode):
             raise ValueError("invalid entry type")
         actual.add(relative)
-    if actual != {*FILES, "manifest.json"}:
+    if actual != {*files, "manifest.json"}:
         raise ValueError("unregistered files")
     manifest = json.loads(_read(root / "manifest.json", 16384), object_pairs_hook=_object)
     if set(manifest) != {"bundle_id", "bundle_version", "bundle_sha256", "files"}:
@@ -81,7 +100,7 @@ def _build(profile: RuntimeProfile, *, bundle_root: Path | None = None) -> Runti
     ):
         raise ValueError("bundle pin mismatch")
     records = manifest["files"]
-    if not isinstance(records, list) or len(records) != len(FILES):
+    if not isinstance(records, list) or len(records) != len(files):
         raise ValueError("invalid inventory")
     for record in records:
         if set(record) != {"path", "sha256"}:
@@ -96,7 +115,7 @@ def _build(profile: RuntimeProfile, *, bundle_root: Path | None = None) -> Runti
             or not re.fullmatch(r"[a-f0-9]{64}", digest)
         ):
             raise ValueError("invalid path or digest")
-    if [record["path"] for record in records] != list(FILES):
+    if [record["path"] for record in records] != list(files):
         raise ValueError("unsorted or duplicate inventory")
     aggregate = hashlib.sha256(
         "".join(f"{record['path']}\0{record['sha256']}\n" for record in records).encode("utf-8")
@@ -116,8 +135,8 @@ def _build(profile: RuntimeProfile, *, bundle_root: Path | None = None) -> Runti
     )
     if metadata != {
         "name": PLUGIN_NAME,
-        "description": PLUGIN_DESCRIPTION,
-        "version": BUNDLE_VERSION,
+        "description": description,
+        "version": profile.bundle_version,
         "skills": "./skills/",
     }:
         raise ValueError("plugin metadata mismatch")
@@ -131,12 +150,12 @@ def _build(profile: RuntimeProfile, *, bundle_root: Path | None = None) -> Runti
             archive.writestr(entry, data)
     return RuntimeBundle(
         bundle_id=BUNDLE_ID,
-        bundle_version=BUNDLE_VERSION,
+        bundle_version=profile.bundle_version,
         bundle_sha256=aggregate,
         inline_plugin={
             "type": "inline",
             "name": PLUGIN_NAME,
-            "description": PLUGIN_DESCRIPTION,
+            "description": description,
             "source": {
                 "type": "base64",
                 "media_type": "application/zip",

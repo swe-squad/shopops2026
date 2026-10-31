@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { authHeaders, checkResponse } from './workspace-api'
+import { isLocalShop } from './browser-url'
 
 type NavigationRequest = { id: number; url: string }
 
@@ -11,6 +12,8 @@ export function useNavigationRequests(token: string) {
     const controller = new AbortController()
     let timer: ReturnType<typeof setTimeout> | undefined
     let latestId = 0
+    let initialRead = true
+    const explicitShopEntry = isLocalShop(new URL(window.location.href))
 
     async function poll() {
       try {
@@ -20,8 +23,10 @@ export function useNavigationRequests(token: string) {
         if (controller.signal.aborted) return
         if (navigation && typeof navigation.id === 'number' && typeof navigation.url === 'string' && navigation.id > latestId) {
           latestId = navigation.id
-          setRequest({ url: navigation.url, sequence: navigation.id })
+          // An explicit deep link wins over a mailbox value left before this window opened.
+          if (!(initialRead && explicitShopEntry)) setRequest({ url: navigation.url, sequence: navigation.id })
         }
+        initialRead = false
         setError('')
       } catch {
         if (!controller.signal.aborted) setError('Could not receive links from chat. Reconnecting…')

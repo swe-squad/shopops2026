@@ -13,6 +13,12 @@ POSTGRES_SSLMODE defaults to prefer. SYNC_INTERVAL_SECONDS defaults to 0
 (disabled); positive integers enable periodic full synchronization.
 PORT defaults to 8000. See .env.example for placeholders.
 
+The current ShopOps deployment target uses the existing PostgreSQL listener on port `15432`.
+Set `POSTGRES_PORT=15432` explicitly with the existing database/credentials, matching
+`mock-data-server`. See the [product deployment route](../../docs/deploy-flow.md#products-đọc-dữ-liệu-postgresql-hiện-có).
+The browser reads current source records through this service's HTTP facade; it does not read
+PostgreSQL directly or use the frontend's in-memory connection flags as shop data.
+
 The source URL is required and supplied at runtime. In CapRover use
 http://srv-captain--mock-data-server-dev:8000 for dev, and
 http://srv-captain--mock-data-server:8000 for production. Keep both services internal

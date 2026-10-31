@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BrowserPane } from './browser-pane'
+import { catalog, shops } from './test/catalog-fixtures'
 
 const json = (value: unknown) => new Response(JSON.stringify(value), { headers: { 'Content-Type': 'application/json' } })
 const localUrl = (path: string) => `${window.location.origin}${path}`
@@ -24,6 +25,32 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); window.history.replaceState(null, '', '/') })
 
 describe('browser tabs', () => {
+  it('keeps Connections as the default entry and opens Products independently of demo flags', async () => {
+    window.history.replaceState(null, '', '/')
+    const fetchMock = vi.fn(async (path: string) => {
+      if (path === '/api/mock/connectors') return json({ connections: [
+        { platform: 'shopee', connected: false, mock: true },
+        { platform: 'tiktok', connected: false, mock: true },
+      ] })
+      if (path === '/api/operations/catalog/shops') return json(shops)
+      if (path.startsWith('/api/operations/catalog?')) return json(catalog)
+      return json([])
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<BrowserPane token="workspace-secret" requestedUrl={null} />)
+    await panel().findByRole('button', { name: 'Log in to Shopee' })
+    expect(screen.getByRole('tab', { name: 'Connections — tab 1' })).toBeInTheDocument()
+    fireEvent.click(panel().getByRole('link', { name: 'Products' }))
+    await panel().findByRole('link', { name: /Canvas tote/ })
+    expect(screen.getByRole('tab', { name: 'Products — tab 1' })).toBeInTheDocument()
+    expect(panel().getByRole('link', { name: 'Connections' })).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([path]) => path === '/api/mock/connectors/shopee')).toBe(false)
+    fireEvent.click(panel().getByRole('link', { name: 'Connections' }))
+    await panel().findByRole('button', { name: 'Log in to Shopee' })
+    fireEvent.click(screen.getByRole('button', { name: 'Go back' }))
+    await panel().findByRole('link', { name: /Canvas tote/ })
+  })
+
   it('keeps independent history, address drafts, and incident drafts when switching tabs', async () => {
     render(<BrowserPane token="workspace-secret" requestedUrl={null} />)
     await panel().findByText('No incidents yet')

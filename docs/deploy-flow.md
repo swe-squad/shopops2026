@@ -44,6 +44,41 @@ App dùng dữ liệu bền vững cần volume và cấu hình instance phù h�
 
 ## Kiểm tra và tìm log
 
+### Products đọc dữ liệu PostgreSQL hiện có
+
+Luồng dữ liệu của trang Products là browser → `shopops-api` → `cronjob-server` →
+`mock-data-server` → PostgreSQL. Browser không kết nối PostgreSQL và không sử dụng các cờ
+Connections trong RAM làm dữ liệu sản phẩm hoặc làm quyền truy cập.
+
+Với máy chủ PostgreSQL được chỉ định cho môi trường này, đặt `POSTGRES_PORT=15432` trong
+App Configs của **cả** `mock-data-server` và `cronjob-server`, cùng host/database và nguồn
+credentials đang được vận hành. Giữ các schema hiện có; không seed lại hoặc reset dữ liệu khi
+deploy giao diện. Port mặc định `5432` trong code là mặc định chung, không phải cấu hình cho
+listener `15432` này. Giá trị host/password cụ thể vẫn thuộc cấu hình runtime, không thuộc repo.
+
+| App dev | Cấu hình runtime cần kiểm tra |
+| --- | --- |
+| `mock-data-server-dev` | `POSTGRES_HOST`, `POSTGRES_PORT=15432`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, TLS theo server hiện có |
+| `cronjob-server-dev` | Cùng PostgreSQL ở port `15432`; `MOCK_DATA_SERVER_URL=http://srv-captain--mock-data-server-dev:8000` |
+| `shopops-api-dev` | `SHOP_CATALOG_MODE=source`, `CRONJOB_SERVER_URL=http://srv-captain--cronjob-server-dev:8000`, `SHOP_DATA_USER_ID` theo demo identity được cấp quyền; giữ `SHOP_API_TOKEN` hiện có |
+| `shopops-web-dev` | `API_URL=http://srv-captain--shopops-api-dev:8000` |
+
+Production dùng app tương ứng không có hậu tố `-dev`; cung cấp URL runtime tương ứng, không
+dùng URL dev làm mặc định trong code. Danh tính catalog hiện là cấu hình server cho một workspace;
+không dùng số điện thoại do browser gửi làm quyền truy cập. Khi ghép registration/vault của AI
+engineer, thay mapping demo bằng verified principal theo [agent integration](agent-integration.md).
+
+Image API mặc định bật source mode và từ chối startup khi thiếu URL/danh tính bắt buộc. Trước
+khi nghiệm thu bản deploy, chạy `python -m app.catalog_check` bên trong container `shopops-api`
+để kiểm tra đường HTTP đến các shop/sản phẩm trong dữ liệu bền vững. Lệnh chỉ đọc, không migration,
+seed hoặc thay đổi shop; chỉ báo trạng thái/tổng số/revision, không in credentials hay bản ghi.
+Xem [catalog setup và preflight](../services/shopops-api/README.md) cho tùy chọn dữ liệu rỗng.
+Sau đó mở **Products**, kiểm tra SKU/reviews/stock và xác nhận thay đổi nguồn hiện lên mà không
+cần reload trang. Các fixture của browser tests không được đóng gói vào image production.
+
+Hướng dẫn này chuẩn bị cấu hình theo port người vận hành chỉ định; không phải bằng chứng rằng
+App Configs hiện tại đã được đọc hay thay đổi. Phiên này không kiểm tra hoặc deploy lên server live.
+
 Chọn đúng service, môi trường và commit khi kiểm tra một lần deploy:
 
 1. Trong GitHub → **Actions**, mở run **CI**, **Deploy** hoặc **PR Deploy** tương ứng. Kiểm tra danh sách service được chọn, job CI và bước deploy; [_build-deploy.yml](../.github/workflows/_build-deploy.yml) là đường đi từ CI đến GHCR và CapRover.

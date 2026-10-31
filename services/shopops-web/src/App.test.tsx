@@ -69,6 +69,7 @@ describe('standalone shop browser', () => {
   })
 
   it('receives new link events, resolves shop paths on its own origin, and deduplicates old events', async () => {
+    window.history.replaceState(null, '', '/')
     let navigation = { id: 7, url: '/shop/incidents' }
     vi.stubGlobal('fetch', vi.fn(async (url: string) => json(url.endsWith('/navigation') ? navigation : [])))
     render(<App />)

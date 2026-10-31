@@ -49,12 +49,34 @@ already accepted by the server may still complete, so refresh records before ret
 Incident timestamps without an offset are treated as UTC, matching the API's SQLite storage;
 the browser displays them in the seller's local timezone.
 
+## Product inspection
+
+Open **Products** to browse the authenticated catalog from the persistent mock shop source.
+Choose a shop, search by product name or SKU, and open a product to inspect reviews, related
+order lines, and returns on those orders. A related return does not establish which SKU was
+returned. Catalog availability is configured in [shopops-api](../shopops-api/README.md);
+a disconnected source shows an error and Retry without generated catalog data.
+
+Product links use `/shop/products?shop_key=<encoded>&sku=<encoded>`; omit `sku` for the gallery.
+The current browser tab owns its selection, history, search, and product question drafts.
+The selected visible product view refreshes about every two seconds, pauses in inactive tabs
+or a hidden document, and preserves the last good records with a stale notice after errors.
+Source revision and fetch time identify the snapshot. Stock is an observation; the displayed
+sale price is the last observed sale, not a current listing price. Unknown values remain unknown.
+
+Source-provided HTTPS product images appear when available. Missing, unsafe, or broken image
+URLs show a labeled placeholder. **Prepare question draft** creates an editable question scoped
+to the selected shop and SKU; copy it into the independent chat client yourself. It does not
+send a message or perform a shop action. Drafts clear when the tab closes or the workspace locks.
+
 ## Brand
 
 Follow the canonical [ShopOps design guidelines](../../docs/brand/design-guidelines.md) and
 [brand direction](../../docs/brand/brand-direction.md). Warm ivory, charcoal, the ShopOps mark, and
 accessible action orange replace the original Notion/blue template. `index.html` loads the vendored
 tokens and icons from `public/brand/`; the app stays independently buildable.
+Products adds a commerce-orange header, neutral gray canvas, and white image tiles while retaining
+the ShopOps identity and accessible action colors.
 
 After changing canonical assets, run `node scripts/sync-brand-assets.mjs` at the repository root.
 Validate the generated copies with `node scripts/sync-brand-assets.mjs --check`.

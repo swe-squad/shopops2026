@@ -9,10 +9,20 @@ import pytest
 
 from app.contracts.report import RuntimeReport
 
+ROOT = Path(__file__).resolve().parents[2] / "runtime-bundles"
 SCRIPT = (
-    Path(__file__).resolve().parents[2] / "runtime-bundles/shopops-hosted-v1/"
-    "shopops-analysis/skills/returns-analysis/scripts/summarize_returns.py"
+    ROOT / "shopops-hosted-v1/shopops-analysis/skills/returns-analysis/scripts/summarize_returns.py"
 )
+
+
+@pytest.fixture(autouse=True, params=["shopops-hosted-v1", "shopops-hosted-v1.1"])
+def script_version(request, monkeypatch):
+    script = (
+        ROOT
+        / request.param
+        / "shopops-analysis/skills/returns-analysis/scripts/summarize_returns.py"
+    )
+    monkeypatch.setattr(sys.modules[__name__], "SCRIPT", script, raising=False)
 
 
 @pytest.fixture

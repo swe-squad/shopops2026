@@ -1,0 +1,43 @@
+{
+  "bundle_id": "shopops-hosted-v1",
+  "bundle_version": "1.1.0",
+  "bundle_sha256": "df1c62dec281a08390ee2c7037c4b3da9b679d1c727032d8062d1d5827aacef2",
+  "files": [
+    {
+      "path": "shopops-analysis/.codex-plugin/plugin.json",
+      "sha256": "31531b93067bfefac94f2e1e6731949daf0a7bad3ab985ed7d2085d527484d2b"
+    },
+    {
+      "path": "shopops-analysis/references/investigation/refresh-and-freshness.md",
+      "sha256": "3676646c763fa9f2cf3d71bcc739dc930d8d01f1a76497c9203899648dd05a3a"
+    },
+    {
+      "path": "shopops-analysis/references/investigation/six-pain-workflows.md",
+      "sha256": "59f38c62080dc1b256c3e0a7d72973b5e6b2e912524d664a12603722864ca9dd"
+    },
+    {
+      "path": "shopops-analysis/references/specialists/data-analyst.md",
+      "sha256": "7696d3b118fdbafc1c64e589978f5878aab0bfd172671a2d81f412a0c7e10969"
+    },
+    {
+      "path": "shopops-analysis/references/specialists/knowledge-analyst.md",
+      "sha256": "8360db399cd349f1e9938448464a7fbcea877ce76c4d940e66de9f9a9ef64154"
+    },
+    {
+      "path": "shopops-analysis/skills/knowledge-review/SKILL.md",
+      "sha256": "b49eaf54a8bfa1fbda26837c8dd377bce07058414004963f8ac05bb0a49700f1"
+    },
+    {
+      "path": "shopops-analysis/skills/product-investigation/SKILL.md",
+      "sha256": "0ce1bd3a24a1ddd452aeb9ba307c3548d5c7262505bc4cd78d4ce414bbc0596d"
+    },
+    {
+      "path": "shopops-analysis/skills/returns-analysis/SKILL.md",
+      "sha256": "dfa220aa6a51bf0170d0deb1265ddd4b89ddb25e4a4785b93666c396af7b1043"
+    },
+    {
+      "path": "shopops-analysis/skills/returns-analysis/scripts/summarize_returns.py",
+      "sha256": "641209c82bc9d723f483ca91d4556cd3c5450e1221a5eef886d36ff3ae7048f3"
+    }
+  ]
+}

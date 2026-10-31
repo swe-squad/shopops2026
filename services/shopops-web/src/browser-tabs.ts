@@ -34,7 +34,7 @@ export function tabTitle(tab: BrowserTab) {
   const url = new URL(tab.history[tab.index])
   if (!isLocalShop(url)) return url.origin === window.location.origin ? 'Workspace page' : url.hostname
   if (connectionPage(url.pathname)) return 'Connections'
-  return url.pathname === '/shop/incidents' ? 'Incidents' : ['/shop', '/shop/', '/shop/overview'].includes(url.pathname) ? 'Overview' : 'Shop page'
+  return url.pathname === '/shop/products' ? 'Products' : url.pathname === '/shop/incidents' ? 'Incidents' : ['/shop', '/shop/', '/shop/overview'].includes(url.pathname) ? 'Overview' : 'Shop page'
 }
 
 export function browserTabsReducer(state: BrowserTabs, action: BrowserAction): BrowserTabs {
