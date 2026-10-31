@@ -23,5 +23,9 @@ def select_tools(
 
 
 def delegation_targets(config: ConfigSnapshot) -> tuple[str, ...]:
-    """Extension point: v1 never launches specialists."""
+    """Approved role labels only; the managed harness owns actual delegation."""
+    if config.template_id != "shopops":
+        raise ConfigurationConflict()
+    if config.runtime_profile.environment_type == "openai_hosted":
+        return ("data-analyst", "knowledge-analyst")
     return ()
