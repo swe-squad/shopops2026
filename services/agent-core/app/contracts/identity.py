@@ -6,6 +6,7 @@ class Scope(BaseModel):
     tenant_id: str = Field(min_length=1, max_length=128)
     shop_id: str = Field(min_length=1, max_length=128)
     user_id: str = Field(min_length=1, max_length=128)
+    permissions: frozenset[str] = frozenset()
 
 
 class AuthContext(BaseModel):
@@ -20,4 +21,9 @@ class AuthContext(BaseModel):
 
         if shop_id not in self.shop_ids:
             raise PermissionDenied()
-        return Scope(tenant_id=self.tenant_id, shop_id=shop_id, user_id=self.user_id)
+        return Scope(
+            tenant_id=self.tenant_id,
+            shop_id=shop_id,
+            user_id=self.user_id,
+            permissions=self.permissions,
+        )

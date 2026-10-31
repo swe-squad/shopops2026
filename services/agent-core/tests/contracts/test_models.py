@@ -28,3 +28,13 @@ def test_scope_and_snapshot_are_immutable():
             knowledge_mcp_url="http://localhost",
             capabilities=["a", "a"],
         )
+
+
+def test_authenticated_scope_preserves_permissions():
+    from app.contracts.identity import AuthContext
+
+    auth = AuthContext(
+        tenant_id="t", user_id="u", shop_ids={"s"}, permissions={"conversation:write"}
+    )
+    scope = auth.scope("s")
+    assert scope.permissions == frozenset({"conversation:write"})

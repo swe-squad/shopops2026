@@ -4,7 +4,12 @@ Python contracts in `app/contracts/` are the source of truth. All I/O interfaces
 SQLite uses `asyncio.to_thread` and a separate connection per short transaction.
 Models are Pydantic frozen records with forbidden extra fields. JSON uses UTF-8, UUID
 strings, ISO-8601 UTC timestamps, string enum values and arrays for tuples/frozensets.
-`Scope` always contains tenant, shop and user; AuthContext is trusted adapter output.
+`Scope` always contains tenant, shop and user plus trusted `permissions` (default empty,
+fail closed). `AuthContext.scope(shop_id)` copies verified grants. Enqueue pins the submitted
+Scope on Run; worker execution_context passes that durable permission snapshot to T04 even
+after restart. Ownership comparisons use tenant/shop/user only; changed grants do not change
+identity. T02 must construct scopes via the verified AuthContext, never model/header fields.
+T04 issues credentials from these grants and must reject history without history:read.
 Repositories enforce tenant/shop/owner on conversations, runs, messages and events.
 Orchestrators are shop-shared configuration. No provider network work occurs at import.
 
@@ -28,7 +33,9 @@ true only on first commit; EnqueueResult contains stable persisted user Message 
 Message content is trimmed before hashing. Replay lookup precedes the busy check.
 Conversation keys are scoped by tenant/shop/user; changed orchestrator or message payload
 conflicts. UUID cursors resolve only inside the authorized resource, then paginate by
-monotonic sequence (1..100 items, default 50). Message IDs are history cursors; event IDs
+monotonic sequence (1..100 items, default 50). Run.message_receipt retains only user-message UUID/sequence/time independently of pruned
+content. Identical replay after pruning reconstructs its receipt from the hash-verified caller
+content and returns the original IDs without restoring deleted history. Message IDs are history cursors; event IDs
 are event cursors; they are opaque, validated, and never interpreted as SQL/offsets.
 User messages become durable at enqueue; assistant history contains only validated,
 completed responses. Raw provider events/chain of thought are never persisted as events.
@@ -77,3 +84,10 @@ Use HS256 only, issuer `agent-core`, audience `agent-core:data` or
 never from model arguments. Signing key comes only from MCP_TOKEN_SIGNING_KEY. Validate
 signature/algorithm, issuer, audience, time and full scope before accessing any data.
 This contract is not a credential implementation; T04 owns issuance and verification.
+
+## Shared contract amendment after review
+
+The follow-up shared-contract commit adds optional Scope.permissions (empty by default),
+Run.scope (trusted enqueue-time grants) and Run.message_receipt. Consumers must import this
+commit before integration. Existing three-identity construction remains valid but grants no
+MCP permissions. No previously verified permissions are inferred from configuration or prompts.

@@ -75,11 +75,19 @@ class Message(Record):
     created_at: datetime
 
 
+class MessageReceipt(Record):
+    id: str
+    sequence: int
+    created_at: datetime
+
+
 class Run(Record):
     id: str
     conversation_id: str
     client_message_id: str
     request_hash: str
+    scope: Scope | None = None
+    message_receipt: MessageReceipt | None = None
     state: RunState
     submission_marker: Literal["none", "session_creating", "submitting", "submitted"] = "none"
     provider_turn_id: str | None = None
