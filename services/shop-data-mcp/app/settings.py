@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+from typing import Literal
 
 from pydantic import (
     BaseModel,
@@ -84,9 +85,13 @@ class Shop(StrictConfiguration):
 
 class Settings(StrictConfiguration):
     control_dsn: SecretStr
-    issuer: str
-    audience: str
-    jwks_url: str
+    membership_dsn: SecretStr = Field(
+        description="Read-only login to the authoritative access.user_shop_access view"
+    )
+    scopes: set[Literal["data:read", "raw:request", "raw:read", "data:refresh"]] = Field(
+        default_factory=lambda: {"data:read"},
+        description="Server-controlled capabilities for phone callers; raw still needs approval",
+    )
     public_url: str
     internal_url: str | None = Field(
         default=None, description="Explicit internal MCP URL allowed by transport host protection"
@@ -104,6 +109,13 @@ class Settings(StrictConfiguration):
     ingestion_token: SecretStr | None = None
     approval_url: str | None = None
     approval_token: SecretStr | None = None
+
+    @field_validator("scopes")
+    @classmethod
+    def read_scope_required(cls, value: set[str]) -> set[str]:
+        if "data:read" not in value:
+            raise ValueError("data:read scope is required")
+        return value
 
     @classmethod
     def load(cls) -> "Settings":
@@ -148,10 +160,13 @@ class Settings(StrictConfiguration):
 
             from psycopg.conninfo import conninfo_to_dict
 
-            urls = [settings.issuer, settings.audience, settings.jwks_url, settings.public_url]
-            if any(urlparse(url).scheme != "https" for url in urls):
-                raise ValueError("HTTPS identity endpoints required")
-            dsns = [settings.control_dsn, *[s.query_dsn for s in settings.shops.values()]]
+            if urlparse(settings.public_url).scheme != "https":
+                raise ValueError("HTTPS public MCP endpoint required")
+            dsns = [
+                settings.control_dsn,
+                settings.membership_dsn,
+                *[s.query_dsn for s in settings.shops.values()],
+            ]
             for dsn in dsns:
                 opts = conninfo_to_dict(dsn.get_secret_value())
                 if opts.get("sslmode") != "verify-full" or not opts.get("sslrootcert"):

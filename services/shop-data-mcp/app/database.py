@@ -21,6 +21,24 @@ class Database:
             self.settings.control_dsn.get_secret_value(), connect_timeout=5, row_factory=dict_row
         )
 
+    async def authorized_shops(self, phone: str) -> set[str]:
+        # This view filters inactive users, merchants and memberships at the source.
+        # Use a separate read-only login; model SQL never runs on this connection.
+        async with await psycopg.AsyncConnection.connect(
+            self.settings.membership_dsn.get_secret_value(), connect_timeout=5
+        ) as conn:
+            await conn.execute("BEGIN READ ONLY")
+            await conn.execute(
+                "SELECT set_config('statement_timeout', %s, true)",
+                (str(self.settings.query_timeout_ms),),
+            )
+            cursor = await conn.execute(
+                "SELECT DISTINCT shop_key FROM access.user_shop_access "
+                "WHERE user_id=%s AND shop_key=ANY(%s)",
+                (phone, list(self.settings.shops)),
+            )
+            return {row[0] for row in await cursor.fetchall()}
+
     async def query(self, who: Principal, sql: str) -> dict:
         dsn = self.settings.shops[who.shop].query_dsn.get_secret_value()
         async with await psycopg.AsyncConnection.connect(dsn, connect_timeout=5) as conn:

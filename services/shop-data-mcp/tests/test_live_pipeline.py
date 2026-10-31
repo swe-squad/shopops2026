@@ -1,7 +1,7 @@
 """SDK-to-HTTP-to-PostgreSQL integration against disposable running services.
 
 The harness owns process/database cleanup. MCP uses the official in-memory SDK
-transport with an already verified identity; cronjob calls use real HTTP bearer
+transport with an already resolved phone context; cronjob calls use real HTTP bearer
 authentication and queries use real restricted PostgreSQL logins.
 """
 
@@ -23,7 +23,7 @@ from mcp.types import CallToolResult
 from psycopg import sql
 from psycopg.conninfo import make_conninfo
 
-from app.auth import Principal, principal
+from app.auth import Identity, principal
 from app.provision import provision
 from app.server import build_server
 from app.service import DataService
@@ -66,9 +66,7 @@ def live_service() -> tuple[DataService, int]:
         conn.execute(Path("migrations/001-control.sql").read_text())
     settings = Settings(
         control_dsn=control_dsn,
-        issuer="https://issuer.test",
-        audience="https://mcp.test/mcp",
-        jwks_url="https://issuer.test/jwks",
+        membership_dsn="postgresql://membership@localhost/test",
         public_url="https://mcp.test/mcp",
         datasets=catalog.datasets,
         shops={
@@ -86,7 +84,8 @@ def live_service() -> tuple[DataService, int]:
 
 @asynccontextmanager
 async def sdk_session(service: DataService, shop: str) -> AsyncIterator[ClientSession]:
-    identity = Principal(subject="agent-a", shop=shop, scopes={"data:read", "data:refresh"})
+    phone = "+84900000001" if shop == SHOPS[0] else "+84900000002"
+    identity = Identity(subject=phone, shops={shop}, scopes={"data:read", "data:refresh"})
     context = principal.set(identity)
     try:
         server = build_server(service)._lowlevel_server

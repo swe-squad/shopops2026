@@ -1,29 +1,19 @@
-"""Real SDK protocol and signed JWT checks with fake database/network boundaries."""
+"""Real SDK protocol checks with fake database/network boundaries."""
 
 import asyncio
 import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
-from typing import Any
 from unittest.mock import AsyncMock
 
 import anyio
-import jwt
 import pytest
-from cryptography.hazmat.primitives.asymmetric import rsa
 from mcp import ClientSession
 from mcp.shared.memory import create_client_server_memory_streams
 from mcp.types import CallToolResult
-from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.responses import JSONResponse
-from starlette.routing import Route
-from starlette.testclient import TestClient
 
-from app.auth import Authentication, Principal, principal
-from app.database import Database
+from app.auth import Identity, principal
 from app.server import build_server
 from app.service import DataService
 from app.settings import Dataset, Settings, Shop
@@ -33,9 +23,7 @@ from app.settings import Dataset, Settings, Shop
 def settings() -> Settings:
     return Settings(
         control_dsn="postgresql://control@localhost/test",
-        issuer="https://issuer.example",
-        audience="https://mcp.example",
-        jwks_url="https://issuer.example/jwks",
+        membership_dsn="postgresql://membership@localhost/test",
         public_url="https://mcp.example/mcp",
         datasets=[
             Dataset(
@@ -58,8 +46,10 @@ def settings() -> Settings:
 
 
 @asynccontextmanager
-async def sdk_session(service: DataService) -> AsyncIterator[ClientSession]:
-    identity = Principal(subject="agent-a", shop="shop-a", scopes={"data:read"})
+async def sdk_session(
+    service: DataService, identity: Identity | None = None
+) -> AsyncIterator[ClientSession]:
+    identity = identity or Identity(subject="+84900000001", shops={"shop-a"}, scopes={"data:read"})
     context = principal.set(identity)
     try:
         server = build_server(service)._lowlevel_server
@@ -153,146 +143,70 @@ def test_sdk_rejects_invalid_pages_and_unsafe_sql_before_database(settings: Sett
     service.db.read.assert_not_awaited()
 
 
-@pytest.fixture(scope="module")
-def signing_key() -> rsa.RSAPrivateKey:
-    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+def test_one_phone_can_discover_and_query_each_authorized_shop(settings):
+    settings.shops["shop-b"] = Shop(query_dsn="postgresql://b@localhost/test", datasets=["hidden"])
+    service = DataService(settings)
+    service.db = AsyncMock()
+    service.db.query.return_value = {"columns": ["total"], "rows": [], "truncated": False}
+    service.db.save.return_value = "result-b"
+    identity = Identity(subject="+84900000001", shops={"shop-a", "shop-b"}, scopes={"data:read"})
+
+    async def exercise():
+        async with sdk_session(service, identity) as session:
+            shops = await session.call_tool("list_shops", {})
+            assert not shops.is_error
+            assert tool_payload(shops)["shops"] == [{"shop_key": "shop-a"}, {"shop_key": "shop-b"}]
+            for shop, dataset in [("shop-a", "orders"), ("shop-b", "hidden")]:
+                catalog = await session.call_tool("search_catalog", {"shop_key": shop})
+                assert not catalog.is_error
+                assert [d["id"] for d in tool_payload(catalog)["datasets"]] == [dataset]
+                result = await session.call_tool(
+                    "query_mart", {"query": f"SELECT * FROM {dataset}", "shop_key": shop}
+                )
+                assert not result.is_error
+                assert service.db.query.await_args.args[0].shop == shop
+                assert service.db.query.await_args.args[0].subject == identity.subject
+                assert tool_payload(result)["shop_key"] == shop
+
+    asyncio.run(exercise())
 
 
-@pytest.fixture
-def auth_context(
-    settings: Settings, signing_key: rsa.RSAPrivateKey, monkeypatch: pytest.MonkeyPatch
-) -> SimpleNamespace:
-    async def protected(request: Request) -> JSONResponse:
-        who = principal.get()
-        return JSONResponse({"subject": who.subject, "shop": who.shop})
-
-    async def health(request: Request) -> JSONResponse:
-        return JSONResponse({"status": "ok"})
-
-    cursor = AsyncMock()
-    cursor.fetchone.return_value = None
-    connection = AsyncMock()
-    connection.__aenter__.return_value = connection
-    connection.execute.return_value = cursor
-    connect = AsyncMock(return_value=connection)
-    monkeypatch.setattr(Database, "connect", connect)
-    app = Authentication(
-        Starlette(routes=[Route("/protected", protected), Route("/health", health)]), settings
-    )
-    app.keys = SimpleNamespace(
-        get_signing_key_from_jwt=lambda token: SimpleNamespace(key=signing_key.public_key())
-    )
-    return SimpleNamespace(
-        client=TestClient(app), cursor=cursor, connection=connection, connect=connect
-    )
-
-
-def signed_token(settings: Settings, signing_key: rsa.RSAPrivateKey, **changes: Any) -> str:
-    now = datetime.now(UTC)
-    claims = {
-        "iss": settings.issuer,
-        "aud": settings.audience,
-        "sub": "agent-a",
-        "shop_key": "shop-a",
-        "scope": "data:read",
-        "iat": now - timedelta(seconds=5),
-        "exp": now + timedelta(minutes=10),
-        "jti": "token-a",
+@pytest.mark.parametrize("shop_key", [None, "not-authorized", ""])
+def test_multi_shop_tools_reject_missing_or_unauthorized_selection(settings, shop_key):
+    service = DataService(settings)
+    service.db = AsyncMock()
+    service.ingestion = AsyncMock()
+    service.approval = AsyncMock()
+    identity = Identity(subject="+84900000001", shops={"shop-a", "shop-b"}, scopes={"data:read"})
+    calls = {
+        "search_catalog": {},
+        "describe_dataset": {"dataset_id": "orders"},
+        "query_mart": {"query": "SELECT * FROM orders"},
+        "query_raw": {"query": "SELECT * FROM orders", "grant_id": "grant"},
+        "create_temp_mart": {"query": "SELECT * FROM orders"},
+        "query_temp_mart": {"query": "SELECT * FROM temp", "result_id": "result"},
+        "read_result": {"result_id": "result"},
+        "drop_temp_mart": {"result_id": "result"},
+        "request_raw_access": {"datasets": {}, "start": "a", "end": "b", "reason": "test"},
+        "request_refresh": {
+            "resource": "orders",
+            "start": "a",
+            "end": "b",
+            "idempotency_key": "key",
+        },
+        "get_operation": {"operation_id": "operation"},
     }
-    claims.update(changes)
-    return jwt.encode(claims, signing_key, algorithm="RS256")
 
+    async def exercise():
+        async with sdk_session(service, identity) as session:
+            for tool, args in calls.items():
+                result = await session.call_tool(tool, args | {"shop_key": shop_key})
+                assert result.is_error, tool
+                assert "Choose an authorized shop_key" in " ".join(
+                    item.text for item in result.content if item.type == "text"
+                )
 
-def test_signed_token_sets_verified_context_and_checks_revocation(
-    auth_context: SimpleNamespace,
-    settings: Settings,
-    signing_key: rsa.RSAPrivateKey,
-) -> None:
-    token = signed_token(settings, signing_key)
-    response = auth_context.client.get("/protected", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.json() == {"subject": "agent-a", "shop": "shop-a"}
-    assert auth_context.connection.execute.await_args.args[1] == ("token-a",)
-    with pytest.raises(LookupError):
-        principal.get()
-
-
-@pytest.mark.parametrize(
-    "changes",
-    [
-        {"iss": "https://untrusted.example"},
-        {"aud": "https://other.example"},
-        {"exp": datetime(2000, 1, 1, tzinfo=UTC)},
-        {"shop_key": "shop-b"},
-        {"scope": "raw:read"},
-        {"exp": datetime.now(UTC) + timedelta(hours=2)},
-    ],
-)
-def test_invalid_signed_claims_are_unauthorized(
-    auth_context: SimpleNamespace,
-    settings: Settings,
-    signing_key: rsa.RSAPrivateKey,
-    changes: dict,
-) -> None:
-    token = signed_token(settings, signing_key, **changes)
-    response = auth_context.client.get("/protected", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 401
-    assert response.json() == {"error": "Unauthorized"}
-    auth_context.connect.assert_not_awaited()
-
-
-def test_revoked_jti_is_unauthorized(
-    auth_context: SimpleNamespace, settings: Settings, signing_key: rsa.RSAPrivateKey
-) -> None:
-    auth_context.cursor.fetchone.return_value = {"revoked": True}
-    token = signed_token(settings, signing_key)
-    response = auth_context.client.get("/protected", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 401
-    assert auth_context.connection.execute.await_args.args[1] == ("token-a",)
-
-
-def test_revocation_database_outage_fails_closed(
-    auth_context: SimpleNamespace,
-    settings: Settings,
-    signing_key: rsa.RSAPrivateKey,
-) -> None:
-    auth_context.connect.side_effect = RuntimeError("private database secret")
-    token = signed_token(settings, signing_key)
-    response = auth_context.client.get("/protected", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 401
-    assert "secret" not in response.text
-
-
-def test_health_is_public_and_protected_route_requires_token(auth_context: SimpleNamespace) -> None:
-    assert auth_context.client.get("/health").status_code == 200
-    assert auth_context.client.get("/protected").status_code == 401
-    auth_context.connect.assert_not_awaited()
-
-
-def test_invalid_authorization_bytes_are_unauthorized(auth_context: SimpleNamespace) -> None:
-    response = auth_context.client.get("/protected", headers=[(b"authorization", b"Bearer \xff")])
-    assert response.status_code == 401
-
-
-@pytest.mark.parametrize("kind", ["signature", "algorithm", "missing-jti"])
-def test_untrusted_signature_algorithm_and_missing_jti_are_unauthorized(
-    auth_context: SimpleNamespace,
-    settings: Settings,
-    signing_key: rsa.RSAPrivateKey,
-    kind: str,
-) -> None:
-    token = signed_token(settings, signing_key)
-    if kind == "signature":
-        header, body, signature = token.split(".")
-        signature = ("A" if signature[0] != "A" else "B") + signature[1:]
-        token = ".".join([header, body, signature])
-    else:
-        claims = jwt.decode(token, options={"verify_signature": False})
-        if kind == "algorithm":
-            token = jwt.encode(claims, "unit-test-key-at-least-32-bytes-long", algorithm="HS256")
-        else:
-            claims.pop("jti")
-            token = jwt.encode(claims, signing_key, algorithm="RS256")
-    response = auth_context.client.get("/protected", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 401
-    auth_context.connect.assert_not_awaited()
+    asyncio.run(exercise())
+    assert not service.db.mock_calls
+    assert not service.ingestion.mock_calls
+    assert not service.approval.mock_calls

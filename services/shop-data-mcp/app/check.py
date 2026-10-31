@@ -15,7 +15,7 @@ async def check(settings: Settings) -> None:
     async with await db.connect() as conn:
         await conn.execute("SELECT 1 FROM mcp_control.results LIMIT 0")
         await conn.execute("SELECT 1 FROM mcp_control.refreshes LIMIT 0")
-        await conn.execute("SELECT 1 FROM mcp_control.revoked_tokens LIMIT 0")
+    await db.authorized_shops("+10000000000")
     for shop, config in settings.shops.items():
         who = Principal(subject="operator-preflight", shop=shop, scopes={"data:read"})
         for dataset in settings.datasets:

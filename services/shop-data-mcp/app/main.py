@@ -36,15 +36,6 @@ def create_app():
     async def health(request):
         return JSONResponse({"status": "ok"})
 
-    async def metadata(request):
-        return JSONResponse(
-            {
-                "resource": settings.public_url,
-                "authorization_servers": [settings.issuer],
-                "scopes_supported": ["data:read", "raw:request", "raw:read", "data:refresh"],
-            }
-        )
-
     async def ready(request):
         try:
             async with await service.db.connect() as conn:
@@ -63,7 +54,6 @@ def create_app():
         [
             Route("/health", health),
             Route("/ready", ready),
-            Route("/.well-known/oauth-protected-resource/mcp", metadata),
         ]
     )
     return Authentication(app, settings)

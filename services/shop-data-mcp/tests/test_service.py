@@ -25,9 +25,7 @@ def who() -> Principal:
 def service() -> DataService:
     settings = Settings(
         control_dsn="postgresql://control@localhost/test",
-        issuer="https://issuer.example",
-        audience="shop-data",
-        jwks_url="https://issuer.example/keys",
+        membership_dsn="postgresql://membership@localhost/test",
         public_url="https://mcp.example/mcp",
         datasets=[
             Dataset(

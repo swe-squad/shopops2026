@@ -45,6 +45,29 @@ def test_split_catalog_loads_metadata_without_overriding_shop_access(split_confi
     assert settings.datasets == Catalog.model_validate(catalog).datasets
     shop = "shopee-open-platform:1001"
     assert settings.shops[shop].datasets == config["shops"][shop]["datasets"]
+    assert settings.scopes == {"data:read"}
+    assert "issuer" not in Settings.model_fields
+
+
+@pytest.mark.parametrize("value", [None, "host=localhost sslmode=disable"])
+def test_membership_connection_is_required_and_uses_verified_tls(split_config, value):
+    config, _, operator_file, _ = split_config
+    if value is None:
+        config.pop("membership_dsn")
+    else:
+        config["membership_dsn"] = value
+    operator_file.write_text(json.dumps(config))
+    with pytest.raises(ConfigurationError):
+        Settings.load()
+
+
+@pytest.mark.parametrize("scopes", [[], ["data:refresh"], ["data:read", "admin"]])
+def test_invalid_server_capabilities_fail_startup(split_config, scopes):
+    config, _, operator_file, _ = split_config
+    config["scopes"] = scopes
+    operator_file.write_text(json.dumps(config))
+    with pytest.raises(ConfigurationError):
+        Settings.load()
 
 
 def test_legacy_inline_catalog_still_loads(split_config, monkeypatch):

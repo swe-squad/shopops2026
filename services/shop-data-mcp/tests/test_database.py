@@ -37,9 +37,7 @@ def database():
         conn.execute(Path("migrations/001-control.sql").read_text())
     settings = Settings(
         control_dsn=dsn,
-        issuer="https://issuer.test",
-        audience="mcp",
-        jwks_url="https://issuer.test/keys",
+        membership_dsn="postgresql://membership@localhost/test",
         public_url="https://mcp.test/mcp",
         datasets=[],
         shops={

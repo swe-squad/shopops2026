@@ -1,5 +1,6 @@
 -- Apply as an operator. Runtime control credentials receive only these objects.
 CREATE SCHEMA IF NOT EXISTS mcp_control;
+-- Legacy JWT revocation storage retained for rollback; phone access does not use it.
 CREATE TABLE IF NOT EXISTS mcp_control.revoked_tokens(jti text PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS mcp_control.results (
     id text PRIMARY KEY,

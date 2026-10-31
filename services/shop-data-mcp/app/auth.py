@@ -1,10 +1,10 @@
-"""JWT verification; agent-supplied tool arguments never define identity."""
+"""Phone-only identification. Knowledge of a phone number is sufficient for access."""
 
-import asyncio
+import re
 from contextvars import ContextVar
 
-import jwt
 from pydantic import BaseModel
+from starlette.responses import JSONResponse
 
 from app.settings import Settings
 
@@ -15,58 +15,54 @@ class Principal(BaseModel):
     scopes: set[str]
 
 
-principal: ContextVar[Principal] = ContextVar("principal")
+class Identity(BaseModel):
+    subject: str
+    shops: set[str]
+    scopes: set[str]
+
+    def select_shop(self, shop_key: str | None = None) -> Principal:
+        if shop_key is None and len(self.shops) == 1:
+            shop_key = next(iter(self.shops))
+        if shop_key not in self.shops:
+            raise ValueError("Choose an authorized shop_key from list_shops")
+        return Principal(subject=self.subject, shop=shop_key, scopes=self.scopes)
+
+
+principal: ContextVar[Identity] = ContextVar("principal")
 
 
 class Authentication:
     def __init__(self, app, settings: Settings):
         self.app, self.settings = app, settings
-        self.keys = jwt.PyJWKClient(settings.jwks_url, timeout=5)
 
     async def __call__(self, scope, receive, send) -> None:
-        if scope["type"] != "http" or scope["path"] in {
-            "/health",
-            "/.well-known/oauth-protected-resource/mcp",
-        }:
+        if scope["type"] != "http" or scope["path"] == "/health":
             await self.app(scope, receive, send)
             return
-        headers = dict(scope["headers"])
         try:
-            token = headers.get(b"authorization", b"").decode()
-            if not token.startswith("Bearer "):
+            phones = [v for k, v in scope["headers"] if k.lower() == b"x-phone-number"]
+            if len(phones) != 1:
                 raise ValueError()
-            token = token[7:]
-            key = await asyncio.to_thread(self.keys.get_signing_key_from_jwt, token)
-            claims = jwt.decode(
-                token,
-                key.key,
-                algorithms=["RS256"],
-                audience=self.settings.audience,
-                issuer=self.settings.issuer,
-                options={"require": ["exp", "iat", "sub", "shop_key", "scope", "jti"]},
-            )
-            who = Principal(
-                subject=claims["sub"], shop=claims["shop_key"], scopes=set(claims["scope"].split())
-            )
-            if who.shop not in self.settings.shops or "data:read" not in who.scopes:
+            phone = phones[0].decode("ascii")
+            if not re.fullmatch(r"\+[1-9][0-9]{7,14}", phone):
                 raise ValueError()
-            if claims["exp"] - claims["iat"] > 3600:
-                raise ValueError()
-            from app.database import Database
-
-            async with await Database(self.settings).connect() as conn:
-                cursor = await conn.execute(
-                    "SELECT 1 FROM mcp_control.revoked_tokens WHERE jti=%s", (claims["jti"],)
-                )
-                if await cursor.fetchone():
-                    raise ValueError()
-        except Exception:
-            from starlette.responses import JSONResponse
-
-            await JSONResponse(
-                {"error": "Unauthorized"}, status_code=401, headers={"WWW-Authenticate": "Bearer"}
-            )(scope, receive, send)
+        except ValueError:
+            await JSONResponse({"error": "Unauthorized"}, status_code=401)(scope, receive, send)
             return
+        from app.database import Database
+
+        try:
+            shops = await Database(self.settings).authorized_shops(phone)
+        except Exception:
+            await JSONResponse({"error": "Access lookup unavailable"}, status_code=503)(
+                scope, receive, send
+            )
+            return
+        shops &= self.settings.shops.keys()
+        if not shops:
+            await JSONResponse({"error": "Unauthorized"}, status_code=401)(scope, receive, send)
+            return
+        who = Identity(subject=phone, shops=shops, scopes=self.settings.scopes)
         context = principal.set(who)
         try:
             await self.app(scope, receive, send)

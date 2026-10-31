@@ -8,27 +8,39 @@ snapshot status semantics and internal agent connection settings. Use `CRONJOB_S
 for the private cronjob origin and `MCP_INTERNAL_URL` to allow the MCP app's internal host.
 The older range-refresh contracts below do not describe PR #6's full-snapshot refresh.
 
-## Confirmed topology
+## Phone access contract
 
-The first deployment is dev only. OpenAI's Codex Agents API connects to an authenticated public HTTPS MCP endpoint. PostgreSQL remains private on the VPS.
+The caller sends `X-Phone-Number` on every `/mcp` request. The number must match the
+source database's `user_id`, in canonical international format: `+` followed by 8-15
+digits, with a nonzero first digit. JWT, API keys and OTP are not required. Anyone
+knowing a user's phone number can access that user's configured shops; this is
+identification by supplied number, not verified phone ownership.
+
+The server looks up `access.user_shop_access` on every request and intersects its shop
+keys with the configured `shops`. Unknown, inactive, revoked and unassigned users get
+`401`; an unavailable membership database gives `503`. No phone goes in a URL or tool
+argument, and proxies/applications must not log the phone header. `/health` needs no
+phone. OAuth protected-resource metadata is no longer advertised.
 
 ```mermaid
 flowchart LR
-  P[Product backend: verified owner and shop] --> A[Codex Agents API]
-  A -->|HTTPS and scoped bearer token| M[CapRover: shop-data-mcp-dev]
-  M -->|Private connection and restricted roles| D[(PostgreSQL)]
-  M --> I[Existing ingestion and processing services]
+  C[Caller with phone number] -->|X-Phone-Number| M[shop-data-mcp]
+  M -->|Fixed membership query| A[(Authoritative access view)]
+  M -->|Restricted login per selected shop| D[(Derived PostgreSQL marts)]
+  M -->|Separate service credential| I[Approval / ingestion services]
 ```
 
-Proposed service: `shop-data-mcp`, Python FastAPI template, container port `8000`, MCP path `/mcp`, image `ghcr.io/swe-squad/shop-data-mcp`. The endpoint will be `https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp` after deployment. These match the service implementation, not running infrastructure.
+Container port: `8000`; MCP endpoint: `/mcp`. Dev public URL:
+`https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp`. This describes the implementation,
+not a verified deployment.
 
 ## Implemented runtime configuration
 
 Set `MCP_CONFIG_FILE` to an operator-owned mounted JSON file and `MCP_CATALOG_FILE` to the separate dataset catalog; `PORT` defaults to 8000. Existing inline catalogs remain supported when the separate path is unset. The earlier individual DB/AUTH environment names were proposals and are not implemented. The authoritative keys and defaults are in [runtime config example](../services/shop-data-mcp/config.example.json), [catalog example](../services/shop-data-mcp/catalog.example.json), and [DE development guide](../services/shop-data-mcp/DEVELOPMENT.md).
 
-The JSON config defines restricted control/query DSNs, shop dataset allowlists, issuer/audience/JWKS, resource limits, and optional fixed ingestion/approval origins with separate credentials. Keep populated configuration outside Git. Both control and query DSNs require `sslmode=verify-full` and a mounted CA. The control identity stores artifacts and operation records but never executes model SQL; per-shop logins execute those queries.
+The JSON config defines restricted control/membership/query DSNs, shop dataset allowlists, server-controlled scopes, resource limits, and optional fixed ingestion/approval origins with separate credentials. Keep populated configuration outside Git. All three types of DSN require `sslmode=verify-full` and a mounted CA. The control identity stores artifacts and operation records but never executes model SQL; per-shop logins execute those queries.
 
-Run `python -m app.check` for configuration validation and add `--connect` to check control storage and published mart connectivity. These checks do not certify tenancy policies or live upstream behavior. With the split examples, mount the runtime JSON, catalog JSON and CA and set both file variables before starting the service. Legacy inline catalogs need only `MCP_CONFIG_FILE` and the CA; leave `MCP_CATALOG_FILE` unset.
+Run `python -m app.check` for configuration validation and add `--connect` to check control storage, membership lookup and published mart connectivity. These checks do not certify tenancy policies or live upstream behavior. With the split examples, mount the runtime JSON, catalog JSON and CA and set both file variables before starting the service. Legacy inline catalogs need only `MCP_CONFIG_FILE` and the CA; leave `MCP_CATALOG_FILE` unset.
 
 ## Connect the MCP to PostgreSQL
 
@@ -40,29 +52,80 @@ Run `python -m app.check` for configuration validation and add `--connect` to ch
 
 Do not use an administrator URL for model queries. SQL restrictions, safe view ownership, raw grant projection and result isolation must be verified before accepting agent traffic. RLS does not protect against a privileged database account bypassing it. See [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html).
 
-## Connect the Agents API to MCP
+## Membership database setup
 
-The product backend verifies owner/shop membership, obtains a short-lived scoped MCP token from the trusted issuer, and creates the Agents API session. The MCP checks signature, issuer, audience, expiry, revocation and shop/agent binding for every call. Token claim names and token renewal must be agreed with the identity service. A caller-provided tenant header or tool argument cannot change authorization.
+Apply [003-phone-membership.sql](../services/shop-data-mcp/migrations/003-phone-membership.sql)
+**once in the authoritative source database**, then set the login password out of band.
+The role can read only `user_id` and `shop_key` from `access.user_shop_access`. Set
+`membership_dsn` to that login with verified TLS. The view must filter inactive users,
+merchants and memberships; do not point at a delayed pipeline copy of the access graph.
+No model-generated SQL runs through this login. It receives no source-record access.
 
-Add this proposed MCP entry to `agent.tools`, supplying `transport.authorization` at session creation from the trusted backend:
+This relies on the existing view contract in the source schema. PostgreSQL evaluates a
+regular view when queried; see [CREATE VIEW](https://www.postgresql.org/docs/current/sql-createview.html).
+
+## Caller example
+
+Configure the MCP client's custom HTTP headers with:
 
 ```json
-{
-  "type": "mcp",
-  "server_label": "shop_data",
-  "transport": {
-    "type": "http",
-    "server_url": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
-    "authorization": "Bearer <short-lived-shop-scoped-token>"
-  },
-  "connection_origin": "service",
-  "required": true
-}
+{"X-Phone-Number": "+84900000001"}
 ```
 
-Do not put the token in instructions, prompts, tool arguments, source files or sandbox environment variables. Per-session HTTP authorization is supported; reusable service-origin credentials can alternatively use an attached vault. Verify renewal for sessions outliving a token. Essential tools must remain accessible when optional protocol features are unavailable. Source: [official Agents API MCP connection and authentication guide](https://developers.openai.com/api/docs/guides/agents-api/tools/mcp).
+Use the caller's `SHOP_DATA_MCP_URL` runtime variable:
 
-Raw access still requires verified owner approval. Fresh pulls run automatically within policy. A refresh returns job/coverage metadata and does not authorize disclosure of collected raw payloads. Temporary marts inherit their sources' restrictions and expiry.
+- Local: `http://localhost:8000/mcp`
+- CapRover dev: `http://srv-captain--shop-data-mcp-dev:8000/mcp`
+- CapRover production: `http://srv-captain--shop-data-mcp:8000/mcp`
+- External callers: the configured public HTTPS endpoint.
+
+Initialize the connection using the normal
+[MCP Streamable HTTP handshake](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports),
+with the phone header on initialize, notifications and subsequent calls. A client that
+only supports OAuth/Bearer credentials needs an adapter or custom-header support for this contract.
+
+First call `list_shops` (paginated, 50 per page). Then call data tools with a selected
+`shop_key` from that list. Example tool-call messages:
+
+```json
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_shops","arguments":{}}}
+```
+
+```json
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"query_mart","arguments":{"shop_key":"lazada:1001","query":"SELECT sum(gross_sales) AS sales FROM order_economics"}}}
+```
+
+The same phone/connection can access several shops. Repeat queries with each authorized
+shop key; this is not a combined cross-shop SQL engine. All data tools accept `shop_key`;
+omitting it is valid only when exactly one configured shop is authorized. Saved results,
+raw grants and refresh receipts stay bound to both phone and shop. Query responses include
+`shop_key` so callers can associate each result with its source shop.
+
+Capabilities come from the operator's `scopes` config, default `['data:read']`. Enable
+`data:refresh` for collection and `raw:request`/`raw:read` for the approval workflow only
+when the corresponding integrations are configured. The caller cannot choose scopes.
+Raw access still requires verified owner approval; knowing the phone does not approve a grant.
+
+## Migrating from JWT
+
+1. Provision the membership login above. Add `membership_dsn` and, if needed, `scopes`
+   to the mounted runtime JSON. Remove `issuer`, `audience` and `jwks_url`; those keys
+   are no longer accepted. Keep `public_url` for host/origin validation.
+2. Update callers to send `X-Phone-Number` instead of `Authorization: Bearer <JWT>`.
+   Use `list_shops` and pass `shop_key` to data tools for multi-shop users.
+3. For refresh, update cronjob's `MCP_SUBJECT_USERS_JSON` to map each phone to the
+   corresponding source user, e.g. synthetic `{"+84900000001":"+84900000001"}`. Keep
+   the separate MCP-to-cronjob service token. Approval integrations must also accept
+   the phone subject and continue verifying owner consent independently.
+4. Existing results, grants and refresh receipts owned by old JWT subjects do not
+   transfer automatically. Finish/reconcile old in-flight operations before cutover;
+   create new results and approvals under the phone subject. Never bulk-reassign them.
+5. Restart with the new image/config and verify the release checks below. The legacy
+   `revoked_tokens` table is retained for rollback but no longer consulted. Revoke
+   access by disabling source membership/user/merchant, not by inserting a JWT ID.
+
+Rollback requires the previous image, previous issuer configuration and previous caller
+headers together. Existing business data and legacy control records are not dropped.
 
 ## CapRover and CI setup
 
@@ -72,16 +135,16 @@ Run the repository's `scripts/setup-service.sh shop-data-mcp dev` from your term
 
 ## Release checks and failure handling
 
-- Unauthenticated, expired, wrong-audience and revoked requests fail without revealing catalog/data.
-- A shop-A identity cannot discover or query shop-B data, results, workspaces or grants. Repeat after pooled-connection reuse.
+- Missing, malformed, duplicate, unknown and inactive phone requests fail without revealing catalog/data.
+- One phone can select all its configured shops, but cannot select unauthorized shops or access another phone/shop's results. Revoked membership blocks subsequent requests.
 - Raw queries fail before approval; raw-derived temporary marts fail after grant expiry/revocation.
 - Malicious SQL cannot change roles/settings, invoke file/network functions, modify sources or use a privileged materializer.
 - Query/result/workspace quotas stop excessive workloads. Database disconnection and certificate errors produce sanitized failures.
 - Retried refreshes deduplicate; incomplete collection/processing never reports the mart as fresh.
-- A real Agents API session lists tools and completes an authorized query; no credentials/private payloads appear in application logs.
+- A real client sends the custom header, lists shops and completes an authorized query; no phone headers or private payloads appear in logs.
 
-Until these checks pass, configuration is documented but deployment is not verified. Roll back the image through CapRover, disable agent traffic and revoke affected MCP credentials when isolation/authentication checks fail. Restore backups only through a separately approved database recovery operation; an image rollback must not mutate source data.
+Until these checks pass, configuration is documented but deployment is not verified. Roll back the image through CapRover, disable agent traffic and disable affected memberships when isolation/authentication checks fail. Restore backups only through a separately approved database recovery operation; an image rollback must not mutate source data.
 
 ## Integration reminders
 
-Before implementing live adapters, remind the owner to supply ingestion and processing job contracts, their authentication methods, freshness/watermark semantics and idempotency behavior. Before enabling raw access or external traffic, remind the owner to supply verified owner identity, token issuance/renewal/revocation and raw-approval callback contracts. These integrations do not exist yet as of 2026-10-31; do not replace them with self-approval or fake success. These are workflow checkpoints, not scheduled notifications.
+Before implementing live adapters, remind the owner to supply ingestion and processing job contracts, their authentication methods, freshness/watermark semantics and idempotency behavior. Before enabling raw access or external traffic, remind the owner to supply the live membership view/connection and raw-owner approval callback contracts. These integrations do not exist yet as of 2026-10-31; do not replace them with self-approval or fake success. These are workflow checkpoints, not scheduled notifications.

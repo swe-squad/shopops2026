@@ -1,8 +1,7 @@
 {
   "control_dsn": "host=PRIVATE_HOST dbname=shopops user=mcp_control password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
-  "issuer": "https://AUTH_HOST",
-  "audience": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
-  "jwks_url": "https://AUTH_HOST/.well-known/jwks.json",
+  "membership_dsn": "host=PRIVATE_SOURCE_HOST dbname=source user=mcp_membership password=REPLACE sslmode=verify-full sslrootcert=/run/secrets/postgres-ca.crt",
+  "scopes": ["data:read"],
   "public_url": "https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp",
   "shops": {
     "shopee-open-platform:1001": {

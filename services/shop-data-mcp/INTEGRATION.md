@@ -4,8 +4,9 @@ The MCP boundary is `agent service -> shop-data-mcp /mcp`. Queries use PostgreSQ
 logins scoped to one shop; refreshes use `shop-data-mcp -> cronjob-server -> mock-data-server`.
 The source database belongs to mock-data-server. MCP query DSNs point to cronjob-server's
 **derived database**, containing `core`, `mart`, `raw`, and `sync`. The control DSN can
-point to a separate database; it stores only MCP results, refresh receipts and revocations.
-Never give MCP the pipeline writer or source database credentials.
+point to a separate database; it stores MCP results and refresh receipts. Legacy revocation
+storage is retained for rollback. Never give MCP the pipeline writer or source data
+credentials. Its separate membership login can read only the authoritative access view.
 
 This integration targets [PR #6](https://github.com/swe-squad/shopops2026/pull/6), base
 commit `55b89d552d5ff777125c2796751da1372d091a15`, plus its companion MCP bridge changes
@@ -18,8 +19,8 @@ enabling refresh. No service imports another service's application code.
    must exist before provisioning query logins. Actual source keys include
    `shopee-open-platform:1001`, `lazada:1001`, and `shopify:1001`.
 2. Apply `migrations/001-control.sql` in the control database. Provision the control login
-   with USAGE on `mcp_control`, SELECT/INSERT/UPDATE/DELETE on `results` and `refreshes`,
-   and SELECT on `revoked_tokens`. It has no application data permissions.
+   with USAGE on `mcp_control` and SELECT/INSERT/UPDATE/DELETE on `results` and `refreshes`.
+   It has no application data permissions. The legacy `revoked_tokens` table is unused.
 3. Apply `migrations/002-pipeline-access.sql` **once in the derived database**, as a
    trusted operator with source SELECT privileges. It creates security-barrier views
    in `mcp_data` and an operator-only role mapping. It leaves the pipeline's base tables
@@ -63,14 +64,18 @@ Set `CRONJOB_SERVER_URL` in the MCP runtime:
 There is no default dev upstream. `CRONJOB_SERVER_URL` overrides legacy JSON
 `ingestion_url`. Set secret JSON `ingestion_token` to the same separately issued value
 as cronjob-server's `MCP_SERVICE_TOKEN`. A URL without a token refuses MCP startup.
-The agent bearer token is never forwarded.
+Phone identity does not replace this service credential.
 
 In cronjob-server, set `MCP_SUBJECT_USERS_JSON` to an operator-owned mapping from the
-agent JWT subject to its authorized source user. For synthetic local tests only:
-`{"agent-a":"+84900000001"}`. Tool arguments cannot override the verified MCP subject
-or shop. Cronjob-server verifies the service token, resolves this mapping, checks current
+MCP phone subject to its authorized source user. For synthetic local tests only:
+`{"+84900000001":"+84900000001"}`. Tool arguments cannot override the phone subject
+or select a shop outside its current membership. Cronjob-server verifies the service token, resolves this mapping, checks current
 source membership and published shop ownership on every submission and poll. Missing
 token/mapping or unavailable membership checks deny access.
+
+Operation/grant GET requests include the phone subject in their query parameters under
+the existing bridge contract. Disable or redact query strings in upstream/proxy access
+logs, in addition to redacting phone headers; do not log raw request bodies.
 
 The bridge implements `POST /v1/refreshes` and `GET /v1/operations/{id}`. Refresh uses
 `resource="snapshot"`: PR #6 collects and publishes the **entire source snapshot**.
@@ -101,16 +106,23 @@ MCP bridge does not change those routes' security model.
 Set the caller's runtime `SHOP_DATA_MCP_URL` to
 `http://srv-captain--shop-data-mcp-dev:8000/mcp` (dev) or
 `http://srv-captain--shop-data-mcp:8000/mcp` (production). Configure MCP's advertised
-`public_url` with its HTTPS identity URL and set `MCP_INTERNAL_URL` to the internal
+`public_url` with its HTTPS MCP URL and set `MCP_INTERNAL_URL` to the internal
 `SHOP_DATA_MCP_URL` value so transport host protection admits it. Other hosts remain
-rejected. The caller must still send the shop-bound RS256 bearer token.
-For an external agent, use the HTTPS MCP URL instead.
+rejected. Send `X-Phone-Number` on every request, including initialize and tool calls.
+No bearer credential is required for MCP; knowledge of the phone number grants access.
+For an external agent, use the HTTPS MCP URL and a client supporting custom HTTP headers.
 
-Required token claims are `sub`, `shop_key`, space-separated `scope`, `iat`, `exp`, `jti`,
-and configured `iss`/`aud`; the token lifetime is at most one hour. Minimum scope is
-`data:read`; refresh also needs `data:refresh`. The issuer must verify the subject's shop
-membership before signing. Raw queries still require the external owner-approval service;
-this integration does not introduce automatic approvals or an identity issuer.
+Set `membership_dsn` to the restricted login provisioned by
+`migrations/003-phone-membership.sql` in the **authoritative source database**. It reads
+only `user_id` and `shop_key` from the live `access.user_shop_access` view. Every request
+resolves membership again, excluding inactive users, memberships and merchants. The phone
+must match `user_id` exactly (`+` and 8-15 digits); no local-format guessing occurs.
+
+Call `list_shops` and pass `shop_key` to each data tool. One phone can access multiple shops;
+queries are executed separately through each shop's restricted login. A missing shop selection
+is accepted only for a single authorized configured shop. No tool argument can change the phone.
+Server configuration supplies `scopes`, defaulting to `data:read`; refresh also needs
+`data:refresh`. Raw queries still require the external owner-approval service.
 
 Call `search_catalog`, `describe_dataset`, and `query_mart`; for a refresh call
 `request_refresh(resource="snapshot", start=..., end=..., idempotency_key=...)`, then

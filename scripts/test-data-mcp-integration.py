@@ -102,7 +102,7 @@ def main() -> int:
         POSTGRES_SSLMODE="disable",
         SYNC_INTERVAL_SECONDS="0",
         MCP_SERVICE_TOKEN=secrets.token_urlsafe(32),
-        MCP_SUBJECT_USERS_JSON=json.dumps({"agent-a": "+84900000001"}),
+        MCP_SUBJECT_USERS_JSON=json.dumps({"+84900000001": "+84900000001"}),
     )
     try:
         command(
@@ -131,7 +131,9 @@ def main() -> int:
         deadline = time.monotonic() + 30
         while True:
             ready = subprocess.run(
-                ["docker", "exec", name, "pg_isready", "-U", "postgres"],
+                # The image's temporary init server accepts socket connections, then
+                # shuts down. Wait for the final TCP listener before creating DBs.
+                ["docker", "exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "postgres"],
                 capture_output=True,
             )
             if ready.returncode == 0:

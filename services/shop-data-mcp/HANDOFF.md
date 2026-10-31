@@ -4,7 +4,7 @@ Updated 2026-10-31. [INTEGRATION.md](INTEGRATION.md) defines the implemented PR 
 cronjob bridge, database provisioning, private agent transport and local verification.
 That bridge supports full snapshots only (`resource=snapshot`, `snapshot_ready`,
 `refresh_mode=full_snapshot`, `applied_source_revision`, `coverage=null`). The range-based
-collection contract below remains a future contract, not PR #6's behavior. Identity and
+collection contract below remains a future contract, not PR #6's behavior. Live phone membership and
 raw-owner approval remain external dependencies. An unconfigured or failed dependency
 returns an error; there is no fixture fallback or automatic approval.
 
@@ -19,12 +19,19 @@ Resolve actual service names and use their private cluster origins
 addresses. Each adapter accepts an origin only, without credentials, path, query or
 fragment. Local integration tests can use a local origin.
 
-The identity engineer must provision the trusted RS256 issuer and audience, verification
-keys, token renewal/revocation and verified owner-to-shop membership. MCP authorization
-scopes are `data:read`, `raw:request`, `raw:read` and `data:refresh`. The verified token
-supplies `sub` (mapped to subject) and `shop_key`; tool arguments cannot choose another shop or identity.
-Service-to-service authentication uses a separately configured service bearer credential.
-The caller's MCP bearer token is never forwarded to an upstream.
+The MCP caller sends `X-Phone-Number` in canonical international format. Anyone knowing
+that number can call: there is no JWT, OTP or proof of phone ownership. The membership
+login reads only `user_id` and `shop_key` from authoritative `access.user_shop_access`;
+its active-user, merchant and membership filters are part of the required DB contract.
+The phone becomes `subject`. `list_shops` exposes the configured shops in that membership;
+tool `shop_key` arguments must select from them. Every HTTP request rechecks access.
+
+MCP capabilities come from server `scopes`: `data:read` is required; `raw:request`,
+`raw:read` and `data:refresh` are optional. Owner approval is still required for raw reads.
+Service-to-service calls from MCP to approval/collection services retain their separately
+configured bearer credentials. Those services receive the phone as subject, not a JWT.
+Keep subjects and phone headers out of logs. Existing cronjob subject mappings must map
+the phone to the same source user; see [INTEGRATION.md](INTEGRATION.md).
 
 ## Common HTTP requirements
 
@@ -169,13 +176,12 @@ projections. Do not replace the shop-bound resolver with an unrestricted shared 
 Apply migrations through an operator credential, verify private routing and verified TLS,
 and test shop isolation across repeated query connections.
 
-Before accepting external agent traffic, verify real issuer/revocation behavior, missing
+Before accepting external agent traffic, verify live phone membership and revocation behavior, missing
 configuration failures, cross-shop access denials, raw approval/expiry/revocation, refresh
 deduplication, partial processing, coverage freshness and sanitized upstream failures.
 Adapter tests with MockTransport validate HTTP behavior only. They do not demonstrate
 working upstream services, PostgreSQL isolation or a live deployment. Follow the owning
 [configuration guide](../../docs/shop-data-mcp-configuration.md) for topology and release checks.
 
-Unresolved: actual upstream service identities and credentials; issuer and revocation
-contract; owner approval callback; upstream idempotency retention; source freshness/watermark updates;
+Unresolved: actual upstream service identities and credentials; authoritative membership connection; owner approval callback; upstream idempotency retention; source freshness/watermark updates;
 approved database schema/catalog and role provisioning; live end-to-end verification.

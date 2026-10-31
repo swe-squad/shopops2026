@@ -78,11 +78,11 @@ to package a recurring order count using the configured `order_economics` datase
 
 ```python
 @server.tool(structured_output=True, annotations=read)
-async def summarize_orders() -> dict[str, Any]:
+async def summarize_orders(shop_key: str | None = None) -> dict[str, Any]:
     """Count the current shop's orders using the configured order-grain dataset."""
     return await run(
         service.analyze,
-        principal.get(),
+        select(shop_key),
         "SELECT count(*) AS order_count FROM order_economics",
     )
 ```
@@ -93,8 +93,7 @@ it. An annotation describes behavior; it does not enforce permissions. For new o
 enforce the required scope in the service method. For tools accepting values, build SQL
 through the existing validated AST path or bound values; never concatenate user input.
 
-Do not call source tables through the control connection, accept a shop identity from tool
-arguments, skip raw grant checks, or execute a model query with migration/writer privileges.
+Do not call source tables through the control connection, trust a shop argument without checking current membership, skip raw grant checks, or execute a model query with migration/writer privileges.
 Keep these safeguards in the shared service/database layers so future tools reuse them.
 
 Verify the change with the owning tests, then `make ci`. The SDK tests exercise actual tool

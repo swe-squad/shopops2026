@@ -102,6 +102,7 @@ class DataService:
         result["grant_snapshots"] = snapshots
         result_id = await self.db.save(who, result, list(set(dependencies)), expires)
         return {
+            "shop_key": who.shop,
             "result_id": result_id,
             "columns": result["columns"],
             "preview": result["rows"][:20],

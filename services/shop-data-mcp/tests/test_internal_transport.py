@@ -9,17 +9,15 @@ from app.settings import Settings
 def test_internal_agent_host_is_allowed_and_unconfigured_host_is_rejected(monkeypatch):
     settings = Settings(
         control_dsn="postgresql://unused",
-        issuer="https://issuer.test",
-        audience="https://mcp.test/mcp",
-        jwks_url="https://issuer.test/keys",
+        membership_dsn="postgresql://membership@localhost/test",
         public_url="https://mcp.test/mcp",
         internal_url="http://srv-captain--shop-data-mcp:8000/mcp",
         shops={},
     )
     monkeypatch.setattr(Settings, "load", lambda: settings)
     protected = create_app()
-    # Check host protection in the real SDK HTTP transport; JWT checks have their own
-    # signed-token tests. No tool is invoked and no database dependency is replaced.
+    # Check host protection in the real SDK HTTP transport; phone checks have their own
+    # membership tests. No tool is invoked and no database dependency is replaced.
     with TestClient(protected.app) as client:
         body = {
             "jsonrpc": "2.0",
