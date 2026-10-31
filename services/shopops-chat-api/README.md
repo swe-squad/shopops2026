@@ -1,0 +1,20 @@
+# ShopOps Chat API
+
+Independent single-workspace chat backend for the configured saved orchestrator in the [OpenAI Agents API](https://developers.openai.com/api/docs/guides/agents-api/quickstart). Operations and incident storage belong to [shopops-api](../shopops-api/README.md). Provider keys never reach the browser.
+
+Required runtime variables: `SHOP_API_TOKEN` (workspace bearer secret), `OPENAI_API_KEY` (Agents API access), `OPENAI_ORCHESTRATOR_AGENT_ID` (saved orchestrator reference), and `CHAT_DATA_PATH` (SQLite path, default `/data/chat.sqlite3`). Empty credentials fail startup. Supply real credentials through the runtime environment; `.env.example` documents variable names and contains no usable credentials. This service does not automatically load `.env` files.
+
+Run `make install`, export the variables, then `make run` (local port 8001). The container listens on `PORT=8000`. Attach persistent writable storage at `/data`, owned by UID 1001. Keep the API internal and expose HTTPS through the frontend. Use the same `SHOP_API_TOKEN` in both API services for this single workspace. Run `make ci` for pinned dependency installation, Ruff, and injected-provider tests. Tests make no paid API calls.
+
+`GET /health` is public. Other routes require `Authorization: Bearer <SHOP_API_TOKEN>`:
+
+- `GET /api/chat/messages`: latest 100 messages in chronological order, each `{id,text,role,created_at}`. Roles are `user` or `assistant`.
+- `POST /api/chat/messages` with `{text}`: a server-sent event stream. Text must contain a non-whitespace character and be at most 2000 characters. Frames contain JSON `{type:"delta",text}`, `{type:"done",message}`, or `{type:"error",message}`. Deltas append provisional text; the done message replaces it with the authoritative final reply. HTTP 401/422 reject authentication/input errors; 409 means another turn or an unresolved prior submission; 502 means saved provider state could not be inspected.
+
+The first submission creates a saved-agent session with `environment.type="none"` and streams its initial turn. The session ID is persisted on `agent.session.created`. Follow-ups reuse that session, open `GET .../events?stream=true` before posting input, and persist a distinct idempotency key per submission. Only root-agent output is displayed. Final text parts replace provisional parts; subagent terminal events, idle events, and EOF do not imply success. See the official [events and recovery guide](https://developers.openai.com/api/docs/guides/agents-api/sessions/events).
+
+SQLite transactions and a renewable 90-second lease serialize turns across workers sharing the same database. User input is persisted before provider I/O. Only a completed root turn with text creates an assistant history entry. Disconnects close the stream and attempt bounded upstream cancellation. The unfinished turn stays recoverable; history refresh or the next submission inspects its saved turn and paginated items without resending the original input. A process crash can require up to 90 seconds before another worker reclaims its lease.
+
+If a create request loses its connection before the session ID arrives, the remote outcome cannot be located safely. The pending submission blocks new input instead of creating a duplicate session. An administrator must reconcile that session against OpenAI logs before marking the pending database row failed and setting the correct workspace session ID. Preserve a database backup before manual recovery. Explicit rejected input (for example HTTP 401 or 429) is marked failed so a corrected new submission can proceed. Failed saved sessions and required actions needing custom function results, environment access, or interactive approvals require administrator intervention; this text chat does not fabricate those results.
+
+Credentials/account access and the saved orchestrator's real tools require a separate live smoke test. Transport contract tests verify local behavior; they do not establish provider entitlement, actual agent configuration, or tool success.
