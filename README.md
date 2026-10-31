@@ -48,12 +48,13 @@ Codex supports development through code generation, integration, and debugging, 
 
 ## Acknowledgments
 
-Built for the [Sea × OpenAI Regional Codex Hackathon — Vietnam](https://codexhackathon.sea.com/), co-hosted by **Sea** and **OpenAI** and brought to the community by **Shopee Vietnam**. We appreciate the seller ecosystem and Codex tools that made this project possible.
+Built for the [Sea × OpenAI Regional Codex Hackathon — Vietnam](https://codexhackathon.sea.com/), co-hosted by **Sea** and **OpenAI**. ShopOps serves Shopee merchants; **Shopee hosts the event and judges the hackathon**.
 
 ## Explore the project
 
 | Start here | Purpose |
 | --- | --- |
+| [Hackathon project write-up](docs/ShopOps-WIP-project-write-up.pdf) · [Editable source](docs/project-write-up.md) | Brief project summary for the Sea × OpenAI Regional Codex Hackathon |
 | [Documentation guide](docs/README.md) | Find the owning document for a question |
 | [Product and demo intent](docs/project-overview-pdr.md) | Seller problems, workflows, trust, and demo success |
 | [System architecture](docs/system-architecture.md) | Managed runtime, MCP boundaries, lifecycle, and isolation |
