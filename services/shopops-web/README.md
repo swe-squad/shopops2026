@@ -31,20 +31,20 @@ operations and explicitly labels marketplace connections as a simulation.
 
 ## Browser workspace
 
-Logging in from the landing page opens **Connections**. Choose **Log in to Shopee** or
-**Log in to TikTok** to exercise the mock connection flow, then return from the
+Logging in from the landing page opens **Connections**. Choose **Log in to Shopee**,
+**Log in to Shopify**, or **Log in to Lazada** to exercise the mock connection flow, then return from the
 success page to see **Connected**. Existing `/shop/...` deep links keep their target;
 new internal tabs still open Overview. The initial chat navigation mailbox snapshot
 establishes a baseline without replaying an old link over the login destination;
 new events after that initial sync still open in the active tab. Connections is also in the shop navigation.
 
-The mock API lives in this service, with two flags in one Node process's RAM:
+The mock API lives in this service, with three flags in one Node process's RAM:
 
 | Endpoint | Result |
 | --- | --- |
-| `GET /api/mock/connectors` | `{connections: [{platform, connected, mock: true}, ...]}` for Shopee and TikTok |
-| `PUT /api/mock/connectors/shopee` or `/tiktok` | No body; idempotently set that flag and return `{platform, connected: true, mock: true}` |
-| `DELETE /api/mock/connectors/shopee` or `/tiktok` | No body; idempotently clear that flag and return `{platform, connected: false, mock: true}` |
+| `GET /api/mock/connectors` | `{connections: [{platform, connected, mock: true}, ...]}` for Shopee, Shopify, and Lazada |
+| `PUT /api/mock/connectors/shopee`, `/shopify`, or `/lazada` | No body; idempotently set that flag and return `{platform, connected: true, mock: true}` |
+| `DELETE /api/mock/connectors/shopee`, `/shopify`, or `/lazada` | No body; idempotently clear that flag and return `{platform, connected: false, mock: true}` |
 
 To remove a demo connection locally:
 
@@ -52,9 +52,9 @@ To remove a demo connection locally:
 curl -X DELETE http://localhost:5173/api/mock/connectors/shopee
 ```
 
-Replace `shopee` with `tiktok` for TikTok, or use the deployed frontend origin.
+Replace `shopee` with `shopify` or `lazada` for the other platforms, or use the deployed frontend origin.
 The response is HTTP 200, including when the platform is already disconnected.
-Only that platform's flag is cleared; both platforms remain in the GET list.
+Only that platform's flag is cleared; all three platforms remain in the GET list.
 Reopen Connections or use **Reload page** to show **Not connected**, then use the
 existing login button to reconnect. This endpoint requires no body or workspace
 token and affects the shared demo state for this service instance. A supplied
@@ -62,11 +62,11 @@ Origin must match the frontend origin, just as for PUT.
 
 These public demo flags are shared by every browser using this service instance.
 They survive browser refresh, closing a browser, and locking/unlocking the UI.
-Restarting the mock process/container or redeploying resets both flags. Run one
+Restarting the mock process/container or redeploying resets all three flags. Run one
 replica for a consistent demo; replicas do not share RAM. No database, browser
 storage, account identity, or real platform credentials are involved. The mock
 does not authenticate users or grant access to operations data. It never contacts
-Shopee/TikTok, imports records, or changes the manual-incidents behavior.
+Shopee/Shopify/Lazada, imports records, or changes the manual-incidents behavior.
 
 Responses are uncached. Invalid platforms return 400, unknown paths 404, unsupported
 methods 405, and cross-origin mutations 403. The UI checks the API on entry,

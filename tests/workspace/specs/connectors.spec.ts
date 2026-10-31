@@ -13,7 +13,9 @@ test('mock connections survive browser reload and relogin and are shared by the 
   }
   await open(page)
   await expect(page.getByRole('region', { name: 'Shopee' })).toContainText('Not connected')
-  await expect(page.getByRole('region', { name: 'TikTok' })).toContainText('Not connected')
+  await expect(page.getByRole('region', { name: 'Shopify' })).toContainText('Not connected')
+  await expect(page.getByRole('region', { name: 'Lazada' })).toContainText('Not connected')
+  await expect(page.getByRole('region', { name: 'TikTok' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Log in to Shopee' }).click()
   await expect(page.getByRole('heading', { name: 'Connection successful' })).toBeVisible()
   await expect(page.getByLabel('Browser address')).toHaveValue(/\/shop\/connections\/shopee\/success$/)
@@ -31,10 +33,13 @@ test('mock connections survive browser reload and relogin and are shared by the 
     const second = await other.newPage()
     await open(second)
     await expect(second.getByRole('button', { name: 'View Shopee connection' })).toBeVisible()
-    await second.getByRole('button', { name: 'Log in to TikTok' }).click()
-    await expect(second.getByRole('heading', { name: 'Connection successful' })).toBeVisible()
-    await page.getByRole('button', { name: 'Reload page', exact: true }).click()
-    await expect(page.getByRole('button', { name: 'View TikTok connection' })).toBeVisible()
+    for (const name of ['Shopify', 'Lazada']) {
+      await second.getByRole('button', { name: `Log in to ${name}` }).click()
+      await expect(second.getByRole('heading', { name: 'Connection successful' })).toBeVisible()
+      await second.getByRole('button', { name: 'Back to connections' }).click()
+      await page.getByRole('button', { name: 'Reload page', exact: true }).click()
+      await expect(page.getByRole('button', { name: `View ${name} connection` })).toBeVisible()
+    }
   } finally { await other.close() }
   expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 })
   expect(mockHeaders.length).toBeGreaterThan(0)
@@ -42,7 +47,7 @@ test('mock connections survive browser reload and relogin and are shared by the 
 })
 
 test('connector pages fit the embedded viewport and preserve tab keyboard focus', async ({ page, request }, testInfo) => {
-  for (const platform of ['shopee', 'tiktok']) {
+  for (const platform of ['shopee', 'shopify', 'lazada']) {
     expect((await request.put(`http://localhost:5173/api/mock/connectors/${platform}`)).ok()).toBe(true)
   }
   await page.goto('/')
@@ -63,14 +68,14 @@ test('connector pages fit the embedded viewport and preserve tab keyboard focus'
     await expectFixedParent(page)
     await page.screenshot({ path: testInfo.outputPath(`connections-${viewport.width}.png`) })
   }
-  await app.getByRole('button', { name: 'View TikTok connection' }).click()
+  await app.getByRole('button', { name: 'View Shopify connection' }).click()
   await expect(app.getByRole('heading', { name: 'Connection successful' })).toBeVisible()
   await expectFixedParent(page)
 })
 
 test('DELETE disconnects one platform in the web UI and allows reconnecting', async ({ page, request }) => {
   const endpoint = 'http://localhost:5173/api/mock/connectors'
-  for (const platform of ['shopee', 'tiktok']) {
+  for (const platform of ['shopee', 'shopify', 'lazada']) {
     expect((await request.put(`${endpoint}/${platform}`)).status()).toBe(200)
   }
   await page.goto('/')
@@ -82,7 +87,8 @@ test('DELETE disconnects one platform in the web UI and allows reconnecting', as
   expect(await response.json()).toEqual({ platform: 'shopee', connected: false, mock: true })
   await app.getByRole('button', { name: 'Reload page', exact: true }).click()
   await expect(app.getByRole('region', { name: 'Shopee' })).toContainText('Not connected')
-  await expect(app.getByRole('button', { name: 'View TikTok connection' })).toBeVisible()
+  await expect(app.getByRole('button', { name: 'View Shopify connection' })).toBeVisible()
+  await expect(app.getByRole('button', { name: 'View Lazada connection' })).toBeVisible()
   await app.getByRole('button', { name: 'Log in to Shopee' }).click()
   await expect(app.getByRole('heading', { name: 'Connection successful' })).toBeVisible()
 })

@@ -2,7 +2,7 @@
 
 React + TypeScript SPA built with Vite, served by nginx (`nginx.conf`, SPA fallback, `/health`).
 `mock/runtime.ts` runs a Node HTTP mock alongside nginx in the same container;
-`mock/connectors.ts` also serves local Vite requests. Connector state is two public
+`mock/connectors.ts` also serves local Vite requests. Connector state is three public
 demo flags in process RAM, shared across browsers and reset on restart, with no
 database or browser persistence. Do not use these flags to authorize operations.
 

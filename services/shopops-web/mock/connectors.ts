@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 export function createConnectorHandler() {
-  const connected = { shopee: false, tiktok: false }
+  const connected = { shopee: false, shopify: false, lazada: false }
   const record = (platform: keyof typeof connected) => ({ platform, connected: connected[platform], mock: true })
 
   return (request: IncomingMessage, response: ServerResponse) => {
@@ -14,7 +14,7 @@ export function createConnectorHandler() {
     const platform = path.slice(base.length + 1)
     const item = path.startsWith(`${base}/`) && !platform.includes('/')
     if (path !== base && !item) return send(404, { error: 'Mock endpoint not found.' })
-    if (item && platform !== 'shopee' && platform !== 'tiktok') return send(400, { error: 'Unknown platform.' })
+    if (item && platform !== 'shopee' && platform !== 'shopify' && platform !== 'lazada') return send(400, { error: 'Unknown platform.' })
     const methods = item ? ['PUT', 'DELETE'] : ['GET']
     if (!methods.includes(request.method ?? '')) {
       response.setHeader('Allow', methods.join(', '))
@@ -28,6 +28,6 @@ export function createConnectorHandler() {
       connected[platform as keyof typeof connected] = request.method === 'PUT'
       return send(200, record(platform as keyof typeof connected))
     }
-    send(200, { connections: [record('shopee'), record('tiktok')] })
+    send(200, { connections: [record('shopee'), record('shopify'), record('lazada')] })
   }
 }

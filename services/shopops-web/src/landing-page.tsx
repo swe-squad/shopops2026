@@ -34,7 +34,7 @@ export function LandingPage({ authenticated }: { authenticated: boolean }) {
       <div className="feature-list">
         <article><span className="feature-icon"><BrowserIcon name="list" /></span><div><h3>Capture what needs attention</h3><p>Record and review issues manually. Keep titles, details, and timestamps together for a clearer view.</p></div></article>
         <article><span className="feature-icon"><BrowserIcon name="globe" /></span><div><h3>Keep your place</h3><p>Open multiple workspace tabs. Switch between them without losing each tab’s drafts or history.</p></div></article>
-        <article><span className="feature-icon"><BrowserIcon name="check" /></span><div><h3>Explore marketplace connections</h3><p>Try the simulated Shopee and TikTok connection flow. Live marketplace login and data sync are not connected yet.</p></div></article>
+        <article><span className="feature-icon"><BrowserIcon name="check" /></span><div><h3>Explore marketplace connections</h3><p>Try the simulated Shopee, Shopify, and Lazada connection flow. Live marketplace login and data sync are not connected yet.</p></div></article>
       </div>
     </section>
 

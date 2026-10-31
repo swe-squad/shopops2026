@@ -30,7 +30,7 @@ describe('browser tabs', () => {
     const fetchMock = vi.fn(async (path: string) => {
       if (path === '/api/mock/connectors') return json({ connections: [
         { platform: 'shopee', connected: false, mock: true },
-        { platform: 'tiktok', connected: false, mock: true },
+        { platform: 'shopify', connected: false, mock: true }, { platform: 'lazada', connected: false, mock: true },
       ] })
       if (path === '/api/operations/catalog/shops') return json(shops)
       if (path.startsWith('/api/operations/catalog?')) return json(catalog)
