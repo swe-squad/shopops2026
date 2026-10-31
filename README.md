@@ -1,8 +1,20 @@
-<p align="center"><img src="docs/brand/assets/logos/lockup-primary.svg" alt="ShopOps" width="300"></p>
+<p align="center">
+  <a href="https://codexhackathon.sea.com/">
+    <img src="https://codexhackathon.sea.com/_next/image?q=75&amp;url=%2FOfficial+_event_name.png&amp;w=1200" alt="Sea x OpenAI Regional Codex Hackathon Vietnam" width="850">
+  </a>
+</p>
 
-# Clarity in the chaos.
+<p align="center"><strong>SEA × OPENAI REGIONAL CODEX HACKATHON · VIETNAM</strong></p>
 
-**Your next move, made clear.** ShopOps is a Telegram-first AI on-call agent for Shopee sellers: spot issues, triage them together in chat, choose an action, and check the result.
+<p align="center"><img src="docs/brand/assets/logos/lockup-primary.png" alt="ShopOps" width="480"></p>
+
+<h1 align="center">Clarity in the chaos.</h1>
+
+<p align="center"><strong>Your next move, made clear.</strong></p>
+
+<p align="center">A Telegram-first AI on-call agent for Shopee sellers.<br>Spot issues, triage them together, choose an action, and check the result.</p>
+
+<p align="center"><a href="#the-solution--from-signal-to-verified-outcome">The solution</a> · <a href="#system-design--managed-agents-and-guarded-data">System design</a> · <a href="docs/README.md">Documentation</a></p>
 
 ## Why ShopOps
 
@@ -10,7 +22,7 @@ Shopee sellers effectively run on-call operations manually. Seller Center provid
 
 ShopOps serves small and mid-sized sellers in Vietnam: teams of **1–5 people handling around 20–500 orders a day**, usually without dedicated operations or data staff. Agencies managing multiple shops are the secondary audience.
 
-## From signal to verified outcome
+## The solution · From signal to verified outcome
 
 **Detect → Classify → Plan → Seller Chooses → Execute → Verify → Learn**
 
@@ -22,7 +34,7 @@ ShopOps connects reviews, orders, returns, cancellations, inventory, vouchers, p
 
 Chat is the shared triage channel: the seller questions the agent's evidence, and the agent asks for context or a decision. The web client shows business intelligence and shop state after confirmed changes. Trust grows per issue and action: **suggest only → auto-execute with notification and rollback where supported → silent execution within explicitly pre-authorized limits**.
 
-## Designed around managed agents and guarded data
+## System design · Managed agents and guarded data
 
 ![ShopOps target architecture: application sessions, OpenAI-managed runtime, and scoped MCP services](docs/assets/system-architecture.png)
 
@@ -36,7 +48,7 @@ Codex supports development through code generation, integration, and debugging, 
 
 ## Acknowledgments
 
-With appreciation to **Sea Group and Shopee** for the seller ecosystem that inspired this project, and to **OpenAI** for Codex and the managed Agents API powering the proposed agent design.
+Built for the [Sea × OpenAI Regional Codex Hackathon — Vietnam](https://codexhackathon.sea.com/), co-hosted by **Sea** and **OpenAI** and brought to the community by **Shopee Vietnam**. We appreciate the seller ecosystem and Codex tools that made this project possible.
 
 ## Explore the project
 
