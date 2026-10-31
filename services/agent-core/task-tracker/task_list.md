@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use `superpowers:executing-plans` for inline implementation, or `superpowers:subagent-driven-development` when delegation is explicitly selected. Checkboxes track implementation progress. This tracker does not authorize implementation or deployment by itself.
 
-**Goal:** Preserve the delivered T01–T04 conversation/tool baseline and deliver the hosted runtime extension through T05–T08, with explicit ownership and integration gates.
+**Goal:** Preserve the delivered T01–T04 conversation/tool baseline and deliver the hosted runtime extension through T05–T08, with explicit ownership and integration gates, then connect the existing chat client through T09.
 
 **Architecture:** FastAPI exposes scoped conversation APIs. A durable SQLite-backed worker coordinates the Agents API provider and application function tools bridged to internal MCP services.
 
@@ -10,7 +10,11 @@
 
 **Spec:** [Agent Core Template Spec](../agents_api_template_spec.md).
 
-All implementation changes must stay inside `services/agent-core/`, the existing repository path (plural `services`, not `service`). Paths in task descriptions are relative to this service directory. A worktree contains the full repository, but its implementation working directory is `<worktree>/services/agent-core/`. T01–T04 statuses describe the delivered conversation/tool baseline; T05–T08 have delivered their offline modules; hosted live acceptance is tracked separately below. Owner numbers are role placeholders, not assignments to named people.
+For T01–T08, all implementation changes must stay inside `services/agent-core/`, the existing repository path (plural `services`, not `service`). Paths in task descriptions are relative to this service directory. A worktree contains the full repository, but its implementation working directory is `<worktree>/services/agent-core/`. T01–T04 statuses describe the delivered conversation/tool baseline; T05–T08 have delivered their offline modules; hosted live acceptance is tracked separately below. Owner numbers are role placeholders, not assignments to named people.
+
+T09 is a separate client-integration milestone. Its proposed cross-service implementation scope is
+explicitly listed in its description; this task-creation change edits only this service's tracker
+and task description. It does not start implementation or change the T01–T08 ownership boundary.
 
 ## Task list
 
@@ -24,6 +28,7 @@ All implementation changes must stay inside `services/agent-core/`, the existing
 | T06 | [OpenAI-hosted provider and lifecycle](desciption/T06-hosted-provider.md) | D5 — Very hard | Provider developer | Ready for integration | Published T05 runtime foundation SHA | T05 wiring and T07 bundle for integrated live execution |
 | T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Ready for integration | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
 | T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Ready for integration | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
+| T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | Not started | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
 
@@ -370,3 +375,30 @@ remains intact. No uncommitted task files were copied.
 T08 now consumes the committed integration fixes and wiring. The original handoff records above
 remain historical module evidence; actual live acceptance is recorded separately and cannot be
 inferred from any offline count.
+
+
+## Chat client integration follow-up (T09)
+
+**Task:** [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md).
+**Status:** Not started. **Difficulty:** D5 — Very hard. **Authentication:** demo phone number, no OTP.
+**Planning baseline:** `53d094e`, the
+`develop` merge of PR #8. This supersedes the earlier draft-delivery note for that PR only;
+merging did not close the T08 live-proof gaps.
+
+The selected integration keeps `shopops-chat` and its existing same-origin backend boundary:
+`shopops-chat → shopops-chat-api → agent-core → OpenAI Agents API (openai_hosted)`.
+The chat API adapts demo phone-number login (no OTP), per-user scope, durable application IDs,
+run polling, history, navigation and downloads;
+Agent Core alone owns provider sessions, tool execution, runtime recovery and report validation.
+
+T09 can implement contract, UI and offline integration tests immediately from this committed
+baseline. Its full hosted acceptance depends on T08's exact probe evidence and child-role proof
+being accepted; unavailable evidence must remain unverified. Phone-demo identity and per-user isolation, honest
+SSE/cancellation behavior and legacy database cutover are pinned in the task description.
+
+Use a separate implementation branch `feat/shopops-chat-agent-core`, worktree label
+`shopops-chat-agent-core`; Git fallback `/tmp/shopops2026-agent-core/T09`. Prefer a native managed
+worktree and record its actual path. No T09 implementation worktree or code is created by this
+planning change. The documentation branch is `docs/agent-core-chat-integration-task`, reusing the
+clean managed worktree `/home/khalee-dev/.codex/worktrees/3913/shopops2026`; the original dirty
+checkout and all module task worktrees are preserved.
