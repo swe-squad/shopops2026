@@ -58,12 +58,16 @@ class FakeProvider:
         except KeyError:
             raise NotFound() from None
 
-    async def create_session(self, config: ConfigSnapshot, correlation_id: str) -> ProviderSession:
+    async def create_session(
+        self, config: ConfigSnapshot, correlation_id: str, *, initial_input: str | None = None
+    ) -> ProviderSession:
         session_id = str(uuid4())
         self.sessions[session_id] = _Session(
             config, ProviderSnapshot(session_id=session_id, root_status="idle")
         )
-        return ProviderSession(id=session_id)
+        if initial_input is not None:
+            await self.submit_input(session_id, initial_input, correlation_id)
+        return ProviderSession(id=session_id, input_submitted=initial_input is not None)
 
     async def inspect_session(self, session_id: str) -> ProviderSnapshot:
         return self._session(session_id).snapshot

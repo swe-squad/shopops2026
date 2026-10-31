@@ -1,0 +1,50 @@
+{
+  "revisions": [
+    {
+      "revision": "returns-v1",
+      "template_id": "shopops",
+      "model": "fixture-only",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "mock-v1",
+      "data_mcp_url": "http://127.0.0.1:8000/mcp/data",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ]
+    },
+    {
+      "revision": "returns-hosted-v1",
+      "template_id": "shopops",
+      "model": "gpt-6-astra",
+      "knowledge_bundle": "returns-v1",
+      "knowledge_version": "1",
+      "mcp_profile": "mock-v1",
+      "data_mcp_url": "http://127.0.0.1:8000/mcp/data",
+      "knowledge_mcp_url": "http://127.0.0.1:8000/mcp/knowledge-memory",
+      "capabilities": [
+        "get_return_metrics",
+        "get_review_summary",
+        "search_knowledge",
+        "get_conversation_history"
+      ],
+      "runtime_profile": {
+        "profile_id": "shopops-hosted-v1",
+        "environment_type": "openai_hosted",
+        "bundle_id": "shopops-hosted-v1",
+        "bundle_version": "1.0.0",
+        "bundle_sha256": "a0fa0d1149fd7f8cccefc4fe1c0da05d7108cb404d458b5a2b9353bb600b718a",
+        "container_size": "small",
+        "network_access": "disabled",
+        "multi_agent_enabled": true,
+        "max_concurrent_subagents": 2,
+        "setup_timeout_seconds": 60,
+        "max_artifacts": 2,
+        "max_artifact_bytes": 1048576
+      }
+    }
+  ]
+}

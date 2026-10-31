@@ -1,6 +1,8 @@
 # Agent Core Template Spec
 
-Status: Implementation draft. Date: 2026-10-31.
+Status: Conversation/tool baseline implemented; T05–T08 hosted modules integrated offline; live acceptance pending. Date: 2026-10-31.
+
+The [Managed Codex Harness and OpenAI-hosted Runtime Extension](agents_api_managed_runtime_spec.md) is normative for the next milestone (T05–T08, AC15–AC22). Existing T01–T04 completion applies only to the baseline described below.
 
 > Alignment note: this document records the earlier starter implementation. The confirmed target
 > makes agent-core a reusable agents-service boilerplate invoked by the product server during user
@@ -21,7 +23,8 @@ Inputs: [basic requirements](agents_api_template_requirements.md), [sketch descr
 | Area | Template choice |
 | --- | --- |
 | Application API | Python FastAPI, based on `template/python-fastapi` |
-| Agent runtime | OpenAI Agents API through the official `openai` package |
+| Agent runtime | Managed Codex Harness through OpenAI Agents API and the official `openai` package |
+| Execution environment | Baseline `none`; new hosted profile `openai_hosted` per the runtime extension |
 | Provider adapter | `openai_agents` for live integration; `fake` for offline tests |
 | Initial persistence | SQLite on local disk with a persistent volume; one replica and one application worker |
 | Request processing | Asynchronous, with durable runs in the database and a worker loop within the service |
@@ -43,13 +46,13 @@ The implementation must use an SDK version that exposes `beta.agents`; pin a ver
 - Ask follow-up questions when the required date range, product, or other information is missing.
 - Answer users in Vietnamese, cite data/knowledge sources, and distinguish hypotheses from conclusions.
 - Replace the mock Data MCP with a real endpoint for new conversations while preserving the tool contract.
-- Provide an extension point for delegation; the MVP profile runs one orchestrator.
+- Preserve the baseline single-orchestrator profile; add real harness delegation, hosted code execution, approved skills, and artifacts under the runtime extension.
 
 ### 1.3. Deferred functionality
 
 Telegram/web clients, phone authentication, shop CRUD, connectors/ETL/Data Mart, proactive monitoring, incident lifecycle, approval/execution against real shops, verification, and progressive autonomy belong to later integrations.
 
-Live specialist-agent execution, sandbox/code execution, arbitrary skill loading, a vector database, and long-term memory across conversations are outside MVP acceptance. This deliberately narrows the multi-agent scope in the basic requirements: the three initial scenarios are implemented as tool capabilities; actual delegation is a separate extension milestone.
+The original MVP delivered the three scenarios as tool capabilities and deferred live specialists and sandbox execution. That baseline is complete; actual specialist delegation, hosted code execution, approved skills and artifacts are now required by the [runtime extension](agents_api_managed_runtime_spec.md), with separate acceptance AC15–AC22. Arbitrary user-controlled skills/plugins, a vector database, and long-term memory across conversations remain deferred.
 
 ## 2. Architecture and integration boundaries
 
@@ -71,6 +74,8 @@ The MCP fixtures are mounted in the same FastAPI service at `/mcp/data` and `/mc
 Do not configure OpenAI to call `srv-captain--...` URLs directly. HTTP MCP connections with `connection_origin: service` originate from OpenAI and require an endpoint reachable from there. Environment-originated connections are an alternative when an appropriate executor/sandbox is available; this template uses the application bridge to access the internal cluster. [MCP connections](https://developers.openai.com/api/docs/guides/agents-api/tools/mcp)
 
 Do not expose an arbitrary function proxy: publish only allowlisted tools. A newly discovered MCP tool does not automatically grant the agent additional permissions.
+
+The hosted extension adds an OpenAI-managed sandbox and harness-created specialists behind the OpenAI API boundary. It keeps internal MCP retrieval in the application bridge; private cluster endpoints are not made reachable from the sandbox. See the [runtime boundaries and subagent constraints](agents_api_managed_runtime_spec.md#4-workspace-bundle-and-actual-specialist-execution).
 
 ## 3. Identity and authorization
 
@@ -167,8 +172,8 @@ Application states: `queued → running ↔ waiting_tool → completed|failed|ca
 A provider turn is one cycle of work; input sent during an active turn can steer it. Check both the local lock and provider state before submission. [Run and continue sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions)
 
 1. In one transaction, persist the user message and durable run, and lock the conversation. Return `202` after commit.
-2. The worker claims a run through a database transaction, creates a session if needed, and saves the mapping as soon as its ID is available.
-3. Subscribe to the provider stream before submission; record the submission marker and attach correlation metadata when supported by the API.
+2. The worker claims a run through a database transaction. On first input, create the session with that input and correlation metadata, then atomically save its mapping and initial-input receipt; do not submit the same first message again.
+3. For subsequent input, subscribe before submission when supported, persist the submission marker, and correlate the new root turn. First-input streaming may attach after creation; in both cases reconcile saved provider state if events were missed.
 4. When the provider requests a function, execute only a pending call in `required_actions`; validate arguments, permissions, and the allowlist before calling MCP.
 5. Persist the tool result before returning it to the provider; use turn/call IDs for replay handling and recovery.
 6. Finish an application run only when the root turn completes or fails; subagent events do not independently finish the root run. Deduplicate synchronized assistant results by provider item ID.
@@ -312,4 +317,4 @@ Unit/contract tests focus on authorization, idempotency, state transitions, reco
 
 Inputs required before enabling live integrations: OpenAI credentials/permissions/model; JWT issuer/JWKS/claims and membership rules; Data MCP endpoint/schema/scoped authentication; and the registry revision used by registration. Teams must confirm whether tenants can have multiple shops and define user permissions. Fixture profiles allow development to proceed without treating those assumptions as agreed decisions.
 
-Template completion means the source and instructions support offline execution from a clean checkout, CI passes, live smoke evidence is available when credentials permit, API/tool contracts are published in the repository, and the demo clearly identifies synthetic data. This is the backend starter milestone; a complete Detect → Approve → Execute → Verify demo requires a subsequent spec.
+Baseline completion means offline execution, CI, AC01–AC14 evidence and published API/tool contracts. Full hosted starter completion additionally requires T05–T08 and AC15–AC22 from the runtime extension; prior AC13 evidence does not prove sandbox, skills or delegation. A complete Detect → Approve → Execute → Verify product workflow remains a later integration milestone.

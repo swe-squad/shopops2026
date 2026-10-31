@@ -43,7 +43,7 @@ class ControlledProvider:
         self.cancel_requested = False
         self.delete_fails = False
 
-    async def create_session(self, config, correlation_id):
+    async def create_session(self, config, correlation_id, *, initial_input=None):
         self.creations += 1
         return ProviderSession(id="session-a")
 

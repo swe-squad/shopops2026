@@ -12,7 +12,11 @@ SAFE_ERRORS = frozenset(STATUS) | {
     "upstream_unavailable",
     "invalid_output",
     "provider_outcome_unknown",
+    "provider_request_rejected",
     "tool_limit_exceeded",
+    "environment_failed",
+    "environment_timeout",
+    "environment_unavailable",
     "cancelled",
 }
 SAFE_EVENTS = {

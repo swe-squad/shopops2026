@@ -281,3 +281,59 @@ def test_tool_finishing_after_deadline_is_not_delivered(repo, scope):
         assert (await repo.get_run(scope, result.run.id)).state == "cancelled"
 
     asyncio.run(execute())
+
+
+def test_atomic_creation_never_submits_first_message_twice(repo, scope):
+    from app.contracts.provider import ProviderSession
+    from app.runs.worker import RunWorker
+
+    class AtomicProvider(ControlledProvider):
+        async def create_session(self, config, correlation_id, initial_input=None):
+            self.creations += 1
+            assert initial_input == "hello"
+            self.ready = True
+            await self.submit_input("session-a", initial_input, correlation_id)
+            self.ready = False
+            return ProviderSession(id="session-a", input_submitted=True)
+
+    async def exercise():
+        c = await conversation(repo, scope)
+        message = await repo.enqueue_message(scope, c.id, "atomic", "hello")
+        provider = AtomicProvider()
+        worker = RunWorker(repo, provider, ControlledBridge())
+        await worker.tick()
+        assert (await repo.get_run(scope, message.run.id)).state == "completed"
+        assert provider.submissions == [message.run.id]
+        assert provider.creations == 1
+        await worker.tick()
+        assert provider.submissions == [message.run.id]
+
+    asyncio.run(exercise())
+
+
+def test_silent_live_stream_yields_to_saved_state_reconciliation(repo, scope):
+    from contextlib import asynccontextmanager
+
+    from tests.runs.doubles import Stream
+
+    class SilentStream(Stream):
+        async def events(self):
+            await asyncio.Event().wait()
+            yield  # async generator, deliberately never emits
+
+    class SilentProvider(ControlledProvider):
+        @asynccontextmanager
+        async def stream_events(self, session_id):
+            yield SilentStream(self)
+
+    async def exercise():
+        from app.runs.worker import RunWorker
+
+        c = await conversation(repo, scope)
+        result = await repo.enqueue_message(scope, c.id, "silent", "hello")
+        provider = SilentProvider(mode="active")
+        await asyncio.wait_for(RunWorker(repo, provider, ControlledBridge()).tick(), timeout=2)
+        assert (await repo.get_run(scope, result.run.id)).state in {"running", "reconciling"}
+        assert provider.submissions == [result.run.id]
+
+    asyncio.run(exercise())

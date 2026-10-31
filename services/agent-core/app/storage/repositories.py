@@ -3,6 +3,7 @@ import json
 import sqlite3
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import uuid4
 
 from app.config.registry import Registry
@@ -31,7 +32,9 @@ from app.contracts.models import (
     Run,
     RunEvent,
     RunState,
+    Source,
 )
+from app.contracts.runtime import ArtifactRecord, ProviderEnvironment
 from app.contracts.tools import PendingToolCall, ToolResult
 from app.runs.state import TRANSITIONS
 from app.storage.database import Database
@@ -284,12 +287,22 @@ class SQLiteRepository:
         return await self.database.transaction(operation)
 
     async def enqueue_message(
-        self, scope: Scope, conversation_id: str, client_message_id: str, content: str
+        self,
+        scope: Scope,
+        conversation_id: str,
+        client_message_id: str,
+        content: str,
+        *,
+        output_mode: Literal["text", "report"] = "text",
     ) -> EnqueueResult:
         content = content.strip()
         if not 1 <= len(content) <= 8000 or not 1 <= len(client_message_id) <= 128:
             raise InvalidInput()
-        digest = hashlib.sha256(content.encode()).hexdigest()
+        if output_mode not in ("text", "report"):
+            raise InvalidInput()
+        digest = hashlib.sha256(
+            (content if output_mode == "text" else "report\0" + content).encode()
+        ).hexdigest()
 
         def operation(db: sqlite3.Connection) -> EnqueueResult:
             c = self._conversation(db, conversation_id, scope)
@@ -299,7 +312,7 @@ class SQLiteRepository:
             ).fetchone()
             if row is not None:
                 run = Run.model_validate_json(row[0])
-                if run.request_hash != digest:
+                if run.request_hash != digest or run.output_mode != output_mode:
                     raise IdempotencyConflict()
                 message_row = db.execute(
                     "SELECT body FROM messages WHERE run_id=? AND provider_item_id IS NULL",
@@ -328,8 +341,11 @@ class SQLiteRepository:
             ).fetchone()
             if c.status != "active" or busy:
                 raise ConversationBusy()
+            if output_mode == "report" and c.config.runtime_profile.environment_type == "none":
+                raise InvalidInput()
             now = self.clock()
             run = Run(
+                output_mode=output_mode,
                 id=new_id(),
                 conversation_id=conversation_id,
                 client_message_id=client_message_id,
@@ -342,8 +358,8 @@ class SQLiteRepository:
                 created_at=now,
             )
             db.execute(
-                "INSERT INTO runs(id,conversation_id,client_key,state,created_at,body) "
-                "VALUES(?,?,?,?,?,?)",
+                "INSERT INTO runs(id,conversation_id,client_key,state,created_at,body,output_mode) "
+                "VALUES(?,?,?,?,?,?,?)",
                 (
                     run.id,
                     conversation_id,
@@ -351,6 +367,7 @@ class SQLiteRepository:
                     run.state,
                     now.isoformat(),
                     run.model_dump_json(),
+                    output_mode,
                 ),
             )
             message = self._message(db, run, "user", content)
@@ -481,12 +498,17 @@ class SQLiteRepository:
 
         return await self.database.transaction(operation)
 
-    async def save_session_mapping(self, run_id: str, session_id: str) -> None:
+    async def save_session_mapping(
+        self, run_id: str, session_id: str, *, input_submitted: bool = False
+    ) -> None:
         def operation(db: sqlite3.Connection) -> None:
             c = self._conversation(db, self._run(db, run_id).conversation_id)
             if c.provider_session_id not in (None, session_id):
                 raise IdempotencyConflict()
             self._save_conversation(db, c.model_copy(update={"provider_session_id": session_id}))
+            if input_submitted:
+                run = self._run(db, run_id)
+                self._save_run(db, run.model_copy(update={"submission_marker": "submitted"}))
 
         await self.database.transaction(operation)
 
@@ -503,6 +525,9 @@ class SQLiteRepository:
                 run.model_copy(
                     update={
                         "submission_marker": marker,
+                        "runtime_setup_started_at": (run.runtime_setup_started_at or self.clock())
+                        if marker == "session_creating"
+                        else run.runtime_setup_started_at,
                         "provider_turn_id": turn_id or run.provider_turn_id,
                     }
                 ),
@@ -729,5 +754,173 @@ class SQLiteRepository:
                 db.executemany(f"DELETE FROM {table} WHERE id=?", ((i,) for i in ids))
                 counts.append(len(ids))
             return counts[0], counts[1]
+
+        return await self.database.transaction(operation)
+
+    async def load_sources(self, session_id: str, turn_id: str) -> tuple[Source, ...]:
+        def operation(db: sqlite3.Connection) -> tuple[Source, ...]:
+            rows = db.execute(
+                "SELECT result FROM tool_calls WHERE session_id=? AND turn_id=? "
+                "AND result IS NOT NULL",
+                (session_id, turn_id),
+            ).fetchall()
+            sources = {}
+            for row in rows:
+                result = ToolResult.model_validate_json(row[0])
+                if result.error is None:
+                    for source in result.sources:
+                        sources[(source.type, source.reference)] = source
+            return tuple(sources.values())
+
+        return await self.database.transaction(operation)
+
+    async def save_runtime(
+        self, scope: Scope, conversation_id: str, environment: ProviderEnvironment
+    ) -> None:
+        def operation(db: sqlite3.Connection) -> None:
+            c = self._conversation(db, conversation_id, scope)
+            if c.config.runtime_profile.environment_type != "openai_hosted":
+                raise InvalidInput()
+            row = db.execute(
+                "SELECT environment_id FROM runtime_mappings WHERE conversation_id=?",
+                (conversation_id,),
+            ).fetchone()
+            if row is not None and row[0] != environment.id:
+                raise IdempotencyConflict()
+            owner = db.execute(
+                "SELECT conversation_id FROM runtime_mappings WHERE environment_id=?",
+                (environment.id,),
+            ).fetchone()
+            if owner is not None and owner[0] != conversation_id:
+                raise IdempotencyConflict()
+            db.execute(
+                "INSERT INTO runtime_mappings VALUES(?,?,?) ON CONFLICT(conversation_id) "
+                "DO UPDATE SET body=excluded.body",
+                (conversation_id, environment.id, environment.model_dump_json()),
+            )
+
+        await self.database.transaction(operation)
+
+    async def get_runtime(self, scope: Scope, conversation_id: str) -> ProviderEnvironment | None:
+        def operation(db: sqlite3.Connection) -> ProviderEnvironment | None:
+            self._conversation(db, conversation_id, scope)
+            row = db.execute(
+                "SELECT body FROM runtime_mappings WHERE conversation_id=?", (conversation_id,)
+            ).fetchone()
+            return ProviderEnvironment.model_validate_json(row[0]) if row else None
+
+        return await self.database.transaction(operation)
+
+    async def save_artifacts(
+        self, scope: Scope, run_id: str, artifacts: tuple[ArtifactRecord, ...]
+    ) -> None:
+        def operation(db: sqlite3.Connection) -> None:
+            run = self._run(db, run_id)
+            c = self._conversation(db, run.conversation_id, scope)
+            if len(artifacts) > c.config.runtime_profile.max_artifacts:
+                raise InvalidOutput()
+            for artifact in artifacts:
+                if (
+                    artifact.scope != scope
+                    or artifact.run_id != run_id
+                    or artifact.conversation_id != c.id
+                    or artifact.session_id != c.provider_session_id
+                    or artifact.turn_id != run.provider_turn_id
+                ):
+                    raise InvalidOutput()
+                row = db.execute(
+                    "SELECT body FROM artifacts WHERE session_id=? AND turn_id=? AND provider_id=?",
+                    (artifact.session_id, artifact.turn_id, artifact.provider_id),
+                ).fetchone()
+                if row:
+                    old = ArtifactRecord.model_validate_json(row[0])
+                    if old.model_dump(exclude={"id"}) != artifact.model_dump(exclude={"id"}):
+                        raise InvalidOutput()
+                    continue
+                db.execute(
+                    "INSERT INTO artifacts VALUES(?,?,?,?,?,?,?)",
+                    (
+                        artifact.id,
+                        run_id,
+                        c.id,
+                        artifact.session_id,
+                        artifact.turn_id,
+                        artifact.provider_id,
+                        artifact.model_dump_json(),
+                    ),
+                )
+
+            self._save_run(db, run.model_copy(update={"artifacts_finalized": True}))
+
+        await self.database.transaction(operation)
+
+    async def list_artifacts(
+        self, scope: Scope, run_id: str, after: str | None = None, limit: int = 50
+    ) -> Page[ArtifactRecord]:
+        if not 1 <= limit <= 100:
+            raise InvalidInput()
+
+        def operation(db: sqlite3.Connection) -> Page[ArtifactRecord]:
+            run = self._run(db, run_id)
+            self._conversation(db, run.conversation_id, scope)
+            if (
+                after is not None
+                and not db.execute(
+                    "SELECT 1 FROM artifacts WHERE id=? AND run_id=?", (after, run_id)
+                ).fetchone()
+            ):
+                raise InvalidCursor()
+            if run.state != "completed":
+                return Page(items=())
+            rows = db.execute(
+                "SELECT body FROM artifacts WHERE run_id=? AND id>? ORDER BY id LIMIT ?",
+                (run_id, after or "", limit + 1),
+            ).fetchall()
+            items = tuple(ArtifactRecord.model_validate_json(r[0]) for r in rows[:limit])
+            return Page(items=items, next_cursor=items[-1].id if len(rows) > limit else None)
+
+        return await self.database.transaction(operation)
+
+    async def get_artifact(self, scope: Scope, artifact_id: str) -> ArtifactRecord:
+        def operation(db: sqlite3.Connection) -> ArtifactRecord:
+            row = db.execute("SELECT body FROM artifacts WHERE id=?", (artifact_id,)).fetchone()
+            if row is None:
+                raise NotFound()
+            record = ArtifactRecord.model_validate_json(row[0])
+            self._conversation(db, record.conversation_id, scope)
+            if self._run(db, record.run_id).state != "completed":
+                raise NotFound()
+            return record
+
+        return await self.database.transaction(operation)
+
+    async def load_tool_results(self, session_id: str, turn_id: str) -> tuple[ToolResult, ...]:
+        return await self.database.transaction(
+            lambda db: tuple(
+                ToolResult.model_validate_json(r[0])
+                for r in db.execute(
+                    "SELECT result FROM tool_calls WHERE session_id=? AND turn_id=? "
+                    "AND result IS NOT NULL",
+                    (session_id, turn_id),
+                ).fetchall()
+            )
+        )
+
+    async def get_saved_artifacts(
+        self, scope: Scope, run_id: str
+    ) -> tuple[ArtifactRecord, ...] | None:
+        """Internal recovery loader; public listing still requires completed root state."""
+
+        def operation(db: sqlite3.Connection) -> tuple[ArtifactRecord, ...] | None:
+            run = self._run(db, run_id)
+            self._conversation(db, run.conversation_id, scope)
+            if not run.artifacts_finalized:
+                return None
+            return tuple(
+                ArtifactRecord.model_validate_json(r[0])
+                for r in db.execute(
+                    "SELECT body FROM artifacts WHERE run_id=? ORDER BY id", (run_id,)
+                ).fetchall()
+            )
 
         return await self.database.transaction(operation)

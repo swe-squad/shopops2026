@@ -44,3 +44,20 @@ class ProviderOutcomeUnknown(CoreError):
 
 class InvalidOutput(CoreError):
     code = "invalid_output"
+
+
+class ProviderRequestRejected(CoreError):
+    code = "provider_request_rejected"
+
+
+class ArtifactInvalid(CoreError):
+    code = "artifact_invalid"
+
+
+class ArtifactUnavailable(CoreError):
+    code = "artifact_unavailable"
+
+
+class ArtifactTransient(CoreError):
+    code = "artifact_upstream_unavailable"
+    retryable = True

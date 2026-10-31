@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use `superpowers:executing-plans` for inline implementation, or `superpowers:subagent-driven-development` when delegation is explicitly selected. Checkboxes track implementation progress. This tracker does not authorize implementation or deployment by itself.
 
-**Goal:** Deliver the Agent Core backend starter through four workstreams with explicit ownership and integration gates.
+**Goal:** Preserve the delivered T01–T04 conversation/tool baseline and deliver the hosted runtime extension through T05–T08, with explicit ownership and integration gates.
 
 **Architecture:** FastAPI exposes scoped conversation APIs. A durable SQLite-backed worker coordinates the Agents API provider and application function tools bridged to internal MCP services.
 
@@ -10,16 +10,20 @@
 
 **Spec:** [Agent Core Template Spec](../agents_api_template_spec.md).
 
-All implementation changes must stay inside `services/agent-core/`, the existing repository path (plural `services`, not `service`). Paths in task descriptions are relative to this service directory. A worktree contains the full repository, but its implementation working directory is `<worktree>/services/agent-core/`. All tasks are initially **Not started**; owner numbers are role placeholders, not assignments to named people.
+All implementation changes must stay inside `services/agent-core/`, the existing repository path (plural `services`, not `service`). Paths in task descriptions are relative to this service directory. A worktree contains the full repository, but its implementation working directory is `<worktree>/services/agent-core/`. T01–T04 statuses describe the delivered conversation/tool baseline; T05–T08 have delivered their offline modules; hosted live acceptance is tracked separately below. Owner numbers are role placeholders, not assignments to named people.
 
 ## Task list
 
 | ID | Task | Difficulty | Suggested owner | Status | Start dependency | Completion dependency |
 | --- | --- | --- | --- | --- | --- | --- |
-| T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Ready for integration | None | T02–T04 handoffs for final integration |
+| T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Done | None | T02–T04 handoffs for final integration |
 | T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Done | T01 foundation gate | T01 repositories and application wiring |
-| T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Blocked | T01 foundation gate | T01 worker and T04 bridge for live smoke |
+| T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Done | T01 foundation gate | T01 worker and T04 bridge for live smoke |
 | T04 | [MCP bridge, fixtures, and knowledge](desciption/T04-mcp-knowledge.md) | D4 — Hard | Owner 4 | Done | T01 foundation gate | T01 history repository and application mounting |
+| T05 | [Runtime foundation, persistence, artifacts API and integration](desciption/T05-runtime-foundation.md) | D5 — Very hard | Runtime integration lead | Ready for integration | Verified baseline containing the PR #5 live amendment | T06/T07 handoffs and T08 acceptance |
+| T06 | [OpenAI-hosted provider and lifecycle](desciption/T06-hosted-provider.md) | D5 — Very hard | Provider developer | Ready for integration | Published T05 runtime foundation SHA | T05 wiring and T07 bundle for integrated live execution |
+| T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Ready for integration | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
+| T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Ready for integration | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
 
@@ -173,18 +177,18 @@ Before the live smoke, check only that both variable names are set without print
 ## Completion tracking
 
 - [x] T01 foundation gate published.
-- [ ] Four separate task branches/worktrees recorded, with a shared committed foundation and no shared runtime data.
+- [x] Four separate task branches/worktrees recorded, with a shared committed foundation and no shared runtime data.
 - [x] T01 storage/worker module tests pass.
-- [ ] T02 module handoff accepted.
-- [ ] T03 offline module handoff accepted.
-- [ ] T04 module handoff accepted.
-- [ ] Offline integration, recovery, and isolation checks pass.
+- [x] T02 module handoff accepted.
+- [x] T03 offline module handoff accepted.
+- [x] T04 module handoff accepted.
+- [x] Offline integration, recovery, and isolation checks pass.
 - [x] `make ci` passes from the service directory.
 - [x] Container volume restart and readiness behavior verified.
-- [ ] AC13 live evidence recorded, or explicitly marked unverified with the missing prerequisite. Unverified live acceptance must not be reported as passed.
-- [ ] Each task status updated with validation evidence and remaining blockers.
+- [x] AC13 live evidence recorded, or explicitly marked unverified with the missing prerequisite. Unverified live acceptance must not be reported as passed.
+- [x] Each task status updated with validation evidence and remaining blockers.
 - [x] T01 changed-path audit confirms only `services/agent-core/` changed.
-- [ ] Completed integration PR targets `develop`; no PR/deployment has been created for this module.
+- [x] Template PR #4 was merged into `develop`; the live amendment is on `fix/agent-core-live`. No deployment was triggered by this amendment.
 
 Status vocabulary: **Not started**, **In progress**, **Ready for integration**, **Blocked**, **Done**. Use **Ready for integration** when module tests pass but required integration evidence is still missing.
 
@@ -222,3 +226,147 @@ no remote push/deploy was performed, and all task changes stay inside the servic
 T02 and T04 are Done for their delivered modules and verified local integration. T01 remains pending final live composition; T03 remains Blocked on the explicitly documented live-session contract. These statuses do not mark AC13 passed.
 
 Final T04 integration checks: `make ci` PASS (198 passed, 2 skipped); Docker build PASS; two network-isolated container restarts preserve volume data; runtime image imports API/provider/MCP composition. Independent read-only review found no concrete P0/P1 integration defects. Service-local AST graph updated; SQL extraction remains partial without tree_sitter_sql. No external API call, push or deployment occurred.
+
+## Live acceptance checkpoint
+
+The prior live blockers below/above are historical. The shared initial-input amendment,
+atomic session/receipt persistence, live provider composition, source loader and official SDK
+runtime pin are implemented. User authorization for synthetic live testing is recorded in T03.
+
+AC13 opt-in pytest: **1 passed**, model `gpt-6-astra`, three completed turns in one session,
+metrics/follow-up/knowledge grounded in real MCP fixture results, numeric checks and confirmed
+remote/local cleanup. Aggregate evidence is local and ignored; no keys, prompts or model output
+are committed. Normal CI remains offline and skips its single live-marked test.
+
+T01–T04 are Done for the backend starter and local synthetic acceptance scope. Deployment and
+real shop/identity/data-service onboarding remain separate system integration work.
+
+Final live amendment validation: default `make ci` **207 passed, 1 skipped** (live gate opt-in); explicit live pytest **1 passed in 88.83s**, with 3 turns and confirmed remote/local cleanup. Model: gpt-6-astra. The pinned SDK wire test runs offline without skipping.
+
+Live amendment packaging: Docker build PASS; SDK 3.42.0 imports in the runtime image; network-isolated volume recreation PASS. Independent review found a busy-run cleanup issue, reproduced by regression and fixed; follow-up read-only review found no remaining P0/P1 in the live delta. Live sessions were cleaned up; no deployment was performed.
+
+Delivery note: template PR #4 was merged and its remote branch removed while live work was in progress. The live amendment is based on the updated origin/develop on branch `fix/agent-core-live`; the service tree is preserved by cherry-picking the verified amendment.
+
+## Hosted runtime extension (T05–T08)
+
+**Spec:** [Managed Codex Harness and OpenAI-hosted Runtime Extension](../agents_api_managed_runtime_spec.md). Status: T05–T08 integrated and verified offline; hosted live acceptance NOT ACCEPTED. This section refines the baseline workflow for T05–T08; it does not reopen T01–T04 or treat their acceptance as hosted evidence.
+
+### Scope and starting point
+
+- Documentation branch: `docs/agent-core-managed-runtime`, isolated worktree `/home/khalee-dev/.codex/worktrees/3913/shopops2026`; implementation baseline inspected at `271405fabfddd51c7bad1fa0a28e868cf6835967`, containing the PR #5 live fix. This is a reference baseline, **not** the T05 runtime foundation.
+- At execution time, the lead selects a committed base containing the reviewed spec and live amendment. T05 publishes its actual foundation SHA below before consumer worktrees start code. Do not assume an old T01 foundation has runtime contracts.
+- All implementation stays in `services/agent-core/`; shared repo instructions, Python 3.14, one SQLite owner/worker/replica, offline default CI and scoped secret handling still apply.
+- T05 owns new shared contracts, settings/migrations, worker/composition/API wiring and dependency changes. T06/T07/T08 own only the files in their descriptions. You are not alone in the codebase: preserve other owners' edits; request shared changes as isolated T05 commits.
+
+### New worktrees
+
+| Task | Branch | Worktree label | Git fallback path |
+| --- | --- | --- | --- |
+| T05 | `feat/agent-core-t05-runtime-foundation` | `agent-core-t05` | `/tmp/shopops2026-agent-core/T05` |
+| T06 | `feat/agent-core-t06-hosted-provider` | `agent-core-t06` | `/tmp/shopops2026-agent-core/T06` |
+| T07 | `feat/agent-core-t07-skills-specialists` | `agent-core-t07` | `/tmp/shopops2026-agent-core/T07` |
+| T08 | `feat/agent-core-t08-hosted-acceptance` | `agent-core-t08` | `/tmp/shopops2026-agent-core/T08` |
+
+Prefer native worktree tools; no new task worktrees are created by this documentation update. Each gets its own venv, DB and ignored evidence. Never copy an env file or credentials from another worktree. Reuse a worktree only if its task/branch matches and it is clean; never reset another owner's workspace.
+
+### T05 runtime foundation gate
+
+- [x] Record baseline SHA, actual T05 worktree, foundation SHA and verification commands in T05's handoff. **Published runtime foundation SHA: `1e45865`; required shared amendment: `ebd7537`. Consumers start from `ebd7537`.**
+- [x] Freeze runtime/bundle/environment/artifact types and repository/provider signatures in `app/contracts/runtime.py` and `contracts/managed-runtime.md`; make fakes and existing consumers import them.
+- [x] Define legacy `none` normalization and new immutable hosted profiles; prove old records/config revisions remain usable.
+- [x] Publish root/child/environment event correlation, artifact finalization, cleanup/recovery records and source-validation rules.
+- [x] Verify SDK 3.42.0 hosted/plugin/environment/artifact surfaces offline; coordinate any required pin change. Do not call OpenAI merely to publish contracts.
+- [x] Publish stubs/test doubles for bundle building, hosted environment building and artifacts so T06/T07/T08 can work without shared implementation edits.
+- [x] Run foundation contract/migration tests and lint. Consumer owners record the exact imported SHA; do not claim agreement for absent owners.
+
+### Parallel work and difficulty
+
+T05 starts first and continues its storage/worker/API work after publishing the small foundation. T06 provider/lifecycle and T07 skills/specialists can then code in parallel. T08 can develop failure fixtures and acceptance tests from that same foundation, then run final integration after T05–T07 handoffs. The lead integrates into `feat/agent-core-hosted-runtime` and proposes a PR into `develop`; no task independently merges or deploys.
+
+T05 is D5 because backward-compatible persistence, immutable profiles, root/child correlation and authorized artifact delivery cross the full service. T06 is D5 because provisioning and delete failures can leave billable/unknown remote resources and must recover without duplicate creation. T07 is D4 because deterministic bundle validation and skills/delegation must respect actual API restrictions. T08 is D5 because only provider-side command/child/artifact evidence can prove the complete flow and teardown.
+
+### Acceptance and credentials
+
+| Criteria | Primary owner | Supporting owners |
+| --- | --- | --- |
+| AC15, AC19 | T05 | T06, T08 |
+| AC16, AC20, AC21 | T06 | T05, T08 |
+| AC17, AC18 | T07 | T06, T08 |
+| AC22 and AC01–AC14 regression | T08 | T05–T07 |
+
+T05/T07 need no OpenAI key for normal work. T06/T08 need `OPENAI_API_KEY` and `OPENAI_MODEL` only for explicit hosted live runs through the documented loader/process environment. The original ignored root `.env` is not inherited and must never be copied; only the existing explicit credentials loader may read key/model at runtime. All tasks use synthetic fixture data. Hosted live tests will require **both** `AGENT_CORE_LIVE=1` and `AGENT_CORE_LIVE_HOSTED=1`; the flags and hosted command are now implemented by T08. See `contracts/hosted-acceptance.md`.
+
+### Extension completion tracking
+
+- [x] T05 runtime foundation published and accepted by consumers.
+- [x] T05 runtime persistence/API/worker integration verified.
+- [x] T06 hosted provider/lifecycle handoff verified.
+- [x] T07 bundle/skill/specialist handoff verified.
+- [x] T08 offline failure, isolation and baseline regression suite verified.
+- [x] Real hosted code execution, approved skill use and two child identities recorded (partial live evidence; role binding remains unverified).
+- [ ] Scoped report artifact and same-session follow-up verified.
+- [x] Session removal and hosted cleanup request recorded; unresolved remote resources retained for recovery.
+- [x] `make ci`, Docker build and volume restart checks pass after integration.
+- [ ] All AC15–AC22 evidence recorded; unavailable live evidence remains explicitly unverified.
+
+The original spec update delivered documentation only. The integration checkpoint below records subsequent code and verification; baseline completion flags are not reused as hosted evidence.
+
+Historical documentation checkpoint (before implementation): the English runtime spec, baseline cross-references and four task descriptions were reviewed and validated as documentation only. Local link/anchor, code-fence, acceptance coverage, task ownership/status and service-scope checks pass; a builder review found no remaining plan-changing gap after report-mode compatibility was clarified. No runtime implementation or hosted live call was performed, and the T05 foundation was then unpublished.
+
+## T05 offline handoff
+
+T05 implementation `ebd7537` is ready for module integration on its assigned branch/worktree.
+Foundation `1e45865` plus the shared-contract/lifecycle amendment are both required; consumers
+start from `ebd7537`. Final Python 3.14 CI: 242 passed, 1 live skipped; Ruff, Docker build and
+network-isolated runtime/artifact volume recreation pass. See T05's handoff for exact verification,
+review corrections and pending gates. T06/T07 builder stubs deliberately fail closed. No consumer
+handoff, hosted live acceptance, integration merge, remote push or deployment is claimed.
+
+## Hosted integration checkpoint
+
+Integration branch: `feat/agent-core-hosted-runtime`; managed worktree
+`/home/khalee-dev/.codex/worktrees/3913/shopops2026`. T05 `428e2c7`, T06 `6e122fc`, and T07
+`944481f` are integrated. The user subsequently confirmed T08 complete. Its implementation
+`e648728` and handoff `6894bfb` were imported as `00d201d` / `e329467`; its separate worktree
+remains intact. No uncommitted task files were copied.
+
+- Setup fix `98ed1a2`: late first connection cannot bypass the 60-second setup budget. New
+  regression was RED (completed instead of failed), then GREEN; established sessions keep their
+  connected state and known late session/environment IDs remain available for cleanup.
+- Wiring `5568975`: registered bundle version/digest, provider and startup path propagation,
+  service-local path validation, Docker bundle packaging, and explicit hosted example profile.
+  The default legacy registry stays unchanged; account/model and dev MCP endpoints remain explicit.
+- Earlier T05–T07 verification: `make ci` **355 passed, 1 skipped**; lint/format PASS; Docker build PASS; the
+  registered hosted plugin builds inside the UID1001 runtime image with networking disabled.
+  Two network-isolated container recreations preserve legacy/runtime/artifact state.
+- Fresh independent whole-branch review found one durable-timeout recovery issue, fixed in
+  `de7b747` with a RED→GREEN restart regression. Review of the new T08 delta found one artifact
+  delete acknowledgement issue, fixed in `9562b46` with three RED→GREEN cases. That commit also
+  exposes all three hosted public errors and removes their strict xfail markers.
+- T08 integrated scoped suite: **53 passed, 1 live skipped**. Full integrated `make ci`: **409 passed,
+  2 live skipped, zero xfails**; Docker build and volume recreation PASS. Subsequent safe diagnostic
+  additions are verified separately below.
+- Final code verification at `7d2700d`: `make ci` **428 passed, 2 live skipped, zero xfails**;
+  scoped T08 tests **72 passed**. Ruff, final Docker build and AST graph update PASS. Recorded
+  network-isolated volume recreation preserves IDs, mappings, history, queue, config and artifacts.
+- Four bounded real hosted attempts used SDK 3.42.0, `gpt-6-astra` and registered bundle `1.0.0`.
+  All four confirmed session absence and local cleanup; no known live session is left for recovery.
+  No physical sandbox-destruction claim is made from session deletion.
+- Live-observed bash wrapping caused the initial saved-command proof rejection; `7d2700d` fixes
+  that shape with RED→GREEN and wrapped adversarial tests. The final attempt passed the exact
+  approved-helper and both skill checks before failing the required boundary-probe assertion.
+- The final attempt completed the root, two child turns and nine command items; two backend MCP
+  calls succeeded without worker/MCP errors. Both child task `instructions` fields were null,
+  although completed child outputs were present. Role binding is therefore unverified under the
+  frozen proof contract. The exact fixed probe command/denial proof also remains unverified.
+- Aggregate actual evidence: ignored `.evidence/live-hosted-attempt1.json` through
+  `.evidence/live-hosted-attempt4.json`; sanitized command-shape facts in
+  `.evidence/live-proof-shape.json`. No raw command, prompt, payload or private ID is committed.
+  Complete report download/numeric checks, follow-up, second-conversation isolation and AC22
+  did not run past the proof gate and remain NOT ACCEPTED. There is no fallback or relaxed pass.
+- Integration is reviewable as a draft PR into `develop`; real JWT/MCP/CapRover onboarding remains
+  separate. Further paid attempts stopped after the final diagnostic run; no deployment occurred.
+
+T08 now consumes the committed integration fixes and wiring. The original handoff records above
+remain historical module evidence; actual live acceptance is recorded separately and cannot be
+inferred from any offline count.

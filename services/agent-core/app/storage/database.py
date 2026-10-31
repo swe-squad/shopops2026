@@ -23,10 +23,13 @@ class Database:
                 try:
                     db.execute("PRAGMA journal_mode=WAL")
                     version = db.execute("PRAGMA user_version").fetchone()[0]
-                    if version > 1:
+                    if version > 2:
                         raise RuntimeError("Unsupported database schema")
                     if version == 0:
                         schema = Path(__file__).with_name("migrations").joinpath("001.sql")
+                        db.executescript(schema.read_text())
+                    if version < 2:
+                        schema = Path(__file__).with_name("migrations").joinpath("002.sql")
                         db.executescript(schema.read_text())
                 finally:
                     db.close()

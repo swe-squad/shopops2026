@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Protocol
+from typing import Literal, Protocol
 
 from app.contracts.identity import Scope
 from app.contracts.models import (
@@ -14,11 +14,31 @@ from app.contracts.models import (
     Run,
     RunEvent,
     RunState,
+    Source,
 )
+from app.contracts.runtime import ArtifactRecord, ProviderEnvironment
 from app.contracts.tools import PendingToolCall, ToolResult
 
 
 class Repository(Protocol):
+    async def save_runtime(
+        self, scope: Scope, conversation_id: str, environment: ProviderEnvironment
+    ) -> None: ...
+    async def get_runtime(
+        self, scope: Scope, conversation_id: str
+    ) -> ProviderEnvironment | None: ...
+    async def save_artifacts(
+        self, scope: Scope, run_id: str, artifacts: tuple[ArtifactRecord, ...]
+    ) -> None: ...
+    async def list_artifacts(
+        self, scope: Scope, run_id: str, after: str | None = None, limit: int = 50
+    ) -> Page[ArtifactRecord]: ...
+    async def get_saved_artifacts(
+        self, scope: Scope, run_id: str
+    ) -> tuple[ArtifactRecord, ...] | None: ...
+    async def get_artifact(self, scope: Scope, artifact_id: str) -> ArtifactRecord: ...
+    async def load_tool_results(self, session_id: str, turn_id: str) -> tuple[ToolResult, ...]: ...
+
     async def provision(
         self, scope: Scope, template_id: str, config_revision: str
     ) -> IdempotentResult[Orchestrator]: ...
@@ -26,7 +46,13 @@ class Repository(Protocol):
         self, scope: Scope, orchestrator_id: str, client_conversation_id: str
     ) -> IdempotentResult[Conversation]: ...
     async def enqueue_message(
-        self, scope: Scope, conversation_id: str, client_message_id: str, content: str
+        self,
+        scope: Scope,
+        conversation_id: str,
+        client_message_id: str,
+        content: str,
+        *,
+        output_mode: Literal["text", "report"] = "text",
     ) -> EnqueueResult: ...
     async def get_conversation(self, scope: Scope, conversation_id: str) -> Conversation: ...
     async def get_run(self, scope: Scope, run_id: str) -> Run: ...
@@ -41,7 +67,9 @@ class Repository(Protocol):
     async def recover_interrupted(self) -> None: ...
     async def pending_runs(self) -> tuple[Run, ...]: ...
     async def execution_context(self, run_id: str) -> tuple[Conversation, Message]: ...
-    async def save_session_mapping(self, run_id: str, session_id: str) -> None: ...
+    async def save_session_mapping(
+        self, run_id: str, session_id: str, *, input_submitted: bool = False
+    ) -> None: ...
     async def mark_submission(
         self, run_id: str, marker: str, turn_id: str | None = None
     ) -> None: ...
@@ -79,3 +107,5 @@ class Repository(Protocol):
         self, scope: Scope, conversation_id: str, delete_session: Callable
     ) -> None: ...
     async def prune(self, before: str) -> tuple[int, int]: ...
+
+    async def load_sources(self, session_id: str, turn_id: str) -> tuple[Source, ...]: ...
