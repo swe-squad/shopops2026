@@ -32,6 +32,52 @@ def test_changed_binding_file_cannot_retarget_pinned_config(tmp_path):
         Bindings.load(str(path)).get(data.shop_data_binding)
 
 
+def test_develop_registry_preserves_pins_and_provisions_chat_revision(tmp_path):
+    from dotenv import dotenv_values
+    from fastapi.testclient import TestClient
+
+    from app.config.settings import Settings
+    from app.main import create_app
+    from tests.integration.test_runtime import environment
+
+    path = "config/registry.shop-data.develop.example.json"
+    revision = "returns-hosted-data-luna-dev-v1"
+    data_url = "http://srv-captain--shop-data-mcp-dev:8000/mcp"
+    core_env = dotenv_values("config/caprover-agent-core.env.example")
+    chat_env = dotenv_values("config/caprover-chat-api.env.example")
+    assert core_env["CONFIG_PATH"] == path
+    assert chat_env["AGENT_CORE_CONFIG_REVISION"] == revision
+    registry = Registry.load(path)
+    legacy = Registry.load("config/registry.shop-data.example.json")
+    for snapshot in legacy.snapshots():
+        assert registry.get(snapshot.template_id, snapshot.revision) == snapshot
+    data = registry.get("shopops", revision)
+    assert data.model == core_env["OPENAI_MODEL"] == "gpt-6-luna"
+    assert data.data_mcp_url == core_env["SHOP_DATA_MCP_URL"] == data_url
+    assert data.knowledge_mcp_url == core_env["KNOWLEDGE_MEMORY_MCP_URL"]
+    assert data.runtime_profile == legacy.get("shopops", "returns-hosted-data-v1").runtime_profile
+    assert data.mcp_profile == "shop-data-read-v1"
+    settings = Settings.from_env(
+        core_env
+        | environment(tmp_path)
+        | {"CONFIG_PATH": path, "DATA_MCP_MODE": core_env["DATA_MCP_MODE"]}
+    )
+    # Exercise startup bundle/binding/endpoint checks and the chat provisioning API,
+    # without submitting a turn or calling external services.
+    with TestClient(create_app(settings=settings)) as client:
+        assert client.get("/ready").status_code == 200
+        request = {
+            "headers": {"Authorization": "Bearer local-alice"},
+            "json": {"template_id": "shopops", "config_revision": revision},
+        }
+        first = client.post("/api/v1/shops/shop-a/orchestrator", **request)
+        assert first.status_code == 201
+        assert first.json()["config_revision"] == revision
+        replay = client.post("/api/v1/shops/shop-a/orchestrator", **request)
+        assert replay.status_code == 200
+        assert replay.json() == first.json()
+
+
 def test_new_endpoint_does_not_rewrite_or_disable_old_pinned_revision(tmp_path):
     from app.composition import build_configured_bridge
     from app.config.settings import Settings

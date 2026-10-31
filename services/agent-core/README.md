@@ -437,7 +437,7 @@ Apply in this order:
    overlapping database owners. Wait for `Application startup complete`.
 3. If the shop already has an orchestrator at another revision, first reconcile
    unresolved work under the previous settings. Follow the stopped-app
-   [maintenance workflow](#maintenance) to activate `returns-hosted-data-dev-v1`.
+   [maintenance workflow](#maintenance) to activate `returns-hosted-data-luna-dev-v1`.
    Do not edit stored snapshots, erase history or discard an uncertain submission.
    A new shop's first login provisions this revision without a separate activation.
 4. Apply the chat API settings. Keep its own existing writable database volume;
