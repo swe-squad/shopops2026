@@ -76,7 +76,7 @@ Record the actual worktree path, branch, foundation SHA, result commit SHA, chan
 - Worktree: `/tmp/shopops2026-agent-core/T02`.
 - Branch: `feat/agent-core-t02-api-auth`; integration destination: `feat/agent-core-template`.
 - Foundation: `9ce01a24f19acdfc4e5803faec1e1a3fa1fd678f`.
-- Result implementation commit: recorded below after committing; handoff metadata follows separately.
+- Result implementation commit: `b3eba62` (handoff metadata follows in a docs commit).
 - Owned changes: `app/auth/`, `app/api/`, `fixtures/identities.json`,
   `contracts/application-api.md`, `contracts/application-api.openapi.json`,
   `tests/auth/`, `tests/api/`, and this task description.
