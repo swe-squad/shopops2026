@@ -157,3 +157,24 @@ Windows uses `Scripts/python.exe`; the harness selects Psycopg's supported event
 Rollback: disable refresh configuration first. Keep receipt tables while reconciling any
 in-flight jobs. Remove shop mappings or revoke logins to stop queries; do not drop shared
 pipeline schemas. The projection migration is independent of the pipeline's base data.
+
+## T10 additive agent projections (preparatory)
+
+`migrations/004-agent-projections.sql` adds sanitized SKU/day cohorts, review flags,
+known SKUs and successful publication metadata. Apply it after pipeline migrations
+and `002-pipeline-access.sql`, as the trusted operator in the derived database.
+Existing mapped query roles receive SELECT on exactly these four new views; fresh
+roles provisioned afterward receive the existing projection permissions. Source/writer
+permissions remain unchanged. `catalog.agent.example.json` is the isolated four-dataset
+catalog; enabling it additionally requires listing its IDs in the selected shop config.
+
+The Core data profile is not yet activated. Its proposed contract is in
+`../agent-core/contracts/shop-data-integration.md`. Missing publication yields no
+snapshot row; consumers must reject that state. Configured demo history coverage is
+separate from publication/query time and must be independently verified. No raw body,
+customer data, refresh or CRUD permission is required by these views.
+
+Run `tests/test_agent_projections.py` with the same disposable database environment
+as the pipeline database tests. It verifies duplicate order/return records, category
+flags, absent publication and two real restricted shop logins. It is not a full
+pipeline-to-chat acceptance test.

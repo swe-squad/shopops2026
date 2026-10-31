@@ -108,3 +108,36 @@ Default CI has no external network/provider calls. Keep `AGENT_CORE_LIVE` and `A
 A complete handoff records branch/worktree/base and dependency SHAs, changed service paths, projection/catalog/binding versions, RED→GREEN and full CI results, database-role/isolation checks, pipeline-to-answer mutation proof, restart/report/follow-up results and resource cleanup. Read-only demo data is synthetic, even when stored in real PostgreSQL; it is not live commerce-platform ingestion.
 
 **Implementation:** Not started. **Offline data integration:** Not verified. **Hosted end-to-end:** UNVERIFIED. This update creates task documents only; it does not seed a database, connect deployed services, enable tools or make paid calls.
+
+### Execution checkpoint
+
+Status: **In progress**, not ready for integration.
+Worktree `/tmp/shopops2026-agent-core/T10`; branch `feat/agent-core-data-mcp`.
+Combined committed dependency base `09a30a1` includes pipeline `5262ba4`, Data MCP
+`e663f88`, and T09 fixes through `e34056f`. No uncommitted owner changes were consumed.
+Draft contract: `contracts/shop-data-integration.md`. Added a preparatory catalog
+compatibility gate with eight focused tests; not wired into any active runtime profile.
+Operator approved a configured and independently verified demo coverage bound.
+Coverage checks reject incomplete requested/baseline intervals. Added additive Data MCP
+projection migration and isolated catalog; real PostgreSQL test verifies duplicate
+cohorts, category flags and two-shop isolation. Adapter/full acceptance remain outstanding.
+
+Validation checkpoint: Core baseline plus catalog tests: 439 passed, 2 skipped;
+latest focused catalog/coverage tests: 12 passed. Lint passes. Full Core suite after
+coverage addition and cross-service acceptance are not yet recorded. No hosted calls.
+
+Data MCP checkpoint: 235 passed, 1 skipped with disposable PostgreSQL 17 and
+`CRONJOB_SOURCE_DIR=../cronjob-server`. Initial full DB test attempt used password
+authentication incompatible with pre-existing passwordless test-role fixtures;
+rerunning with isolated loopback-only test trust authentication passed. The test
+container and its volume were removed. Two sandbox-stalled Core pytest processes
+were also stopped after verifying their T10 service working directory.
+
+Remaining: publication success/boundary projection cases, trusted binding persistence,
+profile-specific transport, fixed query adapter/result validation, registry activation,
+phone alignment, seeded-data coverage oracle, real multi-service report/follow-up/
+restart/mutation proof, browser evidence and final review. No task completion claim.
+
+Final checkpoint rerun: Core **443 passed, 2 skipped** (Python 3.14.7), Data MCP
+**235 passed, 1 skipped**, both service lint checks pass. These counts validate the
+preparatory changes only; end-to-end T10 acceptance remains unverified.
