@@ -54,6 +54,7 @@ Built for the [Sea × OpenAI Regional Codex Hackathon — Vietnam](https://codex
 
 | Start here | Purpose |
 | --- | --- |
+| [Hackathon project write-up](docs/project-write-up.pdf) · [Editable source](docs/project-write-up.md) | Brief project summary for the Sea × OpenAI Regional Codex Hackathon |
 | [Documentation guide](docs/README.md) | Find the owning document for a question |
 | [Product and demo intent](docs/project-overview-pdr.md) | Seller problems, workflows, trust, and demo success |
 | [System architecture](docs/system-architecture.md) | Managed runtime, MCP boundaries, lifecycle, and isolation |

@@ -6,6 +6,7 @@ Start with the [project introduction](../README.md). Product and architecture pa
 
 | Question | Owning document |
 | --- | --- |
+| What are we building for the hackathon? | [Project write-up (PDF)](project-write-up.pdf) · [Editable Markdown](project-write-up.md) |
 | Who is this for, and what should it achieve? | [Product overview](project-overview-pdr.md) |
 | How do managed agents, sessions, and services fit together? | [System architecture](system-architecture.md) |
 | How are MCP access, shop data, and private memory guarded? | [Data and MCP design](data-and-mcp.md) |
