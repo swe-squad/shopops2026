@@ -16,7 +16,7 @@ All implementation changes must stay inside `services/agent-core/`, the existing
 
 | ID | Task | Difficulty | Suggested owner | Status | Start dependency | Completion dependency |
 | --- | --- | --- | --- | --- | --- | --- |
-| T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Not started | None | T02–T04 handoffs for final integration |
+| T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Ready for integration | None | T02–T04 handoffs for final integration |
 | T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Not started | T01 foundation gate | T01 repositories and application wiring |
 | T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Not started | T01 foundation gate | T01 worker and T04 bridge for live smoke |
 | T04 | [MCP bridge, fixtures, and knowledge](desciption/T04-mcp-knowledge.md) | D4 — Hard | Owner 4 | Not started | T01 foundation gate | T01 history repository and application mounting |
@@ -87,20 +87,36 @@ Prefer the platform's native worktree facility and record its actual path. If un
 - Work on feature branches targeting `develop`. Preserve existing documentation and unrelated workspace changes.
 - Every owner writes tests for their module. Only the integration lead edits shared wiring/dependency files; other owners submit explicit dependency requests.
 
+## Published foundation
+
+- Initial SHA: `9ce01a24f19acdfc4e5803faec1e1a3fa1fd678f`.
+- Shared contract amendment/current starting SHA: `94ef8f9c4e25e0af4e321865378bdce718b5fdba`
+  (local `feat/agent-core-template`); preserves trusted grants and replay receipts.
+- Existing worktrees from the initial SHA import the amendment before integration.
+- Worktree: `/home/khalee-dev/.codex/worktrees/2ccf/shopops2026`.
+- T02–T04 may start now from the amended SHA; no dependency on unfinished storage/worker changes.
+- Validation: contracts import without initialization, Ruff passes, contracts/health 3 passed.
+- Shared types, factory signatures, revision activation and recovery rules: `contracts/README.md`.
+- No T02–T04 worktrees were created by T01; each owner creates their own from the SHA above.
+- Live provider SDK/MCP/auth implementations and their dependencies remain owned by T02–T04.
+
 ## Foundation gate
 
 T01 publishes the following before T02–T04 start production code. The other owners can review the spec, prepare test cases, and verify prerequisites while waiting.
 
-- [ ] Preserve the current documents while scaffolding; `scripts/new-service.sh` rejects the existing `agent-core` directory.
-- [ ] Publish the verified foundation commit SHA and start T02–T04 in separate worktrees from that commit.
-- [ ] Publish `app/contracts/identity.py`, `models.py`, `errors.py`, `repository.py`, `provider.py`, and `tools.py`, plus `contracts/README.md` with field definitions and serialization rules.
-- [ ] Define `AuthContext`, `Scope`, `ConfigSnapshot`, `Conversation`, `Run`, `RunEvent`, `Message`, `Page`, and explicit idempotent result types.
-- [ ] Define `AgentProvider`, `ProviderEvent`, `ProviderSession`, `ProviderSnapshot`, `PendingToolCall`, `ToolDefinition`, `ToolResult`, and `ApplicationResponse`.
-- [ ] Freeze method signatures, error classes, dependency injection, and transaction boundaries with the four owners. Use async interfaces consistently; keep blocking database/SDK work off the event loop.
-- [ ] Define event ordering, cursor validation, root-turn identity, and tool-call deduplication rules. Provider code must not import worker implementation; MCP code must not import API routes.
-- [ ] Document scoped credential issuer, audience, expiry, signing algorithm, and claims shared by the bridge and MCP servers. T04 owns its implementation.
-- [ ] Resolve revision activation: the spec rejects provisioning a different revision but also requires new conversations to adopt changed configuration. Define and document the administrative activation procedure without silently changing the provisioning API.
-- [ ] Set an explicit recovery deadline and post-timeout cancellation/reconciliation policy; unknown outcomes must not unlock or resubmit a conversation automatically.
+- [x] Preserve the current documents while scaffolding; `scripts/new-service.sh` rejects the existing `agent-core` directory.
+- [x] Publish verified foundation and amendment SHAs (see above).
+- [ ] T02–T04 owners create their separate worktrees from the amended SHA; T01 did not create them.
+- [x] Publish `app/contracts/identity.py`, `models.py`, `errors.py`, `repository.py`, `provider.py`, and `tools.py`, plus `contracts/README.md` with field definitions and serialization rules.
+- [x] Define `AuthContext`, `Scope`, `ConfigSnapshot`, `Conversation`, `Run`, `RunEvent`, `Message`, `Page`, and explicit idempotent result types.
+- [x] Define `AgentProvider`, `ProviderEvent`, `ProviderSession`, `ProviderSnapshot`, `PendingToolCall`, `ToolDefinition`, `ToolResult`, and `ApplicationResponse`.
+- [x] Publish v1 method signatures, error classes, dependency injection and transaction boundaries;
+  async interfaces keep blocking SQLite work off the event loop.
+- [ ] Confirm v1 consumer acceptance with T02–T04 at handoff; no absent-owner agreement is claimed.
+- [x] Define event ordering, cursor validation, root-turn identity, and tool-call deduplication rules. Provider code must not import worker implementation; MCP code must not import API routes.
+- [x] Document scoped credential issuer, audience, expiry, signing algorithm, and claims shared by the bridge and MCP servers. T04 owns its implementation.
+- [x] Resolve revision activation: the spec rejects provisioning a different revision but also requires new conversations to adopt changed configuration. Define and document the administrative activation procedure without silently changing the provisioning API.
+- [x] Set an explicit recovery deadline and post-timeout cancellation/reconciliation policy; unknown outcomes must not unlock or resubmit a conversation automatically.
 
 `app/contracts/` is a proposed shared boundary package added by this plan. It is distinct from `contracts/`, which contains integration documentation and JSON Schemas. T01 owns shared Python types; T02 owns application API examples; T04 owns tool schemas. Contract changes require updating consumers and their fakes in the same coordinated change.
 
@@ -141,17 +157,27 @@ T01 is delivered in stages, not as a prerequisite that must be fully completed b
 
 ## Completion tracking
 
-- [ ] T01 foundation gate published.
+- [x] T01 foundation gate published.
 - [ ] Four separate task branches/worktrees recorded, with a shared committed foundation and no shared runtime data.
-- [ ] T01 storage/worker module tests pass.
+- [x] T01 storage/worker module tests pass.
 - [ ] T02 module handoff accepted.
 - [ ] T03 offline module handoff accepted.
 - [ ] T04 module handoff accepted.
 - [ ] Offline integration, recovery, and isolation checks pass.
-- [ ] `make ci` passes from the service directory.
-- [ ] Container volume restart and readiness behavior verified.
+- [x] `make ci` passes from the service directory.
+- [x] Container volume restart and readiness behavior verified.
 - [ ] AC13 live evidence recorded, or explicitly marked unverified with the missing prerequisite. Unverified live acceptance must not be reported as passed.
 - [ ] Each task status updated with validation evidence and remaining blockers.
-- [ ] Final changed-path review confirms all implementation changes are under `services/agent-core/` and the integration PR targets `develop`.
+- [x] T01 changed-path audit confirms only `services/agent-core/` changed.
+- [ ] Completed integration PR targets `develop`; no PR/deployment has been created for this module.
 
 Status vocabulary: **Not started**, **In progress**, **Ready for integration**, **Blocked**, **Done**. Use **Ready for integration** when module tests pass but required integration evidence is still missing.
+
+## T01 module handoff
+
+Implementation result `54c8711124b0d3b7583d2d14c560ecc2d29dec54`: Python 3.14 CI passes
+43 tests; Docker build, two-container volume persistence and foundation readiness behavior pass.
+Five P1 review findings were fixed with RED→GREEN regressions. See T01's handoff record for paths,
+commands and exact prerequisites. T02–T04 remain separate tasks; full offline MCP/API flow and AC13
+are unverified. One upstream TestClient deprecation warning remains. No credentials were copied,
+no remote push/deploy was performed, and all task changes stay inside the service directory.

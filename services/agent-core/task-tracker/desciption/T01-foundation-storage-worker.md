@@ -10,7 +10,7 @@
 
 **Spec:** [Agent Core Template Spec](../../agents_api_template_spec.md), sections 1–6 and 8–12.
 
-**Tracker and global constraints:** [Task list](../task_list.md). Owner: integration lead. Status: **Not started**.
+**Tracker and global constraints:** [Task list](../task_list.md). Owner: integration lead. Status: **Ready for integration**.
 
 **Difficulty:** D5 — Very hard. This task combines contract ownership, atomic persistence, concurrency, uncertain provider outcomes, restart recovery and final integration. Its foundation must ship as a small first commit so the other three workstreams can start.
 
@@ -52,16 +52,16 @@ Choose precise argument and return types in `app/contracts/` and publish them in
 
 ## Implementation checklist
 
-- [ ] **Foundation:** Read the repository workflow and adapt `template/python-fastapi` plus `template/_shared` into the existing service directory without changing either template or the shared scaffold script. Preserve current documents; include service-local ignore files. Retain Python 3.14, Ruff py314/100, pinned dependency files and the template Makefile commands. Publish the tracker foundation gate, including revision activation and recovery-deadline decisions. Verify contracts import without provider/network initialization, then publish the foundation commit SHA for the other worktrees.
-- [ ] **Storage tests first:** Add `test_provision_concurrent_unique`, `test_enqueue_replay_before_busy`, `test_same_key_different_payload_conflicts`, and `test_cross_scope_repository_access_denied` in `tests/storage/test_repositories.py`. Require one orchestrator/run, stable replay IDs, typed conflicts, and no cross-scope result. Run the tests and confirm failure before implementing repositories.
-- [ ] **Storage implementation:** Add UUID/UTC tables, foreign keys, unique constraints, WAL/busy timeout, short transactions, config snapshots and stable cursor validation. Persist message/run/lock atomically; deduplicate provider items and tool calls.
-- [ ] **Worker tests first:** Add `test_only_one_active_run_per_conversation`, `test_restart_resumes_queued_run`, `test_replayed_tool_result_not_executed_again`, and `test_unknown_submission_blocks_conversation` in `tests/runs/test_recovery.py`. Use a controllable clock and T03 fake provider; assert no automatic input resubmission after an uncertain provider outcome.
-- [ ] **Worker implementation:** Coordinate `queued`, `running`, `waiting_tool`, `reconciling`, and terminal states. Enforce 180-second run deadlines, 8 calls/run and 4 concurrent runs. Confirm provider cancellation/root-turn completion before unlocking; persist result before tool-result delivery.
-- [ ] **Runtime guards:** Test that missing required configuration fails without exposing values and that fake provider/fixture auth fail outside local/test. Implement readiness from DB/config/worker heartbeat and safe status metrics/logs.
+- [x] **Foundation:** Read the repository workflow and adapt `template/python-fastapi` plus `template/_shared` into the existing service directory without changing either template or the shared scaffold script. Preserve current documents; include service-local ignore files. Retain Python 3.14, Ruff py314/100, pinned dependency files and the template Makefile commands. Publish the tracker foundation gate, including revision activation and recovery-deadline decisions. Verify contracts import without provider/network initialization, then publish the foundation commit SHA for the other worktrees.
+- [x] **Storage tests first:** Add `test_provision_concurrent_unique`, `test_enqueue_replay_before_busy`, `test_same_key_different_payload_conflicts`, and `test_cross_scope_repository_access_denied` in `tests/storage/test_repositories.py`. Require one orchestrator/run, stable replay IDs, typed conflicts, and no cross-scope result. Run the tests and confirm failure before implementing repositories.
+- [x] **Storage implementation:** Add UUID/UTC tables, foreign keys, unique constraints, WAL/busy timeout, short transactions, config snapshots and stable cursor validation. Persist message/run/lock atomically; deduplicate provider items and tool calls.
+- [x] **Worker tests first:** Add `test_only_one_active_run_per_conversation`, `test_restart_resumes_queued_run`, `test_replayed_tool_result_not_executed_again`, and `test_unknown_submission_blocks_conversation` in `tests/runs/test_recovery.py`. Use a controllable clock and T03 fake provider; assert no automatic input resubmission after an uncertain provider outcome.
+- [x] **Worker implementation:** Coordinate `queued`, `running`, `waiting_tool`, `reconciling`, and terminal states. Enforce 180-second run deadlines, 8 calls/run and 4 concurrent runs. Confirm provider cancellation/root-turn completion before unlocking; persist result before tool-result delivery.
+- [x] **Runtime guards:** Test that missing required configuration fails without exposing values and that fake provider/fixture auth fail outside local/test. Implement readiness from DB/config/worker heartbeat and safe status metrics/logs.
 - [ ] **Offline integration:** Wire T02–T04 through the app factory. Add `tests/integration/test_offline_workflow.py`: provision → create conversation → submit → poll → MCP data/knowledge → history/follow-up. Use real loopback MCP transport and fake provider.
 - [ ] **Recovery and configuration integration:** Add tests for lost streams, duplicated provider events, source validation, endpoint revision pinning, worker restart and uncertain cancellation. Record a documented admin procedure for changing the active revision while preserving existing conversations.
-- [ ] **Packaging:** Copy config/knowledge/fixtures into the image, make `/data` writable for the non-root user, and document single-instance deployment with no overlapping DB users. Verify persistence after container restart with a volume. Do not deploy or configure external secrets as part of this task without authorization.
-- [ ] **Cleanup and handoff:** Implement scoped conversation/provider-session cleanup and history/event retention. Keep failed provider deletion visible. Complete README, `.env.example`, offline demo and validation evidence.
+- [x] **Packaging:** Copy config/knowledge/fixtures into the image, make `/data` writable for the non-root user, and document single-instance deployment with no overlapping DB users. Verify persistence after container restart with a volume. Do not deploy or configure external secrets as part of this task without authorization.
+- [x] **Cleanup and handoff:** Implement scoped conversation/provider-session cleanup and history/event retention. Keep failed provider deletion visible. Complete README, `.env.example`, offline demo and validation evidence.
 
 ## Verification and completion
 
@@ -82,3 +82,64 @@ Use scoped commits such as `feat(agent-core): add durable run persistence`. Stag
 ## Handoff record
 
 Record the actual worktree path, branch, reviewed baseline/foundation SHA, result commit SHA, changed paths, verification results and blockers here when implementation begins. Confirm the final branch changes only `services/agent-core/`. Update the central tracker after accepting the other owners' handoffs; retain their branches/worktrees until their commits are integrated and clean.
+
+### Delivered module (2026-10-31)
+
+- Worktree: `/home/khalee-dev/.codex/worktrees/2ccf/shopops2026` (native managed worktree).
+- Branch: `feat/agent-core-t01-foundation`; local integration branch: `feat/agent-core-template`.
+- Reviewed docs baseline: `b43f461` (only service spec/tracker files; unrelated dirty files preserved).
+- Initial foundation: `9ce01a24f19acdfc4e5803faec1e1a3fa1fd678f`.
+- Shared contract amendment: `94ef8f9c4e25e0af4e321865378bdce718b5fdba`.
+  New T02–T04 worktrees may start here; existing initial-foundation worktrees import this commit.
+  Scope now carries trusted permissions; Run pins enqueue-time scope and user-message receipt metadata.
+- Implementation result: `54c8711124b0d3b7583d2d14c560ecc2d29dec54`.
+- Result paths: `app/contracts/`, `contracts/README.md`, `app/config/`, `app/storage/`,
+  `app/runs/`, `app/main.py`, `config/registry.json`, `scripts/`, `tests/contracts/`,
+  `tests/storage/`, `tests/runs/`, `tests/integration/`, `tests/conftest.py`, and service-local
+  scaffold/build/runtime/docs files. Final changed-path audit permits only `services/agent-core/`.
+- Worktree/commits are retained locally. No push, deployment, external secret setup, or PR was performed.
+
+### Verification evidence
+
+- Contracts verified RED→GREEN before foundation publication; imports require no config/network/provider.
+- Storage tests verified concurrent unique provisioning, replay before busy, payload conflicts,
+  tenant/shop/user isolation, resource-bound cursors, immutable revision activation and snapshots.
+- Worker tests verified transactional claims, four-run/eight-call limits, queued restart, durable tool
+  replay, stream loss, subagent events, unknown submission/session creation, cancellation confirmation,
+  source rejection, provider-event deduplication and deadline enforcement before tool delivery.
+- Runtime tests verified safe configuration errors, fake/fixture restrictions, one DB owner,
+  shared dependency composition, mounted MCP app lifespan and visible provider cleanup failure.
+- `make ci` with Python 3.14.7: **43 passed**, Ruff lint/format passed.
+  One upstream Starlette TestClient/httpx deprecation warning remains; no tests failed or skipped.
+- `make docker`: **PASS**, image `agent-core:latest`, non-root UID 1001, writable `/data`.
+- `.venv/bin/python -m scripts.verify_volume_restart`: **PASS**. Two containers with
+  `--network none` and one temporary volume preserved orchestrator/conversation/run IDs, provider
+  mapping, user/assistant history, pinned revision and queued work after container recreation.
+  The script removes only its uniquely named test volume in a finally block.
+- Container smoke: **PASS**, `/health` 200 and `/ready` 503 while T02–T04 adapters are absent.
+- Fresh whole-change review found five P1 issues; all were reproduced RED and corrected GREEN:
+  durable permission propagation, cancellation draining SQLite threads before ownership release,
+  invalid output after confirmed completion, stable replay after retention and tool delivery deadlines.
+  Full suite passed after the fix pass; no second reviewer pass was represented as performed.
+- `graphify update .`: **PASS** inside this service, AST-only, no API calls. SQL AST extraction is
+  partial because `tree_sitter_sql` is not installed. Graph/evidence outputs remain ignored.
+- Local evidence: `.evidence/{make-ci-final.log,docker-build-final.log,volume-restart-final.log,
+  container-readiness.log,graphify-update-final.log}`. Runtime DBs/environments were not committed.
+
+### Remaining integration prerequisites
+
+- T02: authenticated API/router factory and fixture/JWT implementation; no handoff exists yet.
+- T03: fake/live AgentProvider factories and verified/pinned SDK exposing `beta.agents`; no handoff yet.
+  Actual OpenAI session/tool/follow-up cleanup evidence (AC13) is **UNVERIFIED**.
+- T04: ToolBridge and real MCP ASGI factories, schemas, signed credentials, fixture data and knowledge;
+  no handoff yet. Real loopback MCP transport and 5%→15% data evidence are **UNVERIFIED**.
+- Full `tests/integration/test_offline_workflow.py` and offline API demo await those three handoffs.
+  Current integration tests use explicit test-only provider/bridge doubles and lifecycle ASGI apps;
+  they do not establish real MCP or live Agents API acceptance.
+- Cross-owner contract review remains at consumer handoff. Published v1 interfaces unblock their
+  implementation; no agreement from absent owners or completion of their tasks is claimed.
+- Production/develop CapRover apps, volume strategy preventing overlap, JWT issuer/JWKS and runtime
+  credentials remain deployment prerequisites. No public MCP ingress is configured by this task.
+
+T01 remains **Ready for integration**, rather than Done, until the missing handoffs are composed and
+full offline flow/security/recovery checks pass. Preserve other owners' branches/worktrees.
