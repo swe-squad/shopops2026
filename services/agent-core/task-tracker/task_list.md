@@ -184,7 +184,7 @@ Before the live smoke, check only that both variable names are set without print
 - [x] AC13 live evidence recorded, or explicitly marked unverified with the missing prerequisite. Unverified live acceptance must not be reported as passed.
 - [x] Each task status updated with validation evidence and remaining blockers.
 - [x] T01 changed-path audit confirms only `services/agent-core/` changed.
-- [x] Draft PR #4 targets `develop`; no deployment has been performed.
+- [x] Template PR #4 was merged into `develop`; the live amendment is on `fix/agent-core-live`. No deployment was triggered by this amendment.
 
 Status vocabulary: **Not started**, **In progress**, **Ready for integration**, **Blocked**, **Done**. Use **Ready for integration** when module tests pass but required integration evidence is still missing.
 
@@ -240,3 +240,5 @@ real shop/identity/data-service onboarding remain separate system integration wo
 Final live amendment validation: default `make ci` **207 passed, 1 skipped** (live gate opt-in); explicit live pytest **1 passed in 88.83s**, with 3 turns and confirmed remote/local cleanup. Model: gpt-6-astra. The pinned SDK wire test runs offline without skipping.
 
 Live amendment packaging: Docker build PASS; SDK 3.42.0 imports in the runtime image; network-isolated volume recreation PASS. Independent review found a busy-run cleanup issue, reproduced by regression and fixed; follow-up read-only review found no remaining P0/P1 in the live delta. Live sessions were cleaned up; no deployment was performed.
+
+Delivery note: template PR #4 was merged and its remote branch removed while live work was in progress. The live amendment is based on the updated origin/develop on branch `fix/agent-core-live`; the service tree is preserved by cherry-picking the verified amendment.
