@@ -11,7 +11,11 @@ Start the two standalone apps first:
 
 Run `npm ci` and `npm run dev` here, then open `http://localhost:5175`. The viewer uses strict port 5175. Vite serves public `/client-config.json` with the two origins above and limits its frame sources to those origins. `npm run preview` serves the same local config after a build. The child apps must allow the viewer's origin in their embedding policy; see [workspace architecture](../../docs/client-workspace.md).
 
-Unlock each app inside its own frame. Chat links use the existing operations navigation endpoint to update the browser app. The viewer does not read or relay their data. Reload browser app resets only that child; reload chat app resets only chat. Open in new tab is always available when embedding is unavailable. On narrow screens the clients stack, with no frame remount caused by layout changes.
+Unlock each app inside its own frame. Chat links use the existing operations navigation endpoint to update the browser app. The viewer does not read or relay their data. Reload browser app resets only that child; reload chat app resets only chat. Open in new tab is always available when embedding is unavailable.
+
+The viewer occupies one dynamic viewport with no parent scrolling. Above 900px both clients are visible; at narrower widths the Browser/Chat selector changes the visible frame without unmounting either document. Each child's content owns scrolling. The mobile frame stays near 390px wide where space permits. See [feature development patterns](../../docs/feature-development.md).
+
+Brand assets are vendored into `public/brand/` so this service builds independently. After editing canonical assets, run `node scripts/sync-brand-assets.mjs` from the root; `--check` verifies drift and canonical token equivalence.
 
 ## Runtime configuration and CapRover
 
@@ -28,4 +32,4 @@ nginx serves `/client-config.json` from these runtime values and sets `frame-src
 
 ## Validation
 
-`make ci` installs the lockfile and runs lint, tests, and the production build. Tests cover config/URL rejection, independent frame reload identity, config retry and abort, and shell interpolation defenses including multiline values, quotes, invalid hosts, and invalid ports. Browser inspection and the cross-app navigation flow are coordinated from the parent workspace task.
+`make ci` installs the lockfile and runs lint, tests, and the production build. Tests cover config/URL rejection, independent frame reload identity, view switching without remounts, config retry and abort, and shell interpolation defenses. The [workspace browser suite](../../tests/workspace/README.md) verifies real document isolation, scrolling, tabs, streaming and navigation through separate APIs.

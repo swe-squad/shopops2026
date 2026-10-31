@@ -1,0 +1,419 @@
+[
+  {
+    "url": "http://localhost:5175/",
+    "events": [
+      {
+        "name": "pointerdown",
+        "time": 1793429288912.2,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Chat",
+        "x": 334.760009765625,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "mousedown",
+        "time": 1793429288912.2,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Chat",
+        "x": 334,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "pointerup",
+        "time": 1793429288912.5,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Chat",
+        "x": 334.760009765625,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "mouseup",
+        "time": 1793429288912.5,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Chat",
+        "x": 334,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "click",
+        "time": 1793429288912.6,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Chat",
+        "x": 334,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "pointerdown",
+        "time": 1793429289126,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Browser",
+        "x": 267.4100036621094,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "mousedown",
+        "time": 1793429289126,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Browser",
+        "x": 267,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "pointerup",
+        "time": 1793429289126.1,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Browser",
+        "x": 267.4100036621094,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "mouseup",
+        "time": 1793429289126.2,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Browser",
+        "x": 267,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "click",
+        "time": 1793429289126.2,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Browser",
+        "x": 267,
+        "y": 27,
+        "actual": "BUTTON",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "pointerdown",
+        "time": 1793429289214.2,
+        "target": "IFRAME",
+        "id": "",
+        "text": "",
+        "x": 187.5,
+        "y": 742.3699951171875,
+        "actual": "IFRAME",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "mousedown",
+        "time": 1793429289214.2,
+        "target": "IFRAME",
+        "id": "",
+        "text": "",
+        "x": 187,
+        "y": 742,
+        "actual": "IFRAME",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "pointerup",
+        "time": 1793429289214.5,
+        "target": "IFRAME",
+        "id": "",
+        "text": "",
+        "x": 187.5,
+        "y": 742.3699951171875,
+        "actual": "IFRAME",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "mouseup",
+        "time": 1793429289214.6,
+        "target": "IFRAME",
+        "id": "",
+        "text": "",
+        "x": 187,
+        "y": 742,
+        "actual": "IFRAME",
+        "button": null,
+        "height": 812
+      },
+      {
+        "name": "click",
+        "time": 1793429289214.6,
+        "target": "IFRAME",
+        "id": "",
+        "text": "",
+        "x": 187,
+        "y": 742,
+        "actual": "IFRAME",
+        "button": null,
+        "height": 812
+      }
+    ],
+    "geometry": {
+      "width": 375,
+      "height": 812,
+      "outerWidth": 500,
+      "outerHeight": 812,
+      "screen": {
+        "width": 375,
+        "height": 812
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "width": 375,
+        "height": 812,
+        "top": 0,
+        "right": 375,
+        "bottom": 812,
+        "left": 0
+      }
+    }
+  },
+  {
+    "url": "http://127.0.0.1:5173/",
+    "events": [
+      {
+        "name": "input",
+        "time": 1793429289173.3,
+        "target": "INPUT",
+        "id": "workspace-token",
+        "text": "",
+        "actual": null,
+        "button": {
+          "top": 620.375,
+          "bottom": 664.375,
+          "left": 41,
+          "right": 316
+        },
+        "scroll": 0,
+        "height": 703
+      },
+      {
+        "name": "change",
+        "time": 1793429289215.1,
+        "target": "INPUT",
+        "id": "workspace-token",
+        "text": "",
+        "actual": null,
+        "button": {
+          "top": 620.375,
+          "bottom": 664.375,
+          "left": 41,
+          "right": 316
+        },
+        "scroll": 0,
+        "height": 703
+      }
+    ],
+    "geometry": {
+      "width": 357,
+      "height": 703,
+      "outerWidth": 500,
+      "outerHeight": 812,
+      "screen": {
+        "width": 800,
+        "height": 600
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "width": 357,
+        "height": 703,
+        "top": 0,
+        "right": 357,
+        "bottom": 703,
+        "left": 0
+      }
+    }
+  },
+  {
+    "url": "http://localhost:5174/",
+    "events": [
+      {
+        "name": "input",
+        "time": 1793429289021.4,
+        "target": "INPUT",
+        "id": "workspace-token",
+        "text": "",
+        "actual": null,
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      },
+      {
+        "name": "pointerdown",
+        "time": 1793429289062.9,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Unlock chat \u2192",
+        "x": 175.5,
+        "y": 558.4000244140625,
+        "actual": "BUTTON",
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      },
+      {
+        "name": "mousedown",
+        "time": 1793429289063,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Unlock chat \u2192",
+        "x": 175,
+        "y": 558,
+        "actual": "BUTTON",
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      },
+      {
+        "name": "change",
+        "time": 1793429289063,
+        "target": "INPUT",
+        "id": "workspace-token",
+        "text": "",
+        "actual": null,
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      },
+      {
+        "name": "pointerup",
+        "time": 1793429289063.3,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Unlock chat \u2192",
+        "x": 175.5,
+        "y": 558.4000244140625,
+        "actual": "BUTTON",
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      },
+      {
+        "name": "mouseup",
+        "time": 1793429289063.5,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Unlock chat \u2192",
+        "x": 175,
+        "y": 558,
+        "actual": "BUTTON",
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      },
+      {
+        "name": "click",
+        "time": 1793429289063.5,
+        "target": "BUTTON",
+        "id": "",
+        "text": "Unlock chat \u2192",
+        "x": 175,
+        "y": 558,
+        "actual": "BUTTON",
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      },
+      {
+        "name": "submit",
+        "time": 1793429289063.7,
+        "target": "FORM",
+        "id": "",
+        "text": "Workspace access tokenUnlock chat \u2192",
+        "actual": null,
+        "button": {
+          "top": 535.15625,
+          "bottom": 581.65625,
+          "left": 41,
+          "right": 310
+        },
+        "height": 697
+      }
+    ],
+    "geometry": {
+      "width": 351,
+      "height": 697,
+      "outerWidth": 500,
+      "outerHeight": 812,
+      "screen": {
+        "width": 375,
+        "height": 812
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    }
+  }
+]

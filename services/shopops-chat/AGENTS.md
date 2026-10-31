@@ -20,41 +20,41 @@ React + TypeScript SPA built with Vite, served by nginx (`nginx.conf`, SPA fallb
 - Function components and hooks only; no class components.
 - Tests query by role/label (`getByRole`), not by CSS class or test id when avoidable.
 
-## UI design direction (Notion-inspired)
+## ShopOps brand and conversation layout
 
-Read [DESIGN-notion.md](./DESIGN-notion.md) before creating or changing UI. Use its palette,
-typography, spacing, shapes and component guidance as the default unless the user specifies
-another direction. Translate the design language to the service's actual workflows; marketing
-examples such as pricing cards and hero bands are optional, not required app features.
+Read [brand direction](../../docs/brand/brand-direction.md) and [design guidelines](../../docs/brand/design-guidelines.md)
+before changing UI. They replace the inherited `DESIGN-notion.md` template direction.
 
-- Aim for a calm, document-like workspace: generous whitespace, clear content hierarchy,
-  restrained chrome and readable lists/tables. Group content through spacing before adding cards.
-- Use warm paper `#f6f5f4` for the page canvas, white `#ffffff` for panels and inputs,
-  near-black text, `#615d59` for supporting copy and `#e6e6e6` for 1px dividers/borders.
-- Reserve blue `#0075de` for primary actions, links and active/focus indicators; use
-  `#005bab` for pressed primary buttons. Keep secondary actions neutral. Sticker colours
-  (purple, pink, orange, teal, green) belong in small illustrations, icon tiles and category dots.
-  Error/success states must remain understandable through text or icons as well as colour.
-- Use Inter when available with a system sans-serif fallback; do not depend on NotionInter.
-  Keep body text at 15–16px, weight 400 and comfortable line-height (about 1.5 for prose).
-  Use weight 600–700 for headings and tighter tracking for large titles. Reserve 54–64px
-  display sizes for marketing heroes; keep workspace headings appropriate to the content.
-- Reuse spacing tokens of 4, 8, 12, 16, 24, 28 and 32px. Use around 24px padding in cards
-  and generous section gaps; keep data-heavy views compact enough to scan comfortably.
-- Use 4px radii for inputs, 5px for menu/list rows, 8px for utility buttons and 12–16px
-  for cards/large containers. Fully rounded pills suit marketing CTAs and badges.
-  Prefer hairline borders; apply subtle shadows only where elevation helps, such as popovers.
-- Keep navigation quiet, with subtle row hover states and an obvious active indicator.
-  Forms need visible labels, clear validation and keyboard focus. Provide loading, empty,
-  error and disabled states using the same visual system.
-- Adapt grids to two columns on tablet and one on mobile where appropriate; collapse navigation
-  when needed and keep mobile touch targets at least 44×44px. Contain wide tables in their own
-  scroll area so the page itself does not overflow.
-- Use decorative colour sparingly. Avoid heavy shadows and repeated dark sections; the deep
-  indigo `#213183` hero treatment is an optional, single marketing moment.
-- Define reusable CSS custom properties for the design tokens and share component styles
-  rather than scattering one-off values. Check changed screens at desktop and mobile widths,
-  including keyboard focus and readable text contrast; faint decorative tokens are not body text.
+- Consume canonical tokens and mark from `public/brand/`; edit the source kit in `docs/brand/assets/`,
+  then run `node scripts/sync-brand-assets.mjs` from the repo root. Verify with `--check`.
+  Each client vendors only static brand assets and builds independently.
+- Use ivory, white, charcoal and restrained orange. Use action orange for small text and primary
+  buttons; the brighter brand orange is for marks and accents. Keep focus visible, primary controls
+  at least 44×44px, and status text understandable without color.
+- Preserve the Telegram-style contact conversation: compact ShopOps name/circular avatar, honest
+  assistant/loading/typing state, rounded incoming/outgoing bubbles with tails, quiet bottom-right
+  timestamps, local wallpaper and a pill composer with paper-plane send. No fake online/read receipts
+  or decorative attachment/voice/back controls. Day separators derive from message timestamps in the
+  viewer's local time; never invent a conversation date.
+- `chat-actions-menu.tsx` owns real history reload and lock actions. Keep menu keyboard navigation,
+  Escape focus return, outside/blur dismissal, and disabled reload while busy. Recovery stays visible
+  beside the composer instead of requiring the menu.
+- Keep the signed-in app in one viewport: `.chat-header` and `.composer-area` stay outside the
+  conversation scroll. The single `role="log"` named `Conversation` owns message scrolling.
+  Table/code regions may scroll horizontally and must remain keyboard reachable.
+- `use-conversation-scroll.ts` follows incoming content only while near the bottom. Readers above
+  keep their position and get an explicit Jump to latest control. Observe viewport/content resizing
+  without forcing readers back to the bottom. Keep upward wheel/touch and keyboard intent handling:
+  native scroll events can arrive after a streamed layout update. Never cancel native scrolling.
+- `use-mobile-viewport.ts` follows the visual viewport only when standalone and unzoomed. An embedded
+  client follows its iframe. Preserve dynamic-height fallback, safe-area padding and short-height layout.
+- Keep Markdown in `rich-message.tsx` with raw HTML disabled, remote images rendered as text, and links
+  delivered through `onNavigate`. Presentation styles live in `rich-message.css`; never load remote
+  media or use `dangerouslySetInnerHTML` for messages.
+- After stop or stream failure, preserve partial text and require explicit history loading before a
+  new turn. Recovery stays next to the disabled composer; loading history never resends a message.
+- Keep loading, empty, failure, responding and locked states truthful. No invented shop data, connection
+  state or successful-action claims. Verify desktop/mobile layouts and reduced-motion behavior.
 
 ## Review guidelines (React)
 

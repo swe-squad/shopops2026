@@ -16,41 +16,32 @@ React + TypeScript SPA built with Vite, served by nginx (`nginx.conf`, SPA fallb
 - Function components and hooks only; no class components.
 - Tests query by role/label (`getByRole`), not by CSS class or test id when avoidable.
 
-## UI design direction (Notion-inspired)
+## UI design direction (ShopOps)
 
-Read [DESIGN-notion.md](./DESIGN-notion.md) before creating or changing UI. Use its palette,
-typography, spacing, shapes and component guidance as the default unless the user specifies
-another direction. Translate the design language to the service's actual workflows; marketing
-examples such as pricing cards and hero bands are optional, not required app features.
+Read the canonical [design guidelines](../../docs/brand/design-guidelines.md) and
+[brand direction](../../docs/brand/brand-direction.md) before changing the UI. The selected
+direction is **Clarity in the chaos**. `DESIGN-notion.md` is a historical template reference;
+its palette and typography are not the current product standard.
 
-- Aim for a calm, document-like workspace: generous whitespace, clear content hierarchy,
-  restrained chrome and readable lists/tables. Group content through spacing before adding cards.
-- Use warm paper `#f6f5f4` for the page canvas, white `#ffffff` for panels and inputs,
-  near-black text, `#615d59` for supporting copy and `#e6e6e6` for 1px dividers/borders.
-- Reserve blue `#0075de` for primary actions, links and active/focus indicators; use
-  `#005bab` for pressed primary buttons. Keep secondary actions neutral. Sticker colours
-  (purple, pink, orange, teal, green) belong in small illustrations, icon tiles and category dots.
-  Error/success states must remain understandable through text or icons as well as colour.
-- Use Inter when available with a system sans-serif fallback; do not depend on NotionInter.
-  Keep body text at 15–16px, weight 400 and comfortable line-height (about 1.5 for prose).
-  Use weight 600–700 for headings and tighter tracking for large titles. Reserve 54–64px
-  display sizes for marketing heroes; keep workspace headings appropriate to the content.
-- Reuse spacing tokens of 4, 8, 12, 16, 24, 28 and 32px. Use around 24px padding in cards
-  and generous section gaps; keep data-heavy views compact enough to scan comfortably.
-- Use 4px radii for inputs, 5px for menu/list rows, 8px for utility buttons and 12–16px
-  for cards/large containers. Fully rounded pills suit marketing CTAs and badges.
-  Prefer hairline borders; apply subtle shadows only where elevation helps, such as popovers.
-- Keep navigation quiet, with subtle row hover states and an obvious active indicator.
-  Forms need visible labels, clear validation and keyboard focus. Provide loading, empty,
-  error and disabled states using the same visual system.
-- Adapt grids to two columns on tablet and one on mobile where appropriate; collapse navigation
-  when needed and keep mobile touch targets at least 44×44px. Contain wide tables in their own
-  scroll area so the page itself does not overflow.
-- Use decorative colour sparingly. Avoid heavy shadows and repeated dark sections; the deep
-  indigo `#213183` hero treatment is an optional, single marketing moment.
-- Define reusable CSS custom properties for the design tokens and share component styles
-  rather than scattering one-off values. Check changed screens at desktop and mobile widths,
-  including keyboard focus and readable text contrast; faint decorative tokens are not body text.
+- Use canonical `--shopops-*` tokens from `public/brand/brand-tokens.css`: warm ivory canvas,
+  white surfaces, charcoal text, restrained orange accents, and Inter/system typography.
+  Use action orange for normal-size button text contrast; brand orange is for marks and accents.
+- Vendor assets through `node scripts/sync-brand-assets.mjs` from the repository root.
+  Run `node scripts/sync-brand-assets.mjs --check` to detect drift. Edit the canonical brand kit,
+  not the generated copies in `public/brand/`.
+- Keep the document and browser chrome inside the viewport. `.shop-page` owns vertical shop
+  scrolling; the tab strip owns horizontal overflow. Do not introduce page-level scrolling.
+- Prioritize interaction space: use a compact app header and a single shop navigation row.
+  Keep decorative titles and explanatory copy out of extra chrome rows; retain 44px controls.
+- Keep inactive tab panels mounted. History, address drafts, incident drafts, local scroll,
+  and external previews belong to each tab. New chat navigation targets the active tab.
+- Preserve accessible tab semantics, visible keyboard focus, ArrowLeft/ArrowRight/Home/End
+  selection, Delete to close, and 44px touch targets. Closing the last tab opens a fresh overview.
+- Show loading, empty, error, retry, saving, and success states without inventing connected shop
+  data. Errors and statuses need text or icons as well as color. Respect reduced motion.
+- Check desktop, phone, tablet, and short landscape sizes. Keep wide content inside its owner.
+- Keep this client independent from `shopops-chat` and `shopops-workspace`: separate documents,
+  state, tokens, and builds. Shared assets do not authorize shared application code or credentials.
 
 ## Review guidelines (React)
 

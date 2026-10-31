@@ -2,7 +2,7 @@
 
 **An AI-powered operations agent that proactively detects, diagnoses, and resolves business-critical issues for Shopee sellers via Telegram.**
 
-The current clients are a standalone shop browser app and a separate Telegram-style mobile orchestrator chat app. A presentation-only viewer can display both independent apps in one tab. See [client setup and service boundaries](docs/client-workspace.md).
+The current clients are a standalone shop browser app and a separate Telegram-style mobile orchestrator chat app. A presentation-only viewer can display both independent apps in one tab. See [client setup and service boundaries](docs/client-workspace.md) and [feature development patterns](docs/feature-development.md).
 
 ## 1. Problem
 

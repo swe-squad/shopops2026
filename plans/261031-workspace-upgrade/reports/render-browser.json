@@ -1,0 +1,41 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "screenshots/browser-375x812.png",
+    "outline": [
+      "div#root \"shopops. CLARITY IN THE CHAOS Know what \" @ x0 y0 375x812",
+      "  div.app-shell \"shopops. CLARITY IN THE CHAOS Know what \" @ x0 y0 375x812",
+      "    header.workspace-header \"shopops.\" @ x0 y0 375x48",
+      "    main.unlock-scroll \"CLARITY IN THE CHAOS Know what matters.  @ x0 y48 375x764",
+      "      div.unlock-layout \"CLARITY IN THE CHAOS Know what matters. \" @ x0 y48 375x764"
+    ],
+    "findings": [],
+    "height": 812
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "screenshots/browser-768x1024.png",
+    "outline": [
+      "div#root \"shopops. Seller workspace Your next move\" @ x0 y0 768x1024",
+      "  div.app-shell \"shopops. Seller workspace Your next move\" @ x0 y0 768x1024",
+      "    header.workspace-header \"shopops. Seller workspace Your next @ x0 y0 768x48",
+      "    main.unlock-scroll \"CLARITY IN THE CHAOS Know what matters.  @ x0 y48 768x976",
+      "      div.unlock-layout \"CLARITY IN THE CHAOS Know what matters. \" @ x0 y48 768x976"
+    ],
+    "findings": [],
+    "height": 1024
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "screenshots/browser-1440x900.png",
+    "outline": [
+      "div#root \"shopops. Seller workspace Your next move\" @ x0 y0 1440x900",
+      "  div.app-shell \"shopops. Seller workspace Your next move\" @ x0 y0 1440x900",
+      "    header.workspace-header \"shopops. Seller workspace Your next @ x0 y0 1440x48",
+      "    main.unlock-scroll \"CLARITY IN THE CHAOS Know what matters.  @ x0 y48 1440x852",
+      "      div.unlock-layout \"CLARITY IN THE CHAOS Know what matters. \" @ x144 y48 1152x852"
+    ],
+    "findings": [],
+    "height": 900
+  }
+]

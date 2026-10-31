@@ -2,6 +2,12 @@
 
 ShopOps has two independently built and deployed client apps. Open them directly, or open the presentation-only workspace viewer to display both in one browser tab: the browser app on the left and the Telegram-style chat app in a phone-sized frame on the right. The viewer loads full documents from their separate origins; it does not import their components or hold application state, credentials, or business logic. The chat client is a standalone mobile web app, not the Telegram Bot API.
 
+The viewer stays within one dynamic viewport with no parent scrolling. Desktop shows both apps; at 900px and below, a Browser/Chat selector changes visibility without remounting either client. Browser tabs keep independent history and drafts. Chat keeps its composer available while messages scroll, and incoming replies respect the reader's scroll position.
+
+The chat follows Telegram conversation conventions with a compact contact header, incoming/outgoing bubbles, day separators, and a persistent Message composer. Enter sends; Shift+Enter adds a line. The Chat menu contains Load conversation and Lock. Stop and explicit history recovery remain beside the composer. ShopOps colors and identity apply throughout; no unsupported attachment, voice, presence, or read-receipt controls are shown.
+
+For new features, follow [client development patterns](feature-development.md) and the [backend integration pattern](service-integration-pattern.md). The [browser regression suite](../tests/workspace/README.md) exercises the separate apps and APIs together.
+
 ## Services
 
 | Service | Responsibility | Container port | Local port |
