@@ -1,0 +1,66 @@
+name: Prune GHCR Images
+
+# Weekly: for every service image ghcr.io/<owner>/<service>, keep the KEEP newest versions plus whatever
+# a latest-* tag points to, delete the rest.
+on:
+  schedule:
+    - cron: '0 3 * * 4'
+  workflow_dispatch:
+
+jobs:
+  prune:
+    if: github.repository_owner == 'swe-squad'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prune old GHCR image versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          KEEP: '10'
+        run: |
+          set -euo pipefail
+
+          if [[ $(gh api "/users/${OWNER}" -q '.type') == "Organization" ]]; then
+            BASE="/orgs/${OWNER}"
+          else
+            BASE="/users/${OWNER}"
+          fi
+
+          for dir in services/*/; do
+            PACKAGE="$(basename "${dir}")"
+            [[ -f "${dir}service.json" ]] || continue
+
+            echo "::group::${OWNER}/${PACKAGE}"
+            if ! versions_json=$(gh api --paginate -H "Accept: application/vnd.github+json" "${BASE}/packages/container/${PACKAGE}/versions?per_page=100" -q '.[]' 2>/dev/null | jq -s '.'); then
+              echo "No package yet, skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            # latest-* tags move to the newest image, so filtering on them alone would keep ~1 per branch
+            mapfile -t keep_ids < <(
+              jq -r --argjson keep "${KEEP}" '
+                . as $versions |
+                ($versions
+                  | map(select((.metadata.container.tags // []) | any(startswith("latest-"))))
+                  | map(.id)) as $current |
+                ($versions | sort_by(.created_at) | reverse | .[0:$keep] | map(.id)) as $recent |
+                ($current + $recent | unique)[]
+              ' <<<"${versions_json}"
+            )
+            mapfile -t all_ids < <(jq -r '.[].id' <<<"${versions_json}")
+            echo "Keeping ${#keep_ids[@]} of ${#all_ids[@]} version(s)."
+
+            for version_id in "${all_ids[@]}"; do
+              [[ " ${keep_ids[*]} " == *" ${version_id} "* ]] && continue
+              echo "Deleting version ${version_id}..."
+              gh api --method DELETE -H "Accept: application/vnd.github+json" "${BASE}/packages/container/${PACKAGE}/versions/${version_id}"
+            done
+            echo "::endgroup::"
+          done

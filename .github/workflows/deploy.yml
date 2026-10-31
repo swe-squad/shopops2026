@@ -1,0 +1,75 @@
+name: Deploy
+
+# Push/merge to develop -> changed services deploy via environment codex-sea-dev.
+# Push/merge to main    -> changed services deploy via codex-sea-prod.
+# Manual run: pick services (empty = all); main -> production, any other branch -> develop.
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: Comma-separated services to deploy (empty = all)
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.changes.outputs.services }}
+      environment: ${{ steps.changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          REQUESTED: ${{ inputs.services }}
+        run: |
+          set -euo pipefail
+          all=$(.github/scripts/changed-services.sh "" "${GITHUB_SHA}")
+          if [[ "${EVENT}" == "workflow_dispatch" ]]; then
+            if [[ -n "${REQUESTED}" ]]; then
+              services=$(jq -c --arg r "${REQUESTED}" '($r | split(",") | map(gsub("\\s"; ""))) as $want | map(select(. as $s | $want | index($s)))' <<<"${all}")
+            else
+              services="${all}"
+            fi
+          else
+            services=$(.github/scripts/changed-services.sh "${BEFORE}" "${GITHUB_SHA}")
+          fi
+
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            environment=production
+          else
+            environment=develop
+          fi
+
+          echo "Deploying ${services} to ${environment}"
+          echo "services=${services}" >> "$GITHUB_OUTPUT"
+          echo "environment=${environment}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: changes
+    if: needs.changes.outputs.services != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
+    name: ${{ matrix.service }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/_build-deploy.yml
+    with:
+      service: ${{ matrix.service }}
+      ref: ${{ github.sha }}
+      environment: ${{ needs.changes.outputs.environment }}
+      tag: latest-${{ github.ref_name }}
+    secrets: inherit

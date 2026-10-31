@@ -1,0 +1,54 @@
+name: CI (reusable)
+
+# Lint, test and build one service by running `make ci` in services/<service>.
+on:
+  workflow_call:
+    inputs:
+      service:
+        type: string
+        required: true
+      ref:
+        description: Commit to test (defaults to the triggering ref)
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ci
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Read service.json
+        id: meta
+        run: echo "stack=$(jq -r '.stack' service.json)" >> "$GITHUB_OUTPUT"
+
+      - if: steps.meta.outputs.stack == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/${{ inputs.service }}/go.mod
+          cache-dependency-path: services/${{ inputs.service }}/go.sum
+
+      - if: steps.meta.outputs.stack == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: services/${{ inputs.service }}/requirements*.txt
+
+      - if: steps.meta.outputs.stack == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: services/${{ inputs.service }}/package-lock.json
+
+      - run: make ci
