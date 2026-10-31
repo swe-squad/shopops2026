@@ -18,19 +18,19 @@ Proposed service: `shop-data-mcp`, Python FastAPI template, container port `8000
 
 ## Implemented runtime configuration
 
-Set `MCP_CONFIG_FILE` to an operator-owned mounted JSON file; `PORT` defaults to 8000. The earlier individual DB/AUTH environment names were proposals and are not implemented. The authoritative keys and defaults are in [config.example.json](../services/shop-data-mcp/config.example.json), the [service README](../services/shop-data-mcp/README.md) and [data engineer handoff](../services/shop-data-mcp/HANDOFF.md).
+Set `MCP_CONFIG_FILE` to an operator-owned mounted JSON file and `MCP_CATALOG_FILE` to the separate dataset catalog; `PORT` defaults to 8000. Existing inline catalogs remain supported when the separate path is unset. The earlier individual DB/AUTH environment names were proposals and are not implemented. The authoritative keys and defaults are in [runtime config example](../services/shop-data-mcp/config.example.json), [catalog example](../services/shop-data-mcp/catalog.example.json), and [DE development guide](../services/shop-data-mcp/DEVELOPMENT.md).
 
 The JSON config defines restricted control/query DSNs, shop dataset allowlists, issuer/audience/JWKS, resource limits, and optional fixed ingestion/approval origins with separate credentials. Keep populated configuration outside Git. Both control and query DSNs require `sslmode=verify-full` and a mounted CA. The control identity stores artifacts and operation records but never executes model SQL; per-shop logins execute those queries.
 
-Run `python -m app.check` for configuration validation and add `--connect` to check control storage and published mart connectivity. These checks do not certify tenancy policies or live upstream behavior. Mount the operator JSON and CA before starting the service.
+Run `python -m app.check` for configuration validation and add `--connect` to check control storage and published mart connectivity. These checks do not certify tenancy policies or live upstream behavior. With the split examples, mount the runtime JSON, catalog JSON and CA and set both file variables before starting the service. Legacy inline catalogs need only `MCP_CONFIG_FILE` and the CA; leave `MCP_CATALOG_FILE` unset.
 
 ## Connect the MCP to PostgreSQL
 
 1. Determine the real PostgreSQL app/private hostname, version, schema and TLS capability. In the same CapRover cluster, use `srv-captain--<postgres-app-name>:5432`. On another VPS/network, establish a private route and firewall permission before configuring the host. `localhost` inside the MCP container refers to that container.
 2. Keep database port 5432 unpublished. If PostgreSQL runs in CapRover, select **Do not expose as web app** and add no Port Mapping. Limit database/network access to the required service identities and network ranges.
-3. Provision non-owner, non-superuser roles without `BYPASSRLS`, source write or role-changing privileges. Separate control metadata, shop-bound query and workspace writer access. Apply and verify RLS on every shared source and materialized mart surface.
+3. Provision non-owner, non-superuser query roles without `BYPASSRLS`, source write or role-changing privileges. Keep the control/workspace writer separate from shop-bound query identities. Apply and verify RLS on every shared source and materialized mart surface.
 4. Provision a server certificate whose identity matches the configured database hostname and mount its CA into the MCP container. Set `sslmode=verify-full sslrootcert=<CA-path>` in the DSNs. A private hostname alone does not enable or verify TLS; do not downgrade automatically if certificate verification fails.
-5. Mount the JSON/CA and set MCP_CONFIG_FILE in the MCP app. Restart/redeploy and inspect sanitized readiness status. Test from the deployed container/network, not only a laptop.
+5. Mount the runtime JSON, catalog JSON and CA. Set `MCP_CONFIG_FILE` and `MCP_CATALOG_FILE` to their respective mounted files in the MCP app. For a legacy inline catalog, mount the runtime JSON and CA, set only `MCP_CONFIG_FILE`, and leave `MCP_CATALOG_FILE` unset. Restart/redeploy and inspect sanitized readiness status. Test from the deployed container/network, not only a laptop.
 
 Do not use an administrator URL for model queries. SQL restrictions, safe view ownership, raw grant projection and result isolation must be verified before accepting agent traffic. RLS does not protect against a privileged database account bypassing it. See [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html).
 

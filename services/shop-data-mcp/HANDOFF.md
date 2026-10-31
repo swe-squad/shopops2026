@@ -10,7 +10,9 @@ fallback or automatic approval.
 
 The operator supplies the JSON configuration referenced by `MCP_CONFIG_FILE`; see
 `app/settings.py` for the authoritative schema. Keep real credentials outside source
-control. Resolve actual service names and use their private cluster origins
+control. Dataset definitions can be maintained independently through `MCP_CATALOG_FILE`;
+see [Data and tool changes](DEVELOPMENT.md) for registration, tool extension and validation.
+Resolve actual service names and use their private cluster origins
 `http://srv-captain--<app-name>:<port>`; browser-facing public domains are not upstream
 addresses. Each adapter accepts an origin only, without credentials, path, query or
 fragment. Local integration tests can use a local origin.

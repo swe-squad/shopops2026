@@ -1,0 +1,35 @@
+{
+  "datasets": [
+    {
+      "id": "order_economics",
+      "relation": "mart.order_economics",
+      "layer": "mart",
+      "description": "Order economics at shop/order grain. Configure the real projection before use.",
+      "columns": [
+        "order_id",
+        "gross_sales",
+        "contribution_margin",
+        "ordered_at"
+      ],
+      "resource": "orders",
+      "semantics": {
+        "currency": "VND",
+        "margin": "Operational estimate; missing cost means unknown",
+        "watermark": "Populate from the processing pipeline"
+      }
+    },
+    {
+      "id": "settlement_details",
+      "relation": "raw_access.settlement_details",
+      "layer": "raw",
+      "description": "Sanitized settlement projection; exclude buyer contacts and credentials.",
+      "columns": [
+        "order_id",
+        "fee",
+        "captured_at"
+      ],
+      "time_column": "captured_at",
+      "resource": "settlements"
+    }
+  ]
+}

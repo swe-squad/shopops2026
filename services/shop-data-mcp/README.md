@@ -2,16 +2,18 @@
 
 An authenticated Streamable HTTP MCP server for PostgreSQL marts, approved raw analysis, private expiring temporary marts and bounded automatic collection requests. Port: 8000. Endpoint: `/mcp`. Not deployed yet.
 
+For dataset registration and tool changes, start with [Data and tool changes](DEVELOPMENT.md).
+
 ## Configure
 
-1. Copy `config.example.json` to an operator-owned secret file outside Git. Replace hosts, issuer and dataset projections with real values. Mount the JSON and PostgreSQL CA into the container. Set `MCP_CONFIG_FILE` to its absolute path. Missing/invalid configuration refuses startup; no demo data is loaded.
+1. Copy `config.example.json` to an operator-owned secret file outside Git and `catalog.example.json` to a separate approved dataset file. Replace hosts, issuer and dataset projections with real values. Mount both JSON files and the PostgreSQL CA. Set `MCP_CONFIG_FILE` and `MCP_CATALOG_FILE` to their absolute paths. Existing inline `datasets` remain supported when no separate catalog is selected. Missing/invalid configuration refuses startup; no demo data is loaded.
 2. Apply `migrations/001-control.sql` as an operator. Create a restricted control login with USAGE on `mcp_control`; SELECT/INSERT/UPDATE/DELETE on results and refreshes; SELECT only on revoked_tokens. It must have no application source-table access. Revoke PUBLIC schema/table access. Operator credentials never enter the MCP container.
 3. Provision a unique, non-owner PostgreSQL query login per shop with no privileged attributes or role memberships. Grant only the sanitized catalog projections for that shop. Use RLS or shop-specific security views to enforce tenancy in PostgreSQL; catalog filters supplement this boundary. This service refuses privileged query identities but cannot prove arbitrary views/RLS are correctly authored. Verify two-shop isolation before connecting real agents.
 4. Put that shop's query DSN and allowed dataset IDs in `shops`. Query connections are fresh per request and read-only, with statement timeout and restricted SQL. Both control and query DSNs require `sslmode=verify-full` plus CA material when loaded at startup. The SSL certificate must match the private hostname.
 5. Configure an RS256 JWT issuer/JWKS. Required claims: `sub` (agent identity), `shop_key`, `scope` (space-separated), `iat`, `exp`, `jti`, plus matching `iss` and `aud`. Tokens last at most one hour. Every HTTP request checks revocation in `mcp_control.revoked_tokens`; insert a jti there to revoke it. Signing keys stay outside this service. Scopes: `data:read`, optionally `raw:request`, `raw:read`, `data:refresh`.
 6. Supply approval and ingestion service URLs/tokens when implemented. Until then those tools return sanitized errors. `HANDOFF.md` defines their exact proposed contracts, including processing-stage reporting. The MCP never forwards the agent token to those services.
 
-The config example's dataset names/columns are integration contracts, not migrations that create those marts. The data engineer supplies actual schema, projections, semantics and coverage/watermarks. Catalog updates require a restart. Do not include customer identifiers in semantic descriptions.
+The catalog example's dataset names/columns are integration contracts, not migrations that create those marts. The data engineer supplies actual schema, projections, semantics and coverage/watermarks. Catalog updates require a restart. Do not include customer identifiers in semantic descriptions.
 
 ## Agent tools
 
@@ -52,9 +54,10 @@ Policies on existing tables can affect other services: inspect their access befo
 
 ```sh
 make ci
+# Set MCP_CONFIG_FILE and MCP_CATALOG_FILE to the mounted split files first.
+make check-config
+make check-data
 make run
-# With mounted MCP_CONFIG_FILE set:
-.venv/bin/python -m app.check --connect
 ```
 
 `make ci` runs Ruff and unit/protocol tests. Real database tests require a **fresh disposable** PostgreSQL database with role/schema creation privileges, supplied through `TEST_DATABASE_DSN`; they create and remove test schemas/roles. Never point this setting at operational data. Docker is optional; any disposable PostgreSQL instance works. `make integration` requires this variable and runs the real isolation test explicitly.

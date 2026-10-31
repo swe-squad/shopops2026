@@ -2,11 +2,12 @@
 
 import argparse
 import asyncio
+import json
 
 from app.auth import Principal
 from app.database import Database
 from app.query import compile_query
-from app.settings import Settings
+from app.settings import Catalog, ConfigurationError, Settings
 
 
 async def check(settings: Settings) -> None:
@@ -24,16 +25,26 @@ async def check(settings: Settings) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--connect", action="store_true", help="Check control and mart connectivity"
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--connect", action="store_true", help="Check control and mart connectivity")
+    mode.add_argument(
+        "--schema",
+        choices=["config", "catalog"],
+        help="Print an editor JSON Schema; no credentials or connection required",
     )
     args = parser.parse_args()
+    if args.schema:
+        model = Settings if args.schema == "config" else Catalog
+        print(json.dumps(model.model_json_schema(), indent=2))
+        return
     try:
         settings = Settings.load()
         if args.connect:
             asyncio.run(check(settings))
+    except ConfigurationError as exc:
+        raise SystemExit(f"Preflight failed: {exc}") from None
     except Exception:
-        raise SystemExit("Preflight failed; check configuration, roles, CA and schema") from None
+        raise SystemExit("Preflight failed; check roles, CA and schema") from None
     print("Preflight passed; live identity/upstream/isolation verification is still required")
 
 

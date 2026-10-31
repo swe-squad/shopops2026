@@ -1,4 +1,4 @@
-.PHONY: ci install run test lint format docker
+.PHONY: ci install run test lint format docker integration check-config check-data config-schema catalog-schema
 PYTHON ?= python3
 VENV ?= .venv
 
@@ -24,6 +24,18 @@ format:
 integration:
 	test -n "$(TEST_DATABASE_DSN)"
 	$(VENV)/bin/python -m pytest tests/test_database.py -q
+
+check-config:
+	$(VENV)/bin/python -m app.check
+
+check-data:
+	$(VENV)/bin/python -m app.check --connect
+
+config-schema:
+	@$(VENV)/bin/python -m app.check --schema config
+
+catalog-schema:
+	@$(VENV)/bin/python -m app.check --schema catalog
 
 docker:
 	docker build -t shop-data-mcp .

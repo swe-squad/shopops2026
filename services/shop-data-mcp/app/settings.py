@@ -4,18 +4,52 @@ import json
 import os
 from pathlib import Path
 
-from pydantic import BaseModel, Field, SecretStr, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 
-class Dataset(BaseModel):
-    id: str = Field(pattern=r"^[a-z][a-z0-9_]{0,62}$")
-    relation: str = Field(pattern=r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$")
-    layer: str = Field(pattern="^(mart|raw)$")
-    description: str
-    columns: list[str] = Field(min_length=1)
-    time_column: str | None = None
-    resource: str | None = None
-    semantics: dict = Field(default_factory=dict)
+class ConfigurationError(RuntimeError):
+    """Operator-safe configuration diagnostics without input values."""
+
+
+class StrictConfiguration(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class Dataset(StrictConfiguration):
+    id: str = Field(
+        pattern=r"^[a-z][a-z0-9_]{0,62}$",
+        description="Logical SQL name used by agents, independent of the physical relation",
+    )
+    relation: str = Field(
+        pattern=r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$",
+        description="PostgreSQL schema.table or schema.view, protected by database shop isolation",
+    )
+    layer: str = Field(pattern="^(mart|raw)$", description="Raw requires an owner-approved grant")
+    description: str = Field(description="Concise discovery text; never include customer records")
+    columns: list[str] = Field(
+        min_length=1,
+        description="Approved projected column names; excludes credentials/private fields",
+    )
+    time_column: str | None = Field(
+        default=None,
+        description="Required for raw; must be an approved column used for grant windows",
+    )
+    resource: str | None = Field(
+        default=None,
+        description="Collector resource name allowed for automatic refresh, if supported",
+    )
+    semantics: dict = Field(
+        default_factory=dict,
+        description="Grain, metric definitions, units, null semantics, joins and freshness",
+    )
 
     @field_validator("columns")
     @classmethod
@@ -28,19 +62,33 @@ class Dataset(BaseModel):
             raise ValueError("Invalid or duplicate catalog column")
         return values
 
+    @model_validator(mode="after")
+    def raw_window_column(self) -> "Dataset":
+        if self.layer == "raw" and self.time_column not in self.columns:
+            raise ValueError("Raw datasets require time_column in the approved columns")
+        if self.time_column is not None and self.time_column not in self.columns:
+            raise ValueError("time_column must be an approved column")
+        return self
 
-class Shop(BaseModel):
+
+class Catalog(StrictConfiguration):
+    """Non-secret, version-controlled metadata edited by the data engineer."""
+
+    datasets: list[Dataset] = Field(description="Approved non-secret dataset metadata")
+
+
+class Shop(StrictConfiguration):
     query_dsn: SecretStr
     datasets: list[str]
 
 
-class Settings(BaseModel):
+class Settings(StrictConfiguration):
     control_dsn: SecretStr
     issuer: str
     audience: str
     jwks_url: str
     public_url: str
-    datasets: list[Dataset]
+    datasets: list[Dataset] = Field(default_factory=list)
     shops: dict[str, Shop]
     query_timeout_ms: int = Field(default=10000, ge=100, le=60000)
     max_rows: int = Field(default=500, ge=1, le=10000)
@@ -58,9 +106,14 @@ class Settings(BaseModel):
     def load(cls) -> "Settings":
         # Mount outside the repository; never log validation inputs or DSNs.
         try:
-            settings = cls.model_validate(
-                json.loads(Path(os.environ["MCP_CONFIG_FILE"]).read_text())
-            )
+            raw = json.loads(Path(os.environ["MCP_CONFIG_FILE"]).read_text())
+            catalog_path = os.environ.get("MCP_CATALOG_FILE")
+            if catalog_path:
+                if "datasets" in raw:
+                    raise ConfigurationError("Choose inline datasets or MCP_CATALOG_FILE, not both")
+                catalog = Catalog.model_validate(json.loads(Path(catalog_path).read_text()))
+                raw["datasets"] = [d.model_dump() for d in catalog.datasets]
+            settings = cls.model_validate(raw)
             from urllib.parse import urlparse
 
             from psycopg.conninfo import conninfo_to_dict
@@ -79,5 +132,24 @@ class Settings(BaseModel):
             ):
                 raise ValueError("Invalid catalog mapping")
             return settings
+        except ConfigurationError:
+            raise
+        except ValidationError as exc:
+            # Field paths and error categories are useful; validation inputs can contain DSNs.
+            fields = set(cls.model_fields) | set(Dataset.model_fields) | set(Shop.model_fields)
+            errors = []
+            for error in exc.errors(include_input=False, include_context=False, include_url=False)[
+                :5
+            ]:
+                path = ".".join(
+                    str(part) if isinstance(part, int) or part in fields else "<entry>"
+                    for part in error["loc"]
+                )
+                detail = error["msg"] if error["type"] == "value_error" else error["type"]
+                errors.append(f"{path or 'catalog'} ({detail})")
+            raise ConfigurationError("Invalid configuration fields: " + "; ".join(errors)) from None
         except Exception:
-            raise RuntimeError("Invalid or missing MCP_CONFIG_FILE") from None
+            raise ConfigurationError(
+                "Invalid configuration: check MCP_CONFIG_FILE, MCP_CATALOG_FILE, "
+                "JSON syntax, HTTPS endpoints, verified PostgreSQL TLS and dataset mappings"
+            ) from None
