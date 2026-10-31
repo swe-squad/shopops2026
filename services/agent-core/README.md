@@ -1,5 +1,7 @@
 # agent-core
 
+Hosted runtime roadmap: [Managed Codex Harness / OpenAI-hosted extension spec](agents_api_managed_runtime_spec.md), [T05–T08 task tracker](task-tracker/task_list.md#hosted-runtime-extension-t05t08). It specifies sandbox code execution, approved skills, real delegation and scoped artifacts. These capabilities are **not implemented yet**; the existing live smoke verifies the `none` conversation/tool profile.
+
 FastAPI/Python 3.14 foundation for a durable, scoped ShopOps agent service on port 8000.
 T01 supplies contracts, configuration, SQLite storage, scheduling/recovery, lifecycle and packaging.
 T02 supplies auth/API routes, T03 supplies fake/live Agents API adapters, and T04 supplies MCP/tools.
