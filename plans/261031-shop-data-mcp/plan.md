@@ -1,7 +1,7 @@
 ---
 title: "Protected shop data MCP"
 description: "Implement PostgreSQL analysis, approved raw investigation, temporary marts and automatic collection through authenticated MCP."
-status: pending
+status: in-progress
 priority: P1
 effort: "8-12 engineering days after integration contracts are supplied"
 branch: codex/shop-data-mcp-design
@@ -19,8 +19,8 @@ Confirmed: PostgreSQL on VPS; Codex Agents API; public authenticated MCP HTTPS; 
 
 | Phase | Status | Dependencies | Estimate |
 |---|---|---|---|
-| [1. Service, identity and query protection](phase-01-protected-query-service.md) | Pending | Database schema/version, identity contracts | 4-6 days |
-| [2. Temporary marts, integrations and deployment](phase-02-integrations-and-deployment.md) | Pending | Phase 1, raw-approval and ingestion/processing contracts | 4-6 days |
+| [1. Service, identity and query protection](phase-01-protected-query-service.md) | Implemented locally; live wiring pending | Database schema/version, identity contracts | 4-6 days |
+| [2. Temporary marts, integrations and deployment](phase-02-integrations-and-deployment.md) | Adapters implemented; live wiring pending | Phase 1, raw-approval and ingestion/processing contracts | 4-6 days |
 
 ## Work checklist
 
@@ -46,4 +46,8 @@ Files reviewed: this index, both phases, design report and configuration contrac
 
 ## Handoff
 
-The documentation delivery is complete. The MCP implementation is pending; begin with contract acquisition in Phase 1 and raise the reminder before live integration work. Do not claim deployment readiness until Phase 2 checks pass. Execute with ak-cook using this plan's absolute path after the prerequisites are resolved.
+The documentation delivery is complete. Service code and tests are implemented under services/shop-data-mcp. Follow its HANDOFF.md to supply real schemas, issuer and upstream services; remind owner before live integration. Do not claim deployment readiness until Phase 2 checks pass. Execute with ak-cook using this plan's absolute path after the prerequisites are resolved.
+
+## Implementation update
+
+Typed MCP tools, startup validation/preflight, protected SQL projections, shop-bound database logins, grant-aware temporary marts and durable operation/result records are implemented. Local protocol/unit tests and disposable PostgreSQL isolation checks pass. Real upstream contracts and dev deployment evidence remain required; earlier validation entries describe the design-only snapshot.

@@ -22,3 +22,11 @@ Finding resolved during drafting: the prior setup explanation used one generic d
 Additional finding: sample data inspected in the original checkout was not tracked in the base revision and is absent from this worktree. Supply an approved schema/catalog fixture before Phase 1; do not rely on those local files being present.
 
 Remaining dependencies: actual database schema/version/TLS route, issuer/owner approval, collector and processing contracts. Remind owner before implementation and before accepting live traffic. Recommendation: documentation is ready for PR; implementation/deployment remains gated on those inputs.
+
+## Implementation verification update
+
+The service now exists under services/shop-data-mcp, with 11 MCP tools, mounted JSON configuration, SQL restrictions, persistent result/job records and upstream adapters. make ci passed with 107 passing tests and one PostgreSQL test skipped without TEST_DATABASE_DSN. A separate full run with a disposable PostgreSQL database passed 108 tests; the instance was stopped after the run. Subsequent reviewer fixes added strict upstream response schemas and UTC-normalized idempotency; their regression tests are recorded in the PR checks. No Docker image or live Agents API/VPS deployment is claimed verified.
+
+Independent review identified arbitrary upstream field disclosure and noncanonical refresh timestamps; both were corrected before publication. External contracts, live RLS/view deployment and credential setup remain rollout prerequisites.
+
+Final verification after review fixes: Ruff lint/format passed; 145 unit/protocol tests passed with one database test skipped without DSN; the complete suite passed 146 tests against a disposable PostgreSQL instance. That instance was stopped afterward. Strict response schemas and UTC-idempotency regressions are included.

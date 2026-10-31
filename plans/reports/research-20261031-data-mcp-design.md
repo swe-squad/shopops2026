@@ -1,6 +1,6 @@
 # ShopOps data MCP: proposed design
 
-Research date: 2026-10-31, Asia/Ho_Chi_Minh. Revised with owner decisions: PostgreSQL on VPS, Codex Agents API, temporary ad hoc marts, automatic fresh pulls, data protection as priority. Status: proposed implementation design; no service scaffold or live integration implemented. Deployment decisions: public authenticated MCP HTTPS with direct OpenAI connection; private PostgreSQL; dev only. See the [configuration contract](../../docs/shop-data-mcp-configuration.md) and [validated implementation plan](../261031-shop-data-mcp/plan.md).
+Research date: 2026-10-31, Asia/Ho_Chi_Minh. Revised with owner decisions: PostgreSQL on VPS, Codex Agents API, temporary ad hoc marts, automatic fresh pulls, data protection as priority. Status: service code and local tests are implemented under services/shop-data-mcp; live integration/deployment remain pending. Deployment decisions: public authenticated MCP HTTPS with direct OpenAI connection; private PostgreSQL; dev only. See the [configuration contract](../../docs/shop-data-mcp-configuration.md) and [validated implementation plan](../261031-shop-data-mcp/plan.md).
 
 ## Navigation
 

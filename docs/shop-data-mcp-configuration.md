@@ -1,6 +1,6 @@
 # Shop Data MCP configuration contract
 
-Updated: 2026-10-31. Status: design contract; the service and settings below are not implemented yet. Use the [implementation plan](../plans/261031-shop-data-mcp/plan.md) to track readiness. This document owns deployment configuration; the [design report](../plans/reports/research-20261031-data-mcp-design.md) owns analytical behavior and protection requirements.
+Updated: 2026-10-31. Status: implemented configuration contract; live deployment is not verified. Use the [implementation plan](../plans/261031-shop-data-mcp/plan.md) to track readiness. This document owns deployment configuration; the [design report](../plans/reports/research-20261031-data-mcp-design.md) owns analytical behavior and protection requirements.
 
 ## Confirmed topology
 
@@ -14,41 +14,23 @@ flowchart LR
   M --> I[Existing ingestion and processing services]
 ```
 
-Proposed service: `shop-data-mcp`, Python FastAPI template, container port `8000`, MCP path `/mcp`, image `ghcr.io/swe-squad/shop-data-mcp`. The endpoint will be `https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp` after deployment. These are planned identifiers, not claims of running infrastructure.
+Proposed service: `shop-data-mcp`, Python FastAPI template, container port `8000`, MCP path `/mcp`, image `ghcr.io/swe-squad/shop-data-mcp`. The endpoint will be `https://shop-data-mcp-dev.cr.ngochoanielts.com/mcp` after deployment. These match the service implementation, not running infrastructure.
 
-## Runtime settings to implement
+## Implemented runtime configuration
 
-Declare these non-secret names with placeholder values in the future service's `.env.example`, validate them at startup, and document them in its README. Real credentials belong in CapRover App Configs or the deployment's secret manager. Never commit a populated dotenv file.
+Set `MCP_CONFIG_FILE` to an operator-owned mounted JSON file; `PORT` defaults to 8000. The earlier individual DB/AUTH environment names were proposals and are not implemented. The authoritative keys and defaults are in [config.example.json](../services/shop-data-mcp/config.example.json), the [service README](../services/shop-data-mcp/README.md) and [data engineer handoff](../services/shop-data-mcp/HANDOFF.md).
 
-| Setting | Meaning / validation |
-|---|---|
-| `PORT` | `8000`; must match `service.json` and CapRover Container HTTP Port |
-| `MCP_PUBLIC_URL` | Dev HTTPS endpoint above; used for identity/metadata, never as a database address |
-| `DB_HOST`, `DB_PORT`, `DB_NAME` | Private PostgreSQL host, `5432`, target database; required with no dev fallback |
-| `DB_CONTROL_USER`, `DB_CONTROL_PASSWORD` | Restricted service metadata connection; cannot be used to execute model SQL |
-| `DB_QUERY_CREDENTIAL_REF` | Backend-only credential source for shop-bound query connections; resolver must be specified before enabling queries |
-| `DB_WORKSPACE_USER`, `DB_WORKSPACE_PASSWORD` | Restricted writer for service-managed result storage; no raw-table access or model SQL execution |
-| `DB_SSLMODE`, `DB_SSLROOTCERT` | Certificate-verified connection (`verify-full`) and mounted CA path; startup rejects missing trust material |
-| `AUTH_ISSUER`, `AUTH_AUDIENCE`, `AUTH_JWKS_URL` | Trusted token issuer, MCP audience and HTTPS verification-key endpoint; required before exposing MCP |
-| `INGESTION_URL`, `PROCESSING_URL` | Required runtime service URLs for fresh-pull integration; resolve actual service names before deployment |
-| `APPROVAL_URL` | Trusted raw-access approval service URL; not callable as an agent approval tool |
-| `QUERY_TIMEOUT_MS` | Proposed initial `10000`; enforce in PostgreSQL and worker cancellation |
-| `MAX_CONCURRENT_QUERIES_PER_SHOP` | Proposed initial `2`; also cap global concurrency for VPS capacity |
-| `MAX_RESULT_ROWS`, `MAX_RESULT_BYTES`, `WORKSPACE_MAX_BYTES_PER_SHOP` | Required positive operator-set budgets; enforce before materialization and output |
-| `TEMP_MART_TTL_SECONDS` | Proposed initial `3600`; never exceeds any source grant expiry |
-| `REFRESH_MAX_LOOKBACK_DAYS`, `REFRESH_COOLDOWN_SECONDS`, `REFRESH_MAX_CONCURRENT_PER_SHOP` | Required operator-set limits, enforced independently of the agent's requested scope |
+The JSON config defines restricted control/query DSNs, shop dataset allowlists, issuer/audience/JWKS, resource limits, and optional fixed ingestion/approval origins with separate credentials. Keep populated configuration outside Git. Both control and query DSNs require `sslmode=verify-full` and a mounted CA. The control identity stores artifacts and operation records but never executes model SQL; per-shop logins execute those queries.
 
-Credential resolution must map verified shop identity to a limited execution login without allowing the model to supply a role name. The exact resolver is an implementation dependency; a shared unrestricted query credential is not an acceptable substitute. Migrations use an operator-controlled credential outside the running MCP service.
-
-Internal service callers follow root [AGENTS.md](../AGENTS.md): actual callee-named URL variables must be added once service names are known. The generic adapter names above are proposed placeholders; replace them with the owning service's `<CALLEE>_URL` settings, rather than keeping duplicate aliases. Fail startup when enabled dependencies are missing. Do not silently use fixtures or mark a partially configured deployment ready.
+Run `python -m app.check` for configuration validation and add `--connect` to check control storage and published mart connectivity. These checks do not certify tenancy policies or live upstream behavior. Mount the operator JSON and CA before starting the service.
 
 ## Connect the MCP to PostgreSQL
 
 1. Determine the real PostgreSQL app/private hostname, version, schema and TLS capability. In the same CapRover cluster, use `srv-captain--<postgres-app-name>:5432`. On another VPS/network, establish a private route and firewall permission before configuring the host. `localhost` inside the MCP container refers to that container.
 2. Keep database port 5432 unpublished. If PostgreSQL runs in CapRover, select **Do not expose as web app** and add no Port Mapping. Limit database/network access to the required service identities and network ranges.
 3. Provision non-owner, non-superuser roles without `BYPASSRLS`, source write or role-changing privileges. Separate control metadata, shop-bound query and workspace writer access. Apply and verify RLS on every shared source and materialized mart surface.
-4. Provision a server certificate whose identity matches the configured database hostname and mount its CA into the MCP container. Set `DB_SSLMODE=verify-full`. A private hostname alone does not enable or verify TLS; do not downgrade automatically if certificate verification fails.
-5. Configure the settings above in the MCP app. Restart/redeploy and inspect sanitized readiness status. Test from the deployed container/network, not only a laptop.
+4. Provision a server certificate whose identity matches the configured database hostname and mount its CA into the MCP container. Set `sslmode=verify-full sslrootcert=<CA-path>` in the DSNs. A private hostname alone does not enable or verify TLS; do not downgrade automatically if certificate verification fails.
+5. Mount the JSON/CA and set MCP_CONFIG_FILE in the MCP app. Restart/redeploy and inspect sanitized readiness status. Test from the deployed container/network, not only a laptop.
 
 Do not use an administrator URL for model queries. SQL restrictions, safe view ownership, raw grant projection and result isolation must be verified before accepting agent traffic. RLS does not protect against a privileged database account bypassing it. See [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html).
 
