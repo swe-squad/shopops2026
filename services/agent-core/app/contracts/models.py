@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.contracts.identity import Scope
+from app.contracts.runtime import RuntimeProfile
 
 RunState = Literal[
     "queued", "running", "waiting_tool", "reconciling", "completed", "failed", "cancelled"
@@ -16,6 +17,7 @@ class Record(BaseModel):
 
 
 class ConfigSnapshot(Record):
+    runtime_profile: RuntimeProfile = Field(default_factory=RuntimeProfile)
     revision: str
     template_id: str
     model: str
@@ -82,6 +84,7 @@ class MessageReceipt(Record):
 
 
 class Run(Record):
+    output_mode: Literal["text", "report"] = "text"
     id: str
     conversation_id: str
     client_message_id: str

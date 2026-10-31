@@ -16,10 +16,26 @@ from app.contracts.models import (
     RunState,
     Source,
 )
+from app.contracts.runtime import ArtifactRecord, ProviderEnvironment
 from app.contracts.tools import PendingToolCall, ToolResult
 
 
 class Repository(Protocol):
+    async def save_runtime(
+        self, scope: Scope, conversation_id: str, environment: ProviderEnvironment
+    ) -> None: ...
+    async def get_runtime(
+        self, scope: Scope, conversation_id: str
+    ) -> ProviderEnvironment | None: ...
+    async def save_artifacts(
+        self, scope: Scope, run_id: str, artifacts: tuple[ArtifactRecord, ...]
+    ) -> None: ...
+    async def list_artifacts(
+        self, scope: Scope, run_id: str, after: str | None = None, limit: int = 50
+    ) -> Page[ArtifactRecord]: ...
+    async def get_artifact(self, scope: Scope, artifact_id: str) -> ArtifactRecord: ...
+    async def load_tool_results(self, session_id: str, turn_id: str) -> tuple[ToolResult, ...]: ...
+
     async def provision(
         self, scope: Scope, template_id: str, config_revision: str
     ) -> IdempotentResult[Orchestrator]: ...
