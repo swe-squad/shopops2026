@@ -52,6 +52,22 @@ class Settings:
     history_retention_days: int = 30
     runtime_bundle_path: str = "runtime-bundles"
 
+    @property
+    def runtime_bundle_root(self) -> Path:
+        service = Path(__file__).resolve().parents[2]
+        path = Path(self.runtime_bundle_path)
+        target = service / path
+        if (
+            not self.runtime_bundle_path.strip()
+            or path.is_absolute()
+            or ".." in path.parts
+            or not target.is_dir()
+            or target.is_symlink()
+            or not target.resolve().is_relative_to(service)
+        ):
+            raise ValueError("Invalid RUNTIME_BUNDLE_PATH")
+        return target
+
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
         env = os.environ if env is None else env
@@ -100,7 +116,11 @@ class Settings:
         if len(signing_key.encode()) < 32:
             raise ValueError("Invalid MCP_TOKEN_SIGNING_KEY")
         return cls(
-            runtime_bundle_path=env.get("RUNTIME_BUNDLE_PATH", "runtime-bundles"),
+            runtime_bundle_path=(
+                require("RUNTIME_BUNDLE_PATH")
+                if "RUNTIME_BUNDLE_PATH" in env
+                else "runtime-bundles"
+            ),
             app_env=app_env,
             agent_provider=provider,
             auth_mode=auth_mode,

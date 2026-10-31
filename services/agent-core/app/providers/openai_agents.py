@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from pydantic import ValidationError
@@ -131,6 +131,7 @@ class OpenAIAgentsProvider:
         source_loader: SourceLoader | None = None,
         *,
         cleanup_timeout_seconds: float = 60,
+        bundle_root: Path | None = None,
     ) -> None:
         if not 0 < cleanup_timeout_seconds <= 60:
             raise ConfigurationConflict()
@@ -144,6 +145,7 @@ class OpenAIAgentsProvider:
         self.deliveries: dict[tuple[str, str, str], tuple[PendingToolCall, ToolResult]] = {}
         self.source_loader = source_loader
         self.cleanup_timeout_seconds = cleanup_timeout_seconds
+        self.bundle_root = bundle_root
         # Optimization only. Restart loses correlation, and recovery then blocks safely.
         self.correlations: dict[tuple[str, str], str] = {}
 
@@ -179,7 +181,12 @@ class OpenAIAgentsProvider:
             from app.agents.runtime_bundle import build_runtime_bundle
             from app.providers.hosted_runtime import build_hosted_environment
 
-            environment = build_hosted_environment(profile, build_runtime_bundle(profile))
+            bundle = (
+                build_runtime_bundle(profile, bundle_root=self.bundle_root)
+                if self.bundle_root is not None
+                else build_runtime_bundle(profile)
+            )
+            environment = build_hosted_environment(profile, bundle)
             agent["multi_agent"] = {"enabled": True, "max_concurrent_subagents": 2}
         try:
             session = _dict(
@@ -592,6 +599,7 @@ def build_live_provider(
     *,
     api_key: str | None = None,
     model: str | None = None,
+    bundle_root: Path | None = None,
 ) -> OpenAIAgentsProvider:
     """Create a client without network work; credentials stay in the application."""
     import os
@@ -605,6 +613,6 @@ def build_live_provider(
     except ImportError:
         raise ConfigurationConflict() from None
     provider = OpenAIAgentsProvider(
-        AsyncOpenAI(api_key=key, max_retries=0, timeout=20), source_loader
+        AsyncOpenAI(api_key=key, max_retries=0, timeout=20), source_loader, bundle_root=bundle_root
     )
     return provider

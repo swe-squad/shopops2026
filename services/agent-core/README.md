@@ -1,6 +1,6 @@
 # agent-core
 
-Hosted runtime roadmap: [Managed Codex Harness / OpenAI-hosted extension spec](agents_api_managed_runtime_spec.md), [T05–T08 task tracker](task-tracker/task_list.md#hosted-runtime-extension-t05t08). It specifies sandbox code execution, approved skills, real delegation and scoped artifacts. These capabilities are **not implemented yet**; the existing live smoke verifies the `none` conversation/tool profile.
+Hosted runtime roadmap: [Managed Codex Harness / OpenAI-hosted extension spec](agents_api_managed_runtime_spec.md), [T05–T08 task tracker](task-tracker/task_list.md#hosted-runtime-extension-t05t08). T05–T07 modules are integrated for hosted sandbox execution, approved skills, delegation and scoped artifacts. End-to-end hosted acceptance is tracked separately by T08; the original live smoke verifies the `none` conversation/tool profile.
 
 FastAPI/Python 3.14 foundation for a durable, scoped ShopOps agent service on port 8000.
 T01 supplies contracts, configuration, SQLite storage, scheduling/recovery, lifecycle and packaging.
@@ -254,9 +254,14 @@ and CapRover deployment still require their own configuration and checks.
 Runtime profiles are immutable registry revision data. Legacy snapshots normalize to
 `conversation-v1` / `none` independently of the active revision. `RUNTIME_BUNDLE_PATH` defaults to
 `runtime-bundles`; it is an operator-controlled service-local directory, never a request parameter.
-`config/registry-hosted.example.json` illustrates a new administrative revision; its digest is a
-placeholder until T07 publishes the actual bundle. Do not activate it as supplied. T06/T07 builder
-stubs intentionally reject hosted startup until their verified handoffs are integrated.
+`config/registry-hosted.example.json` pins the shipped T07 bundle version `1.0.0` and verified
+SHA-256. Its `gpt-6-astra` model is an explicit example, not a default: set OPENAI_MODEL explicitly
+and publish a new matching registry revision before using another model. The example's loopback
+MCP URLs are local/test only; dev deployments need approved cluster endpoints throughout the
+registry. The legacy default registry remains unchanged. The image includes runtime-bundles/.
+RUNTIME_BUNDLE_PATH must name an existing relative directory inside this service; absolute paths,
+parent traversal and symlink escapes fail before provider I/O. Both startup validation and live
+session creation use the selected directory.
 
 Message submission accepts `output_mode=text|report` (default text). Report is invalid for legacy
 profiles and participates in replay/conflict checks. Hosted report answers need a validated root
@@ -266,6 +271,10 @@ report; clarification/cannot_answer can finish without a report. Artifacts are l
 Provider IDs, bundle payloads and paths are never public inputs.
 
 Schema migration 002 preserves existing rows, adds runtime ownership and artifact metadata, and
-keeps one SQLite owner. Unknown remote outcomes retain blocking/recovery mappings. Hosted live
-acceptance, cleanup behavior from T06, bundle packaging from T07 and final T08 evidence are pending;
-o hosted result is inferred from offline tests. See `contracts/managed-runtime.md`.
+keeps one SQLite owner. Unknown remote outcomes retain blocking/recovery mappings. Provider
+cleanup and bundle packaging are integrated; final T08 hosted evidence remains separately tracked.
+No hosted result is inferred from offline tests. See `contracts/managed-runtime.md`.
+
+The durable setup budget is 60 seconds within the run deadline. First observed connection after
+that budget fails even if the provider now reports connected; established sessions do not receive
+a second setup deadline. Known session/environment IDs are retained for cleanup and recovery.

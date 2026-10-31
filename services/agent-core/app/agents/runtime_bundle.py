@@ -47,11 +47,12 @@ def _read(path: Path, limit: int) -> bytes:
     return data
 
 
-def _build(profile: RuntimeProfile) -> RuntimeBundle:
+def _build(profile: RuntimeProfile, *, bundle_root: Path | None = None) -> RuntimeBundle:
     if profile.profile_id != BUNDLE_ID or profile.bundle_version != BUNDLE_VERSION:
         raise ValueError("unregistered bundle")
-    root = BUNDLE_ROOT / BUNDLE_ID
-    if BUNDLE_ROOT.is_symlink() or root.is_symlink() or not root.is_dir():
+    directory = bundle_root if bundle_root is not None else BUNDLE_ROOT
+    root = directory / BUNDLE_ID
+    if directory.is_symlink() or root.is_symlink() or not root.is_dir():
         raise ValueError("invalid bundle root")
     actual = set()
     directories = {
@@ -145,9 +146,11 @@ def _build(profile: RuntimeProfile) -> RuntimeBundle:
     )
 
 
-def build_runtime_bundle(profile: RuntimeProfile) -> RuntimeBundle:
+def build_runtime_bundle(
+    profile: RuntimeProfile, *, bundle_root: Path | None = None
+) -> RuntimeBundle:
     """No user paths, archive ingestion, network, shell calls or fallback."""
     try:
-        return _build(profile)
+        return _build(profile, bundle_root=bundle_root)
     except OSError, ValueError, KeyError, TypeError, AttributeError, RecursionError:
         raise ConfigurationConflict() from None

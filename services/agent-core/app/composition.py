@@ -53,6 +53,7 @@ def build_configured_provider(
             repository.load_sources,
             api_key=settings.openai_api_key,
             model=settings.openai_model,
+            bundle_root=settings.runtime_bundle_root,
         )
     return None
 
@@ -61,14 +62,16 @@ def build_configured_bridge(
     repository: Repository, registry: Registry, settings: Settings
 ) -> MCPToolBridge:
     snapshots = registry.snapshots()
-    # Fail closed while the separately owned T06/T07 builders are foundation stubs.
+    # Validate every pinned hosted bundle before any session can be created.
     for snapshot in snapshots:
         profile = snapshot.runtime_profile
         if profile.environment_type == "openai_hosted":
             from app.agents.runtime_bundle import build_runtime_bundle
             from app.providers.hosted_runtime import build_hosted_environment
 
-            build_hosted_environment(profile, build_runtime_bundle(profile))
+            build_hosted_environment(
+                profile, build_runtime_bundle(profile, bundle_root=settings.runtime_bundle_root)
+            )
     client = MCPClient(
         allowed_urls=frozenset(
             url
