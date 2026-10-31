@@ -6,8 +6,9 @@ test('mock connections survive browser reload and relogin and are shared by the 
   page.on('request', request => { if (request.url().includes('/api/mock/')) mockHeaders.push(request.headers()) })
   const open = async (target: typeof page) => {
     await target.goto('http://localhost:5173/')
+    await target.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Log in', exact: true }).click()
     await target.getByLabel('Workspace access token').fill(testToken)
-    await target.getByRole('button', { name: 'Unlock workspace' }).click()
+    await target.getByRole('button', { name: 'Log in', exact: true }).click()
     await expect(target.getByRole('heading', { name: 'Connect your stores' })).toBeVisible()
   }
   await open(page)
@@ -18,12 +19,12 @@ test('mock connections survive browser reload and relogin and are shared by the 
   await expect(page.getByLabel('Browser address')).toHaveValue(/\/shop\/connections\/shopee\/success$/)
   await page.getByRole('button', { name: 'Lock workspace' }).click()
   await page.getByLabel('Workspace access token').fill(testToken)
-  await page.getByRole('button', { name: 'Unlock workspace' }).click()
+  await page.getByRole('button', { name: 'Log in', exact: true }).click()
   await expect(page.getByRole('button', { name: 'View Shopee connection' })).toBeVisible()
   await page.reload()
   await expect(page.getByLabel('Workspace access token')).toHaveValue('')
   await page.getByLabel('Workspace access token').fill(testToken)
-  await page.getByRole('button', { name: 'Unlock workspace' }).click()
+  await page.getByRole('button', { name: 'Log in', exact: true }).click()
   await expect(page.getByRole('button', { name: 'View Shopee connection' })).toBeVisible()
   const other = await browser.newContext()
   try {

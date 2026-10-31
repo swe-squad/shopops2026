@@ -1,0 +1,70 @@
+import { test, expect } from '@playwright/test'
+import { expectFixedParent, testToken } from './helpers'
+
+const origin = 'http://localhost:5173'
+
+for (const viewport of [{ width: 1440, height: 900 }, { width: 768, height: 1024 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
+  test(`landing and login fit ${viewport.width}×${viewport.height}`, async ({ page }, testInfo) => {
+    await page.setViewportSize(viewport)
+    const operations: string[] = []
+    page.on('request', request => { if (request.url().includes('/api/operations/')) operations.push(request.url()) })
+    await page.goto(origin)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Clarity inthe chaos.')
+    await expect(page.getByLabel('Workspace access token')).not.toBeAttached()
+    await page.screenshot({ path: testInfo.outputPath(`landing-${viewport.width}.png`) })
+    const main = page.getByRole('main')
+    await main.hover()
+    await page.mouse.wheel(0, 1600)
+    await expect.poll(() => main.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
+    expect(await main.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+    await expectFixedParent(page)
+    expect(operations).toEqual([])
+    const entry = page.getByRole('navigation').getByRole('link', { name: 'Log in', exact: true })
+    await entry.focus()
+    await entry.press('Enter')
+    await expect(page).toHaveURL(`${origin}/login`)
+    await expect(page.getByRole('heading', { name: 'Log in to ShopOps' })).toBeVisible()
+    await page.screenshot({ path: testInfo.outputPath(`login-${viewport.width}.png`) })
+    await page.getByLabel('Workspace access token').fill(testToken)
+    await page.getByLabel('Workspace access token').press('Enter')
+    await expect(page.getByLabel('Browser address')).toHaveValue(`${origin}/shop/connections`)
+    await expect(page).toHaveURL(`${origin}/shop/connections`)
+    await expectFixedParent(page)
+  })
+}
+
+test('rejects invalid tokens, preserves deep links and guards reload and browser history', async ({ page, request }) => {
+  const oldLink = await request.post('http://127.0.0.1:8000/api/operations/navigation', {
+    headers: { Authorization: `Bearer ${testToken}` }, data: { url: '/shop/overview' },
+  })
+  expect(oldLink.status()).toBe(201)
+  await page.goto(`${origin}/shop/incidents?search=late%20shipment#incident-7`)
+  const field = page.getByLabel('Workspace access token')
+  await field.fill('invalid-test-token')
+  await page.getByRole('button', { name: 'Log in', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Invalid workspace token')
+  await expect(page.getByLabel('Browser address')).not.toBeAttached()
+  await field.fill(testToken)
+  await field.press('Enter')
+  await expect(page).toHaveURL(`${origin}/shop/incidents?search=late%20shipment#incident-7`)
+  await expect(page.getByLabel('Browser address')).toHaveValue(`${origin}/shop/incidents?search=late%20shipment#incident-7`)
+  await page.getByRole('link', { name: 'ShopOps browser' }).click()
+  await expect(page).toHaveURL(`${origin}/`)
+  await page.goBack()
+  await expect(page.getByLabel('Browser address')).toBeVisible()
+  await page.goForward()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Clarity in')
+  await page.getByRole('navigation').getByRole('link', { name: 'Open workspace' }).click()
+  await expect(page.getByLabel('Browser address')).toBeVisible()
+  await page.reload()
+  await expect(field).toHaveValue('')
+  await field.fill(testToken)
+  await field.press('Enter')
+  await expect(page.getByLabel('Browser address')).toBeVisible()
+  await page.getByRole('button', { name: 'Lock workspace' }).click()
+  await expect(field).toHaveValue('')
+  await page.goBack()
+  await page.goBack()
+  await expect(page.getByLabel('Browser address')).not.toBeAttached()
+  expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 })
+})

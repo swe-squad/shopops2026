@@ -34,7 +34,7 @@ Use [deployment setup](../../../docs/deploy-flow.md#products-đọc-dữ-liệu-
 
 The AI engineer owns per-user registration, sandbox/team lifecycle, vault credentials and real MCP transport. The current four closed agent tools provide fixture aggregates/context; executable catalog/raw/pull-latest tools are not added by this policy change. Reconcile real granted schemas with validation, routing, authorization and tests as described in the [integration contract](../../../services/agent-core/contracts/product-investigation.md).
 
-An explicit `/shop/...` document uses its first successful mailbox read as a baseline. Under the existing latest-event contract, that first read cannot distinguish an old stored event from an event issued during a preceding outage; subsequent higher IDs navigate normally.
+Every document uses its first successful mailbox read as a baseline. Under the existing latest-event contract, that first read cannot distinguish an old stored event from an event issued during a preceding outage; subsequent higher IDs navigate normally.
 
 Docs impact: major—product behavior, API/config contracts, deployment route and agent integration seam updated. Local technical journal retained; AgentWiki publish skipped.
 

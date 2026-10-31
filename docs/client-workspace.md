@@ -30,9 +30,8 @@ the navigation mailbox. Shop selection, product search, reviews, related orders 
 remain inside the independent browser app. Image URLs are optional; missing or rejected images
 show a placeholder. Displayed sale prices are historical observations, not current listing prices.
 A return on a related order does not establish that the selected SKU was returned.
-When a browser document opens an explicit `/shop/...` URL, its first successful mailbox read
-establishes a baseline instead of replacing that entry with an older stored target. Later navigation
-events still open in the active tab. The ordinary app entry continues to receive the latest target.
+When a browser document opens, its first successful mailbox read establishes a baseline instead of
+replacing the initial route with an older stored target. Later navigation events open in the active tab.
 
 The browser reads authenticated catalog endpoints in `shopops-api`, which calls the private
 `cronjob-server` source facade over HTTP. Catalog responses use a coherent source revision and

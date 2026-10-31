@@ -4,9 +4,11 @@ import App from './App'
 
 const json = (value: unknown) => new Response(JSON.stringify(value), { headers: { 'Content-Type': 'application/json' } })
 
-function unlock() {
+async function unlock() {
+  if (window.location.pathname === '/') fireEvent.click(screen.getAllByRole('link', { name: 'Log in' })[0])
   fireEvent.change(screen.getByLabelText('Workspace access token'), { target: { value: 'workspace-secret' } })
-  fireEvent.click(screen.getByRole('button', { name: /unlock workspace/i }))
+  fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+  await screen.findByLabelText('Browser address')
 }
 
 beforeEach(() => window.history.replaceState(null, '', '/shop/overview'))
@@ -23,7 +25,7 @@ describe('standalone shop browser', () => {
       return json({ connections: [{ platform: 'shopee', connected, mock: true }, { platform: 'tiktok', connected: false, mock: true }] })
     }))
     render(<App />)
-    unlock()
+    await unlock()
     expect(screen.getByLabelText('Browser address')).toHaveValue(`${window.location.origin}/shop/connections`)
     await screen.findAllByText('Not connected')
     fireEvent.click(screen.getByRole('button', { name: 'Log in to Shopee' }))
@@ -40,7 +42,7 @@ describe('standalone shop browser', () => {
     await screen.findByRole('heading', { name: 'Connection successful' })
     expect(screen.getByRole('tab', { name: 'Connections — tab 1' })).not.toHaveAttribute('tabindex', '-1')
     fireEvent.click(screen.getByRole('button', { name: 'Lock workspace' }))
-    unlock()
+    await unlock()
     await screen.findByRole('button', { name: 'View Shopee connection' })
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
@@ -54,7 +56,7 @@ describe('standalone shop browser', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
     render(<App />)
-    unlock()
+    await unlock()
     await screen.findByText('No incidents yet')
     expect(screen.queryByRole('region', { name: 'Agent chat' })).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith('/api/operations/incidents', expect.objectContaining({ headers: { Authorization: 'Bearer workspace-secret' } }))
@@ -68,18 +70,20 @@ describe('standalone shop browser', () => {
     expect(window.sessionStorage.getItem('token')).toBeNull()
   })
 
-  it('receives new link events, resolves shop paths on its own origin, and deduplicates old events', async () => {
-    window.history.replaceState(null, '', '/')
+  it('keeps the initial route, receives new link events and deduplicates old events', async () => {
     let navigation = { id: 7, url: '/shop/incidents' }
     vi.stubGlobal('fetch', vi.fn(async (url: string) => json(url.endsWith('/navigation') ? navigation : [])))
     render(<App />)
-    unlock()
-    await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue(`${window.location.origin}/shop/incidents`))
+    await unlock()
+    await screen.findByText('No incidents yet')
+    expect(screen.getByLabelText('Browser address')).toHaveValue(`${window.location.origin}/shop/overview`)
+    navigation = { id: 8, url: '/shop/incidents' }
+    await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue(`${window.location.origin}/shop/incidents`), { timeout: 2200 })
     fireEvent.click(screen.getByRole('link', { name: 'Overview' }))
     expect(screen.getByLabelText('Browser address')).toHaveValue(`${window.location.origin}/shop/overview`)
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 1050)) })
     expect(screen.getByLabelText('Browser address')).toHaveValue(`${window.location.origin}/shop/overview`)
-    navigation = { id: 8, url: 'https://example.com/tracking' }
+    navigation = { id: 9, url: 'https://example.com/tracking' }
     const iframe = await screen.findByTitle('Website: example.com', {}, { timeout: 2200 })
     expect(iframe).toHaveAttribute('sandbox', 'allow-scripts allow-forms')
     expect(iframe).toHaveAttribute('referrerpolicy', 'no-referrer')
@@ -92,9 +96,9 @@ describe('standalone shop browser', () => {
   })
 
   it('reports invalid addresses and operations errors without executing unsafe URLs', async () => {
-    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('/navigation') ? json(null) : new Response('', { status: 500 })))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(json([])).mockImplementation(async (url: string) => url.endsWith('/navigation') ? json(null) : new Response('', { status: 500 })))
     render(<App />)
-    unlock()
+    await unlock()
     await screen.findByText(/Could not load incidents/)
     fireEvent.change(screen.getByLabelText('Browser address'), { target: { value: 'javascript:alert(1)' } })
     fireEvent.click(screen.getByRole('button', { name: 'Open address' }))
@@ -106,11 +110,11 @@ describe('standalone shop browser', () => {
     const fetchMock = vi.fn(async (url: string, _options?: RequestInit) => json(url.endsWith('/navigation') ? null : []))
     vi.stubGlobal('fetch', fetchMock)
     render(<App />)
-    unlock()
+    await unlock()
     await screen.findByText('No incidents yet')
-    const signals = fetchMock.mock.calls.map(call => call[1]?.signal as AbortSignal)
+    const signals = fetchMock.mock.calls.slice(1).map(call => call[1]?.signal as AbortSignal)
     fireEvent.click(screen.getByRole('button', { name: 'Lock workspace' }))
-    expect(screen.getByRole('heading', { name: 'Open your shop browser' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Log in to ShopOps' })).toBeInTheDocument()
     expect(signals.every(signal => signal.aborted)).toBe(true)
     expect(screen.getByLabelText('Workspace access token')).toHaveValue('')
   })

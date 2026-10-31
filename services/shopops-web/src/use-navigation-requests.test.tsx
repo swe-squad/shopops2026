@@ -18,10 +18,10 @@ describe('navigation mailbox on entry', () => {
     expect(result.current.request).toEqual({ sequence: 8, url: '/shop/incidents' })
   })
 
-  it('continues to open the latest mailbox target for the ordinary app entry', async () => {
+  it('preserves the ordinary app entry when the mailbox already has a target', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({ id: 7, url: '/shop/products?shop_key=demo&sku=SHIRT-M' })))
     const { result } = renderHook(() => useNavigationRequests('test-workspace'))
     await act(async () => {})
-    expect(result.current.request).toEqual({ sequence: 7, url: '/shop/products?shop_key=demo&sku=SHIRT-M' })
+    expect(result.current.request).toBeNull()
   })
 })

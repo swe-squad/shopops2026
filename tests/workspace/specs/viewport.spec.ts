@@ -13,7 +13,7 @@ for (const viewport of viewports) {
   test(`parent stays fixed at ${viewport.width}×${viewport.height}`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport)
     await page.goto('/')
-    await expect(browserApp(page).getByLabel('Workspace access token')).toBeVisible()
+    await expect(browserApp(page).getByRole('heading', { name: 'Clarity in the chaos.' })).toBeVisible()
     await expectFixedParent(page)
     await showClient(page, 'Chat')
     await expect(chatApp(page).getByLabel('Workspace access token')).toBeVisible()
@@ -55,7 +55,7 @@ test('child origins stay isolated and viewer holds no credentials', async ({ pag
     if (request.frame() === page.mainFrame()) ownRequests.push(request.url())
   })
   await page.goto('/')
-  await expect(browserApp(page).getByLabel('Workspace access token')).toBeVisible()
+  await expect(browserApp(page).getByRole('heading', { name: 'Clarity in the chaos.' })).toBeVisible()
   await expect(chatApp(page).getByLabel('Workspace access token')).toBeVisible()
   const children = page.frames().filter(frame => frame.parentFrame() === page.mainFrame())
   expect(children).toHaveLength(2)

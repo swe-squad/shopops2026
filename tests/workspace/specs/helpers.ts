@@ -10,6 +10,10 @@ export async function showClient(page: Page, client: 'Browser' | 'Chat') {
 }
 
 export async function unlock(frame: FrameLocator, button: string) {
+  if (button === 'Unlock workspace') {
+    await frame.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Log in', exact: true }).click()
+    button = 'Log in'
+  }
   await frame.getByLabel('Workspace access token').fill(testToken)
   await frame.getByRole('button', { name: button, exact: true }).click()
 }
