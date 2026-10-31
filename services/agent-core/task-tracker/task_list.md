@@ -17,9 +17,9 @@ All implementation changes must stay inside `services/agent-core/`, the existing
 | ID | Task | Difficulty | Suggested owner | Status | Start dependency | Completion dependency |
 | --- | --- | --- | --- | --- | --- | --- |
 | T01 | [Foundation, storage, worker, and integration](desciption/T01-foundation-storage-worker.md) | D5 — Very hard | Owner 1 / integration lead | Ready for integration | None | T02–T04 handoffs for final integration |
-| T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Ready for integration | T01 foundation gate | T01 repositories and application wiring |
+| T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Done | T01 foundation gate | T01 repositories and application wiring |
 | T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Blocked | T01 foundation gate | T01 worker and T04 bridge for live smoke |
-| T04 | [MCP bridge, fixtures, and knowledge](desciption/T04-mcp-knowledge.md) | D4 — Hard | Owner 4 | Not started | T01 foundation gate | T01 history repository and application mounting |
+| T04 | [MCP bridge, fixtures, and knowledge](desciption/T04-mcp-knowledge.md) | D4 — Hard | Owner 4 | Done | T01 foundation gate | T01 history repository and application mounting |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
 
@@ -197,7 +197,7 @@ commands and exact prerequisites. T02–T04 remain separate tasks; full offline 
 are unverified. One upstream TestClient deprecation warning remains. No credentials were copied,
 no remote push/deploy was performed, and all task changes stay inside the service directory.
 
-## T01–T03 integration checkpoint
+## T01–T03 integration checkpoint (historical)
 
 - Integration branch: `feat/agent-core-template`; isolated worktree: `/home/khalee-dev/.codex/worktrees/3913/shopops2026`.
 - T01 base: `5d6bd78`; T02 branch merged as `ea759a6`; T03 branch merged as `835fabb`. All implementation changes stay inside this service.
@@ -209,3 +209,16 @@ no remote push/deploy was performed, and all task changes stay inside the servic
 - Ruling: integrate existing modules and verify the offline boundary now; preserve the documented live-session blocker instead of silently changing the provider contract or introducing a sandbox. No push or deployment was performed.
 
 - Independent read-only integration review found no concrete P0/P1 findings; it did not run its own tests. Verification above was run by the integration implementer.
+
+## T04 integration checkpoint
+
+- T04 handoff `dc0d999` (implementation `0f8d6b0`) has been merged into the integration branch. Shared amended grants are preserved.
+- App startup now constructs the real MCP bridge and Data/Knowledge–Memory subapps with the same repository. Explicit injected test factories remain supported. Exact-path MCP dispatch preserves immutable v1 URLs without a redirect.
+- Registry `approved_remote_profiles` explicitly gates real-profile compatibility; all registered URLs are allowlisted and validated before readiness or administrative activation. HTTP loopback is local/test-only.
+- Real HTTP integration demonstrates API → SQLite → worker → fake provider → MCP metrics, knowledge and history, with source references, isolation, follow-ups and readiness. Provider reasoning remains simulated.
+- Full offline verification: **198 passed, 2 skipped**, Ruff lint/format passed. Live gate and optional SDK check remain skipped; no real OpenAI request or credentials were used.
+- Module handoffs are locally integrated; T03's live session contract/SDK pin and AC13 remain pending. T01/T04 are not declared end-to-end Done solely from module or fake-provider passes.
+
+T02 and T04 are Done for their delivered modules and verified local integration. T01 remains pending final live composition; T03 remains Blocked on the explicitly documented live-session contract. These statuses do not mark AC13 passed.
+
+Final T04 integration checks: `make ci` PASS (198 passed, 2 skipped); Docker build PASS; two network-isolated container restarts preserve volume data; runtime image imports API/provider/MCP composition. Independent read-only review found no concrete P0/P1 integration defects. Service-local AST graph updated; SQL extraction remains partial without tree_sitter_sql. No external API call, push or deployment occurred.

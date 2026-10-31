@@ -128,7 +128,7 @@ Record the actual worktree path, branch, reviewed baseline/foundation SHA, resul
 - Local evidence: `.evidence/{make-ci-final.log,docker-build-final.log,volume-restart-final.log,
   container-readiness.log,graphify-update-final.log}`. Runtime DBs/environments were not committed.
 
-### Remaining integration prerequisites
+### Remaining integration prerequisites at the original T01 handoff
 
 - T02: authenticated API/router factory and fixture/JWT implementation; no handoff exists yet.
 - T03: fake/live AgentProvider factories and verified/pinned SDK exposing `beta.agents`; no handoff yet.
@@ -145,3 +145,12 @@ Record the actual worktree path, branch, reviewed baseline/foundation SHA, resul
 
 T01 remains **Ready for integration**, rather than Done, until the missing handoffs are composed and
 full offline flow/security/recovery checks pass. Preserve other owners' branches/worktrees.
+
+### Current integration follow-up
+
+T02, T03 and T04 module commits are now merged on `feat/agent-core-template`. API/auth,
+SQLite, worker, fake provider and real loopback MCP data/knowledge/history run together.
+`make ci` passes with 198 tests and two explicit skips; image build, runtime imports
+and the two-container volume persistence check pass. Remaining work is T03 live-session
+contract amendment/SDK pin/composition and AC13; the original missing module handoffs
+above are historical and no longer block offline integration.

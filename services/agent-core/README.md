@@ -3,8 +3,9 @@
 FastAPI/Python 3.14 foundation for a durable, scoped ShopOps agent service on port 8000.
 T01 supplies contracts, configuration, SQLite storage, scheduling/recovery, lifecycle and packaging.
 T02 supplies auth/API routes, T03 supplies fake/live Agents API adapters, and T04 supplies MCP/tools.
-Those three handoffs are required for the complete offline conversation demo. The standalone
-foundation starts only with valid configuration and returns `/ready` 503 until adapters are wired.
+All four module branches are integrated for offline execution. Default startup mounts the scoped
+MCP apps and configures their bridge with the shared repository. Local/test fake-provider mode can
+be ready; OpenAI live execution still awaits the initial-input session contract amendment.
 
 ## Development
 
@@ -47,7 +48,7 @@ Validation errors name the variable and omit its value. No real secrets are in s
 | `MCP_TOKEN_SIGNING_KEY` | Required secret, at least 32 bytes; runtime only |
 | `OPENAI_API_KEY` | Required only for openai_agents; runtime secret |
 | `OPENAI_MODEL` | Required only for openai_agents; no default model |
-| `AUTH_JWKS_URL` | Required HTTP(S) JWKS endpoint in jwt mode |
+| `AUTH_JWKS_URL` | Required HTTPS JWKS endpoint in jwt mode |
 | `AUTH_ISSUER`, `AUTH_AUDIENCE` | Required trusted issuer/audience in jwt mode |
 | `RUN_TIMEOUT_SECONDS` | 180 from enqueue, including queue time |
 | `RECOVERY_TIMEOUT_SECONDS` | 60 additional seconds after the run deadline |
@@ -175,10 +176,36 @@ AGENT_CORE_DEV_APP_NAME / AGENT_CORE_DEV_CAPROVER_TOKEN, and shared CAPROVER_SER
 app agent-core and matching PROD secrets before merge to main. These are deployment prerequisites;
 T01 does not create them, push branches, or invoke /deploy. Completed integration targets develop.
 
-## T01–T03 integration status
+## Integrated offline workflow
 
-The default app factory now mounts the application API with the configured fixture/JWT authenticator and the same SQLite repository used by the worker. In local/test mode, `AGENT_PROVIDER=fake` selects the delivered T03 fake provider. Other factories/providers can still be injected explicitly.
+All four module branches are included on `feat/agent-core-template`. Default startup constructs the
+API/auth adapter, SQLite repository, local/test fake provider, MCP bridge and MCP subapps using the
+same repository and configured signing key. The bridge uses real HTTP and signed scoped tokens.
+`httpx==0.28.1` is a runtime dependency; no MCP transport package or duplicate HTTP client was added.
 
-T04 MCP applications and a tool bridge are still required to start a complete worker workflow. Without them, `/ready` and `/api/v1/ready` return 503. Tests exercise the T01–T03 workflow with an explicitly named test-only bridge; they do not prove MCP acceptance. The live Agents API session-creation contract remains blocked, and no live-to-fake fallback is used. Runtime configuration is read from environment variables; the app does not implicitly load the original checkout's root `.env`.
+Both `/mcp/data` and `/mcp/data/` (and their knowledge equivalents) reach the same MCP root without
+redirects. Existing immutable slashless revision URLs remain unchanged. MCP routes require their
+own scoped credentials; application bearer tokens do not grant MCP access. Keep these routes on
+an internal service/ingress as described above.
 
-Run the combined checks from this service directory with `.venv/bin/pytest` and `make lint`. The new `tests/integration/test_task_integration.py` checks persisted messages, follow-ups, trusted permissions, replay/conflict behavior and isolation against real SQLite.
+Registry snapshots, not environment overrides, supply conversation-pinned MCP URLs. For an approved
+real MCP profile, add its name to the top-level `approved_remote_profiles` array in CONFIG_PATH after
+confirming the scoped-auth/schema contract. Unapproved profiles fail startup and administrative
+activation. The bridge allowlist includes every registered revision URL; this preserves old/new
+snapshots. Remote mode disables the mock Data mount; drain old mock conversations before disabling
+it. HTTP loopback endpoints are allowed only for local/test deployment.
+
+Verification: `tests/integration/test_mcp_workflow.py` runs a real HTTP service with SQLite, fixture
+authentication, T03's explicitly configured fake scenarios and both MCP servers. It checks 5% baseline
+versus 15% current returns (+10 percentage points), knowledge references, current-conversation history,
+follow-ups, cross-owner denial, readiness and remote-profile preflight. The fake scenarios are fixed
+synthetic test inputs, not evidence of live model reasoning. The default fake provider asks for
+clarification unless scenarios are supplied explicitly; its in-memory provider sessions do not
+survive a process restart, while SQLite history and receipts remain durable.
+
+`AGENT_PROVIDER=openai_agents` still cannot start a complete live workflow: shared initial-input
+session creation, the SDK runtime pin, live provider composition and AC13 are pending. It never
+falls back to simulated responses. Runtime config is read from process environment; the original
+checkout's root `.env` is not implicitly loaded.
+
+Run `.venv/bin/pytest` and `make ci` from this service directory. Live tests remain explicitly opt-in.

@@ -160,3 +160,16 @@ A module-level profile test retains an old endpoint and uses an approved remote 
 for a new conversation. Real activation persistence, production mounting and history
 ownership with SQLite remain T01/T02 integration evidence; live provider tool delivery
 remains T03 integration evidence. None of these missing gates is marked passed here.
+
+## Integrated application wiring
+
+The integration branch now promotes httpx to runtime, builds the bridge and both MCP subapps
+from the shared repository/settings, and supports exact slashless URLs without redirecting
+or mutating old snapshots. `app.composition.build_configured_bridge` validates the deployed
+registry before readiness and before the administrative activation command. The optional
+top-level registry array `approved_remote_profiles` records compatibility approvals; it is
+operator configuration, never a request/model argument.
+
+The complete local HTTP/SQLite workflow, including knowledge/history and fixture identities,
+is covered by `tests/integration/test_mcp_workflow.py`. This extends the module-level evidence
+above. Live OpenAI delivery and external remote-peer TLS/SNI acceptance remain unverified.

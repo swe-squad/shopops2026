@@ -53,11 +53,16 @@ def test_live_mode_requires_key_and_explicit_model(tmp_path):
         Settings.from_env(env)
 
 
-def test_readiness_requires_adapters(tmp_path):
+def test_readiness_requires_live_provider(tmp_path):
     from app.config.settings import Settings
     from app.main import create_app
 
-    app = create_app(settings=Settings.from_env(environment(tmp_path)))
+    env = environment(tmp_path) | {
+        "AGENT_PROVIDER": "openai_agents",
+        "OPENAI_API_KEY": "synthetic",
+        "OPENAI_MODEL": "synthetic",
+    }
+    app = create_app(settings=Settings.from_env(env))
     with TestClient(app) as client:
         assert client.get("/health").status_code == 200
         assert client.get("/ready").status_code == 503

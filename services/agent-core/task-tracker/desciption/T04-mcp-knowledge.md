@@ -10,7 +10,7 @@
 
 **Spec:** [Agent Core Template Spec](../../agents_api_template_spec.md), sections 2–3, 7–9 and 11.
 
-**Tracker and global constraints:** [Task list](../task_list.md). Owner: MCP/knowledge developer. Status: **Ready for integration**.
+**Tracker and global constraints:** [Task list](../task_list.md). Owner: MCP/knowledge developer. Status: **Done** (module and local HTTP integration; external/live gates tracked separately).
 
 **Difficulty:** D4 — Hard. Real MCP transport, bounded schemas, scoped token validation, retries and history isolation cross several security boundaries. Knowledge fixtures are straightforward; safe tool execution and compatibility with real endpoints drive the difficulty.
 
@@ -131,6 +131,14 @@ Production app mounting, SQLite-backed history ownership, administrative revisio
 volume/recovery checks, TLS/SNI against a real remote peer and live provider tool delivery are
 **unverified integration gates**, not module passes. T01/T02/T03 own those checks. MCP module
 transport, owner isolation, deterministic 5%/15%/+10-point data and local old/new endpoint
-pinning are verified. This task is **Ready for integration**, not end-to-end Done. Preserve
+pinning are verified. At module handoff this task was **Ready for integration**, not end-to-end Done. Preserve
 this worktree and branch for the integration lead; no push, PR, merge or deployment is part
 of the T04 handoff.
+
+### Integration follow-up
+
+T04 is now merged on `feat/agent-core-template`. The integration lead promoted the existing httpx
+pin to runtime, mounted both subapps with real SQLite and added exact-path dispatch for v1 URLs.
+Real HTTP tests now verify metrics, knowledge/history ownership, source references, one-session
+follow-ups and readiness. Startup and revision activation reject unapproved remote profiles.
+External TLS/SNI and live provider acceptance remain separate unverified gates.

@@ -10,7 +10,7 @@
 
 **Spec:** [Agent Core Template Spec](../../agents_api_template_spec.md), sections 3–5, 8 and 11.
 
-**Tracker and global constraints:** [Task list](../task_list.md). Owner: API/auth developer. Status: **Ready for integration**.
+**Tracker and global constraints:** [Task list](../task_list.md). Owner: API/auth developer. Status: **Done** (module and verified local integration).
 
 **Difficulty:** D3 — Moderate. The endpoint structure is conventional, but JWT verification, ownership checks, response sanitization and replay-before-busy behavior require careful tests. Database transactions and worker recovery remain T01 responsibilities.
 
@@ -101,3 +101,10 @@ Record the actual worktree path, branch, foundation SHA, result commit SHA, chan
   concurrency and isolation integration tests. No app/main.py/shared contract changes.
 - T04 should align synthetic tenant/shop/user IDs with identities.json. No live
   issuer/OpenAI/MCP evidence claimed. No merge, push, deployment or central tracker edit.
+
+### Integration follow-up
+
+T02 is now composed on `feat/agent-core-template` with the real SQLite repository, worker,
+fake provider and scoped MCP servers. Integrated tests verify persisted replay/history,
+trusted grants, same-user permission denial and cross-owner/tenant isolation. Deployment
+issuer configuration and OpenAI live acceptance are separate gates, not module test evidence.

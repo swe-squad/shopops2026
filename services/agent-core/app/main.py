@@ -5,9 +5,15 @@ from contextlib import AsyncExitStack, asynccontextmanager, suppress
 
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import JSONResponse
+from starlette.routing import Route
 from starlette.types import ASGIApp
 
-from app.composition import build_configured_router, build_offline_provider
+from app.composition import (
+    MCPExactEndpoint,
+    build_configured_router,
+    build_mcp_components,
+    build_offline_provider,
+)
 from app.config.registry import Registry
 from app.config.settings import Settings
 from app.contracts.provider import AgentProvider
@@ -62,20 +68,24 @@ def create_app(
             app.state.repository = repository
             selected_provider = provider or build_offline_provider(config)
             app.state.provider = selected_provider
+            mounts = mcp_factory(repository, config) if mcp_factory else (mcp_apps or {})
+            selected_bridge = bridge
+            if bridge is None and mcp_factory is None and mcp_apps is None:
+                selected_bridge, mounts = build_mcp_components(repository, registry, config)
+            app.state.bridge = selected_bridge
             worker = (
                 RunWorker(
                     repository,
                     selected_provider,
-                    bridge,
+                    selected_bridge,
                     max_concurrent=config.max_concurrent_runs,
                     max_tool_calls=config.max_tool_calls_per_run,
                     mcp_timeout=config.mcp_timeout_seconds,
                 )
-                if selected_provider and bridge
+                if selected_provider and selected_bridge
                 else None
             )
             app.state.worker = worker
-            mounts = mcp_factory(repository, config) if mcp_factory else (mcp_apps or {})
             if config.data_mcp_mode == "remote" and "/mcp/data" in mounts:
                 raise ValueError("DATA_MCP_MODE=remote cannot mount mock Data MCP")
             for path, asgi in mounts.items():
@@ -84,6 +94,9 @@ def create_app(
                 child_router = getattr(asgi, "router", None)
                 if child_router is not None:
                     await resources.enter_async_context(child_router.lifespan_context(asgi))
+                app.router.routes.append(
+                    Route(path, MCPExactEndpoint(asgi, path), methods=["POST", "GET", "DELETE"])
+                )
                 app.mount(path, asgi)
             router = (
                 router_factory(repository, config, ready)

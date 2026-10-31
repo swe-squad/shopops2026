@@ -167,3 +167,10 @@ References verified during T03:
 [events and items](https://developers.openai.com/api/docs/guides/agents-api/sessions/events).
 The live adapter cannot pass create-session conformance until the shared amendment is available;
 this task remains Blocked overall, with the offline module committed for T01 review.
+
+### Current integration follow-up
+
+T04 is now composed with the T01 worker/repository and T02 API on the integration branch.
+Real loopback MCP calls through the fake provider pass for data, knowledge and history.
+The initial-input live session amendment, official SDK runtime pin and AC13 remain pending;
+this offline integration does not remove the live blocker or establish model reasoning.

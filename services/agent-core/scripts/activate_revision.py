@@ -1,13 +1,16 @@
 import argparse
 import asyncio
 
+from app.composition import build_configured_bridge
 from app.config.settings import Settings
 from app.contracts.identity import Scope
 from scripts._admin import maintenance
 
 
 async def activate(args: argparse.Namespace) -> None:
-    async with maintenance(Settings.from_env()) as repository:
+    settings = Settings.from_env()
+    async with maintenance(settings) as repository:
+        build_configured_bridge(repository, repository.registry, settings)
         await repository.activate_revision(
             Scope(tenant_id=args.tenant, shop_id=args.shop, user_id=args.user),
             args.template,
