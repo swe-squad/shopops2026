@@ -28,7 +28,7 @@ and task description. It does not start implementation or change the T01–T08 o
 | T06 | [OpenAI-hosted provider and lifecycle](desciption/T06-hosted-provider.md) | D5 — Very hard | Provider developer | Ready for integration | Published T05 runtime foundation SHA | T05 wiring and T07 bundle for integrated live execution |
 | T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Ready for integration | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
 | T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Ready for integration | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
-| T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | Not started | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
+| T09 | [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md) | D5 — Very hard | Client integration developer | Ready for integration | `develop` containing merged PR #8; offline work may start now | Cross-service CI/recovery checks and gated hosted acceptance; unresolved T08 proof gates remain explicit |
 
 The `desciption` directory spelling is intentional and follows the requested location. Do not rename it during implementation.
 
@@ -380,20 +380,21 @@ inferred from any offline count.
 ## Chat client integration follow-up (T09)
 
 **Task:** [Connect the chat client to Agent Core](desciption/T09-chat-client-integration.md).
-**Status:** Not started. **Difficulty:** D5 — Very hard. **Authentication:** demo phone number, no OTP.
+**Status:** Ready for integration (offline verified; hosted acceptance UNVERIFIED). **Difficulty:** D5 — Very hard.
+**Scope:** one demo phone user, one configured shop, one logical shop orchestrator; no OTP.
 **Planning baseline:** `53d094e`, the
 `develop` merge of PR #8. This supersedes the earlier draft-delivery note for that PR only;
 merging did not close the T08 live-proof gaps.
 
 The selected integration keeps `shopops-chat` and its existing same-origin backend boundary:
 `shopops-chat → shopops-chat-api → agent-core → OpenAI Agents API (openai_hosted)`.
-The chat API adapts demo phone-number login (no OTP), per-user scope, durable application IDs,
+The chat API adapts one-user phone demo login (no OTP), the configured owner/shop scope, durable application IDs,
 run polling, history, navigation and downloads;
 Agent Core alone owns provider sessions, tool execution, runtime recovery and report validation.
 
 T09 can implement contract, UI and offline integration tests immediately from this committed
 baseline. Its full hosted acceptance depends on T08's exact probe evidence and child-role proof
-being accepted; unavailable evidence must remain unverified. Phone-demo identity and per-user isolation, honest
+being accepted; unavailable evidence must remain unverified. The single demo identity, existing scope-denial checks, honest
 SSE/cancellation behavior and legacy database cutover are pinned in the task description.
 
 Use a separate implementation branch `feat/shopops-chat-agent-core`, worktree label
@@ -402,3 +403,32 @@ worktree and record its actual path. No T09 implementation worktree or code is c
 planning change. The documentation branch is `docs/agent-core-chat-integration-task`, reusing the
 clean managed worktree `/home/khalee-dev/.codex/worktrees/3913/shopops2026`; the original dirty
 checkout and all module task worktrees are preserved.
+
+
+### T09 single-user scope amendment
+
+The user reduced the current demo to **one user and one shop**. Use the existing `local-alice`
+Core fixture for the one configured phone/owner and selected `shop-a`; it already has all three
+required permissions. Existing Core identities and permissions, including `local-bob`, remain
+unchanged. The earlier two-user fixture requirement/additional-identity proposal is superseded.
+First login ensures the shop's logical orchestrator idempotently; re-login reuses it, and the first
+message starts the provider session through Core. Keep foreign-resource/invalid-session negative
+checks without adding a second supported demo login or a user/shop registration system.
+
+Implementation worktree now exists at `/tmp/shopops2026-agent-core/T09` on
+`feat/shopops-chat-agent-core`, based on `fd3be2f`; preserve its owner's uncommitted test work.
+This updates the earlier planning-time worktree note. This amendment changes task documents only.
+
+
+### T09 offline implementation handoff
+
+Implemented on `feat/shopops-chat-agent-core` at `/tmp/shopops2026-agent-core/T09`, base `fd3be2f`,
+with the `479c27f` single-owner amendment. Backend `0f32e6e`, frontend `ba5f3eb`; the following
+Core test/handoff commit records final support/evidence. Chat API CI:93 passed/1 loopback skipped;
+explicit real-Core offline loopback:1 passed; frontend CI:48 passed; Core CI:428 passed/2 live skipped.
+Both chat images built; network-isolated API volume recreation and desktop/mobile browser checks pass.
+Existing Core identities/permissions and unrelated clients remain unchanged. Review's lease-expiry
+finding was fixed with an observed RED→GREEN regression. Service-local AST graphs updated.
+See the T09 handoff for commands, scope, the separate loopback opt-in ruling and evidence limits.
+T09 is Ready for integration, not Done: real hosted acceptance and both T08 proof gates remain
+UNVERIFIED/unaccepted. No paid call, merge or deployment was used for implementation verification.

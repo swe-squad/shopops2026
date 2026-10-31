@@ -4,13 +4,19 @@
 
 **Goal:** Let the existing ShopOps chat UI use Agent Core's hosted conversations, tools, skills, specialists and report artifacts through its existing chat backend.
 
-**Architecture:** `shopops-chat → shopops-chat-api → agent-core → OpenAI Agents API`. The chat API is an HTTP adapter for the phone-number demo login and per-user scoped conversations; Agent Core owns provider execution and canonical conversation history. Preserve the standalone clients and the presentation-only workspace viewer.
+**Architecture:** `shopops-chat → shopops-chat-api → agent-core → OpenAI Agents API`. The chat API is an HTTP adapter for the one phone-number demo user and one configured shop; Agent Core owns provider execution and canonical conversation history. Preserve the standalone clients and the presentation-only workspace viewer.
 
 **Tech Stack:** Existing React/TypeScript/Vite client, Python 3.14/FastAPI, SQLite, pinned httpx, pytest, Vitest and shared Docker/CapRover delivery.
 
 **Spec:** [Integration design](#integration-design) below, [application API](../../contracts/application-api.md), [managed runtime](../../agents_api_managed_runtime_spec.md), [client architecture](../../../../docs/client-workspace.md), [tracker](../task_list.md#chat-client-integration-follow-up-t09).
 
-**Status:** Not started. **Difficulty:** D5 — Very hard. The work crosses phone demo identities, per-user isolation, durable HTTP submission/recovery, polling-to-SSE adaptation, two independent databases, scoped downloads and legacy compatibility. A successful browser reply alone does not prove hosted execution.
+**Status:** Ready for integration (offline implementation verified; hosted acceptance UNVERIFIED). **Difficulty:** D5 — Very hard. The work crosses one phone demo identity, scoped resource access, durable HTTP submission/recovery, polling-to-SSE adaptation, two independent databases, scoped downloads and legacy compatibility. A successful browser reply alone does not prove hosted execution.
+
+## User scope amendment: one user and one shop
+
+The current deliverable is exactly **one demo phone number → one owner → one configured shop → one logical shop orchestrator**. Login has no OTP. Multi-user login, two users provisioning the same shop, additional user/shop registration and new privileged Core demo identities are out of scope. This supersedes the earlier two-user fixture requirement and the proposed additional provisioning-fixture approval.
+
+On the first successful demo login, idempotently provision or retrieve the configured shop orchestrator using the existing `local-alice` fixture. Persist that mapping before completing initialization. Re-login/provisioning replay must return the same orchestrator; it must not create another shop or grant permissions. This is application metadata only: create/reuse the conversation and let Core create its OpenAI session/environment when the first message executes. A login alone must not start a billable agent run. Keep existing negative authorization/scope tests; they do not require implementing a second login identity.
 
 ## Baseline, dependencies and worktree
 
@@ -26,7 +32,7 @@ All paths here are repository-root relative. This is a proposed follow-up scope 
 
 | Area | Owned paths and responsibility |
 | --- | --- |
-| Chat backend | Create `services/shopops-chat-api/app/agent_core.py` for the HTTP boundary, `app/core_chat.py` for run coordination, `app/demo_auth.py` for phone demo sessions, `app/navigation.py` for the authenticated operations mailbox adapter and `fixtures/demo-identities.json` for server-owned synthetic identities; update its existing `app/main.py`, `settings.py`, `contracts.py`, `store.py`, `.env.example` and README for explicit selection, migrations and API composition |
+| Chat backend | Create `services/shopops-chat-api/app/agent_core.py` for the HTTP boundary, `app/core_chat.py` for run coordination, `app/demo_auth.py` for phone demo sessions, `app/navigation.py` for the authenticated operations mailbox adapter and `fixtures/demo-identities.json` for one server-owned synthetic identity; update its existing `app/main.py`, `settings.py`, `contracts.py`, `store.py`, `.env.example` and README for explicit selection, migrations and API composition |
 | Backend verification | Create `services/shopops-chat-api/tests/test_agent_core_contract.py`, `test_agent_core_recovery.py`, `test_agent_core_artifacts.py`, `test_agent_core_integration.py`, `test_demo_phone_auth.py`, `test_agent_core_navigation.py`; preserve the existing direct-provider regressions |
 | Chat client | Update `services/shopops-chat/src/App.tsx`, `App.test.tsx`, `workspace-api.ts`, `use-chat-controller.ts`, `chat-client.tsx` and their existing tests; add focused artifact-download UI/tests and minimal styles inside this service |
 | Core integration support | Service-local loopback fixture support/tests, operator configuration documentation and this tracker under `services/agent-core/`; existing public `/api/v1` contracts remain the boundary |
@@ -57,11 +63,11 @@ The user explicitly chose phone-number entry **without OTP** for the demo. Add:
 
 Phone numbers are strings, normalized to an explicit international `+` country-code format (8–15 digits). Never use numeric types, invent a country code, or accept phone/tenant/user headers as authorization. The new UI asks for a demo phone number and has no OTP screen. Public auth configuration reveals only the login mode, not credentials or internal URLs.
 
-Create an allowlisted synthetic phone-to-identity fixture, aligned with Core's existing `fixtures/identities.json`: at least two phones map to distinct users in the same shop, plus a foreign-shop/tenant fixture for denial tests. Each mapping pins the internal user/tenant, memberships, permissions and Core fixture credential server-side. Unknown phones fail; do not auto-enrol a real phone or derive access rights from a typed number. The normalized phone is the unique demo login identifier; Core continues using its existing opaque `user_id`/`sub` identity contract.
+Create exactly one positive synthetic phone-to-identity mapping in the chat API fixture: the configured demo phone maps to Core's existing `local-alice` identity (`tenant-a`, `alice`) and selected `shop-a`. Restrict the adapter to `shop-a` even though the existing Core fixture has another shop membership. `local-alice` already has `orchestrator:provision`, `conversation:write` and `history:read`; no new Core identity or permission expansion is needed. Keep `local-bob`, `local-carol` and all existing Core fixtures unchanged. Unknown phones fail; do not auto-enrol another phone/shop or derive access rights from a typed number. The normalized phone is the unique demo login identifier; Core continues using its existing opaque `user_id`/`sub` identity contract. Foreign identities/resources may be used as negative test inputs only; a second functioning demo login is outside this task.
 
 Expose `GET /api/chat/auth/config`, `POST /api/chat/auth/demo-phone` with `{phone_number}`, and authenticated `POST /api/chat/auth/logout`. Login returns a random opaque `access_token` and `expires_at`, valid for one hour. Store only the token hash and mapped identity/expiry server-side. The browser keeps the token in memory and clears it on lock/reload; re-entering the same demo phone restores the same mapped user's durable conversation. Logout revokes that session. No phone numbers, tokens, prompts or identity claims belong in logs/URLs/errors.
 
-Authenticate every chat/history/capability/download/navigation request from that session. Select the configured shop only if the mapped identity is a member; enforce tenant/user/shop scope on every DB lookup and Core call. Resolve a per-user Core fixture credential on the server; do not forward the demo access token or the phone number as Core authorization. Browser input cannot select tenant, user, permissions or an upstream token. Cross-phone access must return 404 without upstream artifact reads. Real per-phone ownership verification/JWT onboarding remains outside this demo task.
+Authenticate every chat/history/capability/download/navigation request from that session. Select the configured shop only if the mapped identity is a member; enforce tenant/user/shop scope on every DB lookup and Core call. Resolve the configured demo owner's Core fixture credential on the server; do not forward the demo access token or the phone number as Core authorization. Browser input cannot select tenant, user, permissions or an upstream token. Foreign or unmapped resources must return 404 without upstream artifact reads. Real per-phone ownership verification/JWT onboarding remains outside this demo task.
 
 Construct Core routes from validated application IDs against the configured base URL; never follow arbitrary `polling_url` values or cross-origin redirects. Validate settings before I/O. The chat API makes no direct OpenAI requests and needs no OpenAI key in core mode. Separately gated hosted smoke may use Core's existing local fixture auth with synthetic data; this does not establish production identity acceptance.
 
@@ -71,7 +77,7 @@ The operations API still accepts its workspace token. A phone session must not b
 
 ### HTTP and browser contract
 
-Consume these existing Core routes under `/api/v1` using the mapped user's server-resolved Core fixture credential:
+Consume these existing Core routes under `/api/v1` using the configured demo owner's server-resolved Core fixture credential:
 
 | Purpose | Core route / mapping |
 | --- | --- |
@@ -98,7 +104,7 @@ Agent Core is the canonical business history/execution owner. The chat database 
 
 An uncertain Core application POST may be replayed only with the same persisted idempotency key and identical body to recover its receipt under the existing idempotent API contract. This is not a new provider input. Never generate a replacement key/conversation after a timeout, duplicate a completed reply on replay, or infer success from EOF/idle/progress. Restart, lease loss and a crash between 202 and local commit must reconcile existing work. A replayed client ID with changed text or mode returns 409.
 
-Keep existing direct-provider tables/history intact. Namespace core correlations/history and submission leases by backend, upstream base URL, mapped tenant/user, shop and revision; do not reuse the legacy global `workspace(id=1)`/single-pending-turn constraint across phone users; a new core-mode conversation must not adopt a legacy provider session ID or present old direct-provider chat as its model context. Block mode/scope cutover while the previous namespace has unresolved work. Preserve an operator rollback path and verify migration/restart against a legacy database. Core has one SQLite owner/worker/replica; do not share its DB volume with the chat service.
+Keep existing direct-provider tables/history intact. Bind core correlations/history and the submission lease to the single configured backend, upstream base URL, tenant/user, shop and revision; keep the Core mapping separate from the legacy `workspace(id=1)` provider-session state and do not add a multi-user coordinator; a new core-mode conversation must not adopt a legacy provider session ID or present old direct-provider chat as its model context. Block mode/scope cutover while the previous namespace has unresolved work. Preserve an operator rollback path and verify migration/restart against a legacy database. Core has one SQLite owner/worker/replica; do not share its DB volume with the chat service.
 
 ### Reports and downloads
 
@@ -118,32 +124,87 @@ Forward bounded content and safe attachment/nosniff headers; enforce the current
 
 ## Implementation steps
 
-- [ ] **1. Freeze phone auth and adapter tests before implementation.** Add RED cases in `test_agent_core_contract.py` for settings/auth isolation, provision/conversation/message bodies, 202 receipts, terminal response kinds, polling/SSE comments, paginated chronological history, malformed/repeated cursor limits and zero direct OpenAI calls. Pin the additive browser input/output and authenticated capability contract in backend OpenAPI and `src/workspace-api.test.ts`; cover disabled report controls and rejected report input in legacy mode.
-- [ ] **2. Implement demo phone sessions and the HTTP boundary.** First add RED→GREEN cases in `test_demo_phone_auth.py` for international-number normalization, allowlist mapping, two users in one shop, unknown phone, expiry/logout, scope override and non-local demo rejection. Implement `app/demo_auth.py`, the login form and auth routes without OTP. Add typed validated Core request/response models and bounded HTTP operations in `app/agent_core.py`; select the adapter in settings/main while retaining the current provider's independent regressions. Missing core-mode config must fail before I/O. Verify all step-1 tests GREEN, then commit `feat(shopops-chat-api): add agent core HTTP adapter`.
-- [ ] **3. Implement durable coordination and migration.** Add correlation/outbox persistence and `app/core_chat.py`. In `test_agent_core_recovery.py`, reproduce lost provision/conversation/202 receipts, exact replay, conflicting replay, crash/reopen, lease loss, concurrent sends and cutover with legacy pending work, two phone users sharing a shop, expired/revoked sessions and login after restart restoring only that phone's conversation. Make them GREEN without duplicate upstream logical input or destructive legacy migration; commit the recovery change.
-- [ ] **4. Add report projection and scoped downloads.** Write RED tests in `test_agent_core_artifacts.py` for valid report, clarification/no artifact, foreign/unmapped IDs with zero remote reads, 410, redirects/path injection, unsafe filenames/media, oversize/streamed content and secret-free errors. Implement metadata projection and authenticated proxying; verify GREEN before committing.
-- [ ] **5. Connect the existing UI and navigation.** Add RED→GREEN cases in `test_agent_core_navigation.py` for authenticated phone sessions, membership denial, server-only operations credentials and navigation-only retry. Implement the bounded mailbox adapter. Update controller/transport to send the stable client-message ID and selected output mode. Add focused tests for phone login/lock, report/text, final replacement, Stop/reload, UUID history IDs, malformed optional metadata, authenticated Blob download/revocation, expired attachment and no operations-navigation call for downloads. Preserve mobile layout, safe rendering and standalone/viewer isolation; run the existing UI suite and build.
-- [ ] **6. Prove the application boundary offline.** `test_agent_core_integration.py` must exercise a real loopback Core application with its own SQLite and explicit fake provider plus the chat API, not only a mocked HTTP transport. Add service-local Core fixture support if needed; run the services in separate processes/import environments to avoid their `app` package collision. Verify text, report, clarification, same-conversation follow-up, replay, restart, history and authorized/foreign downloads. Assert no external calls; synthetic artifacts/children remain explicitly fake evidence.
-- [ ] **7. Record configuration and deployment prerequisites.** Update owned `.env.example`/READMEs with demo-phone session/fixture separation, hosted revision activation, separate volumes, stop/cutover behavior and runtime cluster URL. Local ports: operations 8000, chat API 8001, Core 8002, client 5174. Existing container ports and public same-origin proxies remain unchanged.
-- [ ] **8. Verify and hand off.** Run the commands below, review service scope and preserve the isolated worktree. Record exact commits, changed paths, RED→GREEN/scoped/full results, migration/restart and image evidence. Run paid hosted acceptance only with a separately explicit opt-in, operator configuration and accepted T08 proof prerequisites; otherwise record it UNVERIFIED. Mark Ready for integration after module checks; Done requires accepted integrated evidence.
+- [x] **1. Freeze phone auth and adapter tests before implementation.** Add RED cases in `test_agent_core_contract.py` for settings/auth isolation, provision/conversation/message bodies, 202 receipts, terminal response kinds, polling/SSE comments, paginated chronological history, malformed/repeated cursor limits and zero direct OpenAI calls. Pin the additive browser input/output and authenticated capability contract in backend OpenAPI and `src/workspace-api.test.ts`; cover disabled report controls and rejected report input in legacy mode.
+- [x] **2. Implement demo phone sessions and the HTTP boundary.** First add RED→GREEN cases in `test_demo_phone_auth.py` for international-number normalization, the one phone-to-owner/shop mapping, provisioning/replay with `local-alice`, unknown phone, expiry/logout, scope override and non-local demo rejection. Implement `app/demo_auth.py`, the login form and auth routes without OTP. Add typed validated Core request/response models and bounded HTTP operations in `app/agent_core.py`; select the adapter in settings/main while retaining the current provider's independent regressions. Missing core-mode config must fail before I/O. Verify all step-1 tests GREEN, then commit `feat(shopops-chat-api): add agent core HTTP adapter`.
+- [x] **3. Implement durable coordination and migration.** Add correlation/outbox persistence and `app/core_chat.py`. In `test_agent_core_recovery.py`, reproduce lost provision/conversation/202 receipts, exact replay, conflicting replay, crash/reopen, lease loss, concurrent sends and cutover with legacy pending work, expired/revoked sessions and re-login/restart restoring the same owner/shop conversation. Make them GREEN without duplicate upstream logical input or destructive legacy migration; commit the recovery change.
+- [x] **4. Add report projection and scoped downloads.** Write RED tests in `test_agent_core_artifacts.py` for valid report, clarification/no artifact, foreign/unmapped IDs with zero remote reads, 410, redirects/path injection, unsafe filenames/media, oversize/streamed content and secret-free errors. Implement metadata projection and authenticated proxying; verify GREEN before committing.
+- [x] **5. Connect the existing UI and navigation.** Add RED→GREEN cases in `test_agent_core_navigation.py` for authenticated phone sessions, membership denial, server-only operations credentials and navigation-only retry. Implement the bounded mailbox adapter. Update controller/transport to send the stable client-message ID and selected output mode. Add focused tests for phone login/lock, report/text, final replacement, Stop/reload, UUID history IDs, malformed optional metadata, authenticated Blob download/revocation, expired attachment and no operations-navigation call for downloads. Preserve mobile layout, safe rendering and standalone/viewer isolation; run the existing UI suite and build.
+- [x] **6. Prove the application boundary offline.** `test_agent_core_integration.py` must exercise a real loopback Core application with its own SQLite and explicit fake provider plus the chat API, not only a mocked HTTP transport. Add service-local Core fixture support if needed; run the services in separate processes/import environments to avoid their `app` package collision. Verify text, report, clarification, same-conversation follow-up, replay, restart, history and authorized/foreign downloads. Assert no external calls; synthetic artifacts/children remain explicitly fake evidence.
+- [x] **7. Record configuration and deployment prerequisites.** Update owned `.env.example`/READMEs with demo-phone session/fixture separation, hosted revision activation, separate volumes, stop/cutover behavior and runtime cluster URL. Local ports: operations 8000, chat API 8001, Core 8002, client 5174. Existing container ports and public same-origin proxies remain unchanged.
+- [x] **8. Verify and hand off.** Run the commands below, review service scope and preserve the isolated worktree. Record exact commits, changed paths, RED→GREEN/scoped/full results, migration/restart and image evidence. Run paid hosted acceptance only with a separately explicit opt-in, operator configuration and accepted T08 proof prerequisites; otherwise record it UNVERIFIED. Mark Ready for integration after module checks; Done requires accepted integrated evidence.
 
 ## Verification and acceptance
 
-Run from each service directory with both `AGENT_CORE_LIVE` and `AGENT_CORE_LIVE_HOSTED` unset:
+Run from each service directory with both `AGENT_CORE_LIVE` and `AGENT_CORE_LIVE_HOSTED` unset.
+Independent chat API CI skips the separate cross-service test to avoid depending on another
+service's private environment. After installing Core's private dependencies, explicitly run
+`AGENT_CORE_LOOPBACK=1 .venv/bin/pytest tests/test_agent_core_integration.py -v` from the chat API.
+This is offline loopback acceptance, not a paid/live flag:
+
 
 - `services/shopops-chat-api`: `.venv/bin/pytest tests/test_demo_phone_auth.py tests/test_agent_core_navigation.py tests/test_agent_core_contract.py tests/test_agent_core_recovery.py tests/test_agent_core_artifacts.py tests/test_agent_core_integration.py -v`, then `make ci`.
 - `services/shopops-chat`: `npm test`, then `make ci` for its independent lint/test/build.
 - `services/agent-core`: `make ci` plus its existing hosted recovery/artifact regression suites if fixture/API-support files change.
 - Build both changed chat images; record browser desktop/mobile and independent app checks. Record persisted adapter/core mappings after service restart using separate storage. A build alone is not persistence evidence.
 
-Acceptance requires the existing chat UI to log in by demo phone without OTP, isolate two phone users in the same shop, then complete text/report/clarification through the Core API, reuse its mapped conversation, display canonical history without duplicates, download only scoped validated artifacts, survive interruption/restart without new logical inputs, and keep legacy mode usable. In core mode the chat service requires no OpenAI key and makes zero provider calls. Offline results never establish real skill/specialist execution.
+Acceptance requires the existing chat UI to log in as the single configured demo phone without OTP, bind only its configured owner/shop, then complete text/report/clarification through the Core API, reuse its mapped conversation, display canonical history without duplicates, download only scoped validated artifacts, survive interruption/restart without new logical inputs, and keep legacy mode usable. In core mode the chat service requires no OpenAI key and makes zero provider calls. Offline results never establish real skill/specialist execution.
 
 For actual hosted proof, reuse the established T08 credentials-loader/dual-opt-in policy with synthetic data; credentials remain at their original ignored location and are never copied between worktrees. Record aggregate model/runtime/bundle/turn/artifact/isolation/cleanup evidence only. Missing hosted account/settings or the two existing T08 proof gates remain explicit blockers for full acceptance. Do not merge, comment `/deploy`, deploy or leave billable sessions running as a documentation/implementation verification shortcut.
 
 ## Handoff record
 
-- Implementation worktree / branch / base SHA: not started.
-- Result commits and changed service paths: not started.
-- Offline targeted/full CI, UI, migration/restart and Docker evidence: not run for T09.
-- Hosted end-to-end acceptance and cleanup evidence: UNVERIFIED; T08 prerequisites remain open.
-- Current deliverable: English task description and central tracker entry only; no product code, credentials, provider call or deployment is created by this planning change.
+- Status: **Ready for integration** for the implemented offline module. Full hosted acceptance
+  remains **UNVERIFIED**; T08's exact boundary probe and child-role evidence remain unaccepted.
+- Worktree: `/tmp/shopops2026-agent-core/T09`; branch `feat/shopops-chat-agent-core`.
+  Base `fd3be2f5517518a9e65474394e9839c449385131` contains `develop` baseline `53d094e`.
+  Applied the single-owner task amendment documented in `479c27f` without changing Core identities.
+- Result commits: backend `0f32e6e`; frontend `ba5f3eb`; Core loopback support and this handoff
+  are recorded in the following `test(agent-core)` commit.
+- Changed paths: only `services/shopops-chat-api/` (HTTP/auth/navigation/outbox/artifact adapter,
+  synthetic phone fixture, six targeted test modules, packaging/config/docs),
+  `services/shopops-chat/` (phone UI, capabilities, UUID/mode transport, Blob downloads, tests,
+  minimal styles/docs/ignore rules), and `services/agent-core/` (test-only loopback app, docs/tracker).
+  Existing Core fixtures/permissions and browser/viewer clients are unchanged.
+- Python 3.14.7 chat API `make ci`: **93 passed, 1 skipped** (separate loopback acceptance),
+  Ruff check/format passed. Existing direct-provider regressions remain enabled.
+- Explicit `AGENT_CORE_LOOPBACK=1 .venv/bin/pytest tests/test_agent_core_integration.py -q`:
+  **1 passed**. A separate Core process uses its real application/worker and independent SQLite,
+  with explicit synthetic provider/tools and external network blocked. Verified report, follow-up,
+  clarification, completed replay, canonical six-message history, authorized/foreign downloads,
+  re-login, chat restart, then Core restart with persistent history/artifact mappings. Foreign
+  `local-bob`/`local-carol` reads remain denied. No new logical provider input after restart/replay.
+- Frontend `make ci`: **48 passed**, lint and production build passed. The final build was also
+  checked in headless Chromium at 1280×800 and 390×844 with synthetic API responses: one scroll
+  log, visible composer, no horizontal overflow/page errors; report UUID/mode send, authenticated
+  Blob download and separate navigation each occurred once. Standalone/viewer source was preserved.
+- Core `make ci`: **428 passed, 2 skipped** (existing opt-in live gates); no live flag enabled.
+- Both final chat Docker images built. Two network-isolated API image runs against the same
+  task-only persistent directory preserve the one orchestrator mapping/client key. First login
+  provisions once; recreation/re-login does not reprovision, create a conversation or run.
+- Observed RED→GREEN evidence: initial settings/auth/Core contract, first-login provisioning,
+  malformed frontend metadata and UUID/mode transport, sanitized request errors, pending-Core
+  rollback refusal, permitted navigation compatibility, missing report artifact, and accelerated
+  lease-expiry regression. Other added regression cases passed verification; no unobserved RED
+  result is claimed for them.
+- Read-only final review identified a P1 lease expiry during long finalization. Fixed by projecting
+  only the current run, independently renewing the lease/emitting SSE comments, and bounding whole
+  history reconciliation/replay. Accelerated clock regression fails without renewal and passes with
+  it; the full backend suite is green. No deferred review findings.
+- Graphify AST updates ran in each changed service. Generated graphs/evidence are service-local
+  and ignored; Core SQL extraction is partial because `tree_sitter_sql` is unavailable.
+- Environment note: the initial Python3.13 venv was replaced operationally by the service-local
+  Python3.14 interpreter for canonical verification. Runtime Docker uses Python3.14. No root
+  dependency files, workflows or unrelated workspaces were modified.
+
+### Implementation rulings
+
+- The user's single-owner amendment supersedes the earlier proposed extra demo identities.
+  Exactly `+15550000001` maps to existing `local-alice` restricted here to `shop-a`; Core fixtures
+  were restored unchanged. There is no permission expansion or second supported phone login.
+- Cross-service loopback acceptance is a separate explicit offline opt-in so independent chat API
+  CI does not silently require the sibling Core environment. Cost: maintainers must run the
+  documented acceptance command in addition to standalone CI. Its actual result is recorded above.
+
+Paid hosted end-to-end acceptance and remote cleanup proof remain **UNVERIFIED**, pending the
+stated operator configuration/explicit opt-ins/T08 gates. No paid provider call, merge or deployment
+was performed. This handoff preserves the isolated implementation branch/worktree.
