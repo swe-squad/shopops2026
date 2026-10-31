@@ -43,7 +43,12 @@ class Repository(Protocol):
         self, scope: Scope, template_id: str, config_revision: str
     ) -> IdempotentResult[Orchestrator]: ...
     async def create_conversation(
-        self, scope: Scope, orchestrator_id: str, client_conversation_id: str
+        self,
+        scope: Scope,
+        orchestrator_id: str,
+        client_conversation_id: str,
+        *,
+        expected_config_revision: str | None = None,
     ) -> IdempotentResult[Conversation]: ...
     async def enqueue_message(
         self,

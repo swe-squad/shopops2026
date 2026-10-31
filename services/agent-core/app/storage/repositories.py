@@ -229,8 +229,15 @@ class SQLiteRepository:
         await self.database.transaction(operation)
 
     async def create_conversation(
-        self, scope: Scope, orchestrator_id: str, client_conversation_id: str
+        self,
+        scope: Scope,
+        orchestrator_id: str,
+        client_conversation_id: str,
+        *,
+        expected_config_revision: str | None = None,
     ) -> IdempotentResult[Conversation]:
+        if expected_config_revision is not None and not 1 <= len(expected_config_revision) <= 128:
+            raise InvalidInput()
         if not 1 <= len(client_conversation_id) <= 128:
             raise InvalidInput()
 
@@ -242,7 +249,10 @@ class SQLiteRepository:
             ).fetchone()
             if row is not None:
                 c = Conversation.model_validate_json(row[0])
-                if c.orchestrator_id != orchestrator_id:
+                if c.orchestrator_id != orchestrator_id or (
+                    expected_config_revision is not None
+                    and c.config.revision != expected_config_revision
+                ):
                     raise IdempotencyConflict()
                 return IdempotentResult(record=c, created=False)
             row = db.execute(
@@ -252,6 +262,12 @@ class SQLiteRepository:
             if row is None:
                 raise NotFound()
             o = Orchestrator.model_validate_json(row[0])
+            # Activation and this snapshot check share the same SQLite write transaction.
+            if (
+                expected_config_revision is not None
+                and o.config_revision != expected_config_revision
+            ):
+                raise ConfigurationConflict()
             config = ConfigSnapshot.model_validate_json(
                 db.execute(
                     "SELECT body FROM config_revisions WHERE orchestrator_id=? AND revision=?",

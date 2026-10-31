@@ -573,27 +573,41 @@
         "title": "ArtifactPage"
       },
       "ConversationInput": {
+        "additionalProperties": false,
         "properties": {
           "orchestrator_id": {
-            "type": "string",
             "maxLength": 128,
             "minLength": 1,
-            "title": "Orchestrator Id"
+            "title": "Orchestrator Id",
+            "type": "string"
           },
           "client_conversation_id": {
-            "type": "string",
             "maxLength": 128,
             "minLength": 1,
-            "title": "Client Conversation Id"
+            "title": "Client Conversation Id",
+            "type": "string"
+          },
+          "expected_config_revision": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expected Config Revision"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
         "required": [
           "orchestrator_id",
           "client_conversation_id"
         ],
-        "title": "ConversationInput"
+        "title": "ConversationInput",
+        "type": "object"
       },
       "ConversationOutput": {
         "properties": {
