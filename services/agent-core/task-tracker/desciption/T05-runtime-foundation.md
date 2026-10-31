@@ -10,7 +10,7 @@
 
 **Spec:** [Managed runtime extension](../../agents_api_managed_runtime_spec.md), [main spec](../../agents_api_template_spec.md), [tracker](../task_list.md#hosted-runtime-extension-t05t08).
 
-**Status:** Not started. **Difficulty:** D5 — Very hard. Migrations, snapshot compatibility, root/child identity, artifact security and remote cleanup cross the entire service.
+**Status:** Ready for integration (offline T05 module; final T06–T08 integration pending). **Difficulty:** D5 — Very hard. Migrations, snapshot compatibility, root/child identity, artifact security and remote cleanup cross the entire service.
 
 ## Global constraints
 
@@ -48,22 +48,57 @@ Preserve the existing response schema; add optional message output_mode=text|rep
 
 ## Steps
 
-- [ ] **1. Write foundation regressions.** Add contract/profile/migration tests. Assert legacy normalization to `conversation-v1`; pinned hosted digest survives DB reopen/activation; a changed digest/profile combination fails before provider calls; one exclusive DB owner is retained.
-- [ ] **2. Verify RED.** Run `.venv/bin/pytest tests/runtime/test_contracts.py tests/runtime/test_profiles.py tests/storage/test_runtime_migration.py -v`; confirm failures identify missing runtime contracts/migration, not external prerequisites.
-- [ ] **3. Publish the foundation.** Add closed shared models, report schema, exact async signatures, migration and consumer doubles. Validate SDK surfaces offline, coordinate any pin change, then rerun Step 2 plus `make lint`. Commit as `feat(agent-core): publish hosted runtime contracts`; record exact SHA in the central foundation gate and notify consumer owners. They start from this commit, not the reference baseline.
+- [x] **1. Write foundation regressions.** Add contract/profile/migration tests. Assert legacy normalization to `conversation-v1`; pinned hosted digest survives DB reopen/activation; a changed digest/profile combination fails before provider calls; one exclusive DB owner is retained.
+- [x] **2. Verify RED.** Run `.venv/bin/pytest tests/runtime/test_contracts.py tests/runtime/test_profiles.py tests/storage/test_runtime_migration.py -v`; confirm failures identify missing runtime contracts/migration, not external prerequisites.
+- [x] **3. Publish the foundation.** Add closed shared models, report schema, exact async signatures, migration and consumer doubles. Validate SDK surfaces offline, coordinate any pin change, then rerun Step 2 plus `make lint`. Commit as `feat(agent-core): publish hosted runtime contracts`; record exact SHA in the central foundation gate and notify consumer owners. They start from this commit, not the reference baseline.
 - [ ] **4. Write integration regressions.** In artifact API tests assert 404 for another tenant/shop/user with zero provider calls, safe attachment headers, bounded reads/digest checks, 410 unavailable, 502 invalid and 503 transient I/O. In worker tests assert setup deadline, root-only finalization, two-child event replays, required report missing/invalid, report-mode clarification/cannot_answer completing without artifacts, text-mode policy-only answers, output_mode replay/conflict and legacy rejection, and unknown-outcome blocking.
-- [ ] **5. Verify RED, implement coordinator/API behavior.** Run `.venv/bin/pytest tests/api/test_artifacts.py tests/runs/test_hosted_recovery.py -v`, establish failures, then implement scoped metadata persistence, artifact finalization/download, runtime progress and recovery without another agent loop. Export matching application API contracts. Add RUNTIME_BUNDLE_PATH docs/settings with no secret defaults.
+- [x] **5. Verify RED, implement coordinator/API behavior.** Run `.venv/bin/pytest tests/api/test_artifacts.py tests/runs/test_hosted_recovery.py -v`, establish failures, then implement scoped metadata persistence, artifact finalization/download, runtime progress and recovery without another agent loop. Export matching application API contracts. Add RUNTIME_BUNDLE_PATH docs/settings with no secret defaults.
 - [ ] **6. Integrate T06/T07/T08 committed handoffs.** Wire build_runtime_bundle/build_hosted_environment into the configured provider, include registered bundles in the image, and keep profile activation administrative. Preserve internal MCP transport and legacy `none` tests.
 - [ ] **7. Verify delivery.** Run `make ci`, `make docker` and `.venv/bin/python -m scripts.verify_volume_restart`. Validate migration/profile/runtime/artifact metadata survive recreation; default CI makes no OpenAI requests. Accept AC15/AC19, supporting AC20/AC21 and T08's actual live evidence before marking the extension complete.
-- [ ] **8. Commit handoff.** Use `feat(agent-core): integrate hosted runtime lifecycle`, audit changed paths against the base SHA, and record results/blockers. No live success is inferred from fakes or Docker alone.
+- [x] **8. Commit handoff.** Use `feat(agent-core): integrate hosted runtime lifecycle`, audit changed paths against the base SHA, and record results/blockers. No live success is inferred from fakes or Docker alone.
 
 
 ## Handoff record
 
-- Actual worktree / branch: not recorded.
-- Base SHA / imported T05 foundation SHA: not recorded.
-- Result commit SHA / changed-path audit: not recorded.
-- Scoped test commands/results / relevant acceptance IDs: not recorded.
-- Live evidence or exact missing prerequisite / unresolved integration issues: not recorded.
+- Actual worktree: `/tmp/shopops2026-agent-core/T05`; branch:
+  `feat/agent-core-t05-runtime-foundation`. Preserved for consumer integration.
+- Base: `797d449` (reviewed runtime spec plus delivered live amendment).
+- Published foundation: `1e45865`; lifecycle/shared-contract amendment: `ebd7537`.
+  **Consumers must start from `ebd7537`**, which includes both commits. No consumer import or
+  acceptance is claimed for absent owners.
+- Result implementation commit: `ebd7537`. Changed-path audit against the base confirms all
+  implementation files remain under `services/agent-core/`; no credentials were copied.
+- Foundation RED identified missing models/runtime normalization, migration and save_runtime;
+  GREEN: five initial foundation tests. Explicit-null legacy normalization added afterward.
+- Final `make ci PATH=<service>/.venv/bin:/usr/bin:/bin`: PASS on Python 3.14.7,
+  **242 passed, 1 skipped** (opt-in live). Ruff check/format pass. Default tests prohibit external
+  network; elevated execution was required because sandbox asyncio thread completion hung.
+- `make docker`: PASS. `.venv/bin/python -m scripts.verify_volume_restart`: PASS; two recreated
+  network-isolated UID1001 containers preserve legacy mappings/history/queue plus pinned hosted
+  profile, environment mapping and artifact metadata. These checks use synthetic local state.
+- SDK 3.42.0 session/environment/plugin/artifact surfaces inspected offline; no pin change needed.
+- Artifact regressions cover ownership, safe attachment headers, traversal, size/digest checks,
+  410/502/503 errors and same-root metrics/source provenance. Worker regressions cover report/text
+  replay and collision rejection, missing reports, clarification/cannot_answer, environment loss,
+  confirmed cancellation at setup timeout, queue-independent persisted setup start, and restart
+  between artifact metadata commit and root completion. Existing root/recovery tests remain green.
+- Independent read-only review identified provider format propagation, metrics-source mismatch,
+  cross-mode hash collision and artifact-finalization crash replay. Each was reproduced RED and
+  corrected; follow-up recovery review found no remaining P0/P1. Review itself did not run tests.
+- `graphify update .`: completed inside the service; SQL extraction remains partial because
+  `tree_sitter_sql` is unavailable. Generated graph output is ignored and service-local.
 
-Update this description only for your handoff; the runtime integration lead updates the central task table. Mark Ready for integration after module verification, not Done until required integration evidence is accepted.
+### Remaining integration prerequisites
+
+Steps 4, 6 and 7 are intentionally not fully checked: expanded hosted child/event/failure evidence
+and final acceptance require the separate T06/T07/T08 handoffs. No such handoff exists in this
+baseline. AC15 has offline migration/pinning evidence; AC19 has offline API/validation evidence.
+Full AC15/AC19 acceptance and AC16–AC22 remain pending integrated hosted execution and T08 review.
+
+T06 must implement the hosted provider/environment builder, enforce streaming read limits, and
+confirm cleanup independently for artifacts and session removal. T07 must replace its fail-closed
+bundle builder stub, publish a real registered digest, and supply the image bundle. The example
+hosted registry uses a placeholder digest and must not be activated as supplied. T05 final wiring,
+image bundle packaging and integrated checks resume after those committed handoffs. No fallback
+to none/fake/local execution is enabled for a hosted registry. No OpenAI call, deployment, merge
+or remote push was performed. The module is Ready for integration, not Done for the hosted extension.

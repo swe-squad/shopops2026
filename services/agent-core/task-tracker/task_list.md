@@ -20,7 +20,7 @@ All implementation changes must stay inside `services/agent-core/`, the existing
 | T02 | [Authentication and application API](desciption/T02-auth-application-api.md) | D3 — Moderate | Owner 2 | Done | T01 foundation gate | T01 repositories and application wiring |
 | T03 | [Agent provider and instructions](desciption/T03-agent-provider.md) | D4 — Hard | Owner 3 | Done | T01 foundation gate | T01 worker and T04 bridge for live smoke |
 | T04 | [MCP bridge, fixtures, and knowledge](desciption/T04-mcp-knowledge.md) | D4 — Hard | Owner 4 | Done | T01 foundation gate | T01 history repository and application mounting |
-| T05 | [Runtime foundation, persistence, artifacts API and integration](desciption/T05-runtime-foundation.md) | D5 — Very hard | Runtime integration lead | Not started | Verified baseline containing the PR #5 live amendment | T06/T07 handoffs and T08 acceptance |
+| T05 | [Runtime foundation, persistence, artifacts API and integration](desciption/T05-runtime-foundation.md) | D5 — Very hard | Runtime integration lead | Ready for integration | Verified baseline containing the PR #5 live amendment | T06/T07 handoffs and T08 acceptance |
 | T06 | [OpenAI-hosted provider and lifecycle](desciption/T06-hosted-provider.md) | D5 — Very hard | Provider developer | Not started | Published T05 runtime foundation SHA | T05 wiring and T07 bundle for integrated live execution |
 | T07 | [Versioned skills and specialist roles](desciption/T07-skills-specialists.md) | D4 — Hard | Capability developer | Not started | Published T05 runtime foundation SHA | T06 runtime for real discovery/delegation evidence |
 | T08 | [Hosted integration and live acceptance](desciption/T08-hosted-acceptance.md) | D5 — Very hard | Acceptance developer | Not started | T05 foundation for fixture/test preparation | T05 wiring and T06/T07 handoffs for final verification |
@@ -249,7 +249,7 @@ Delivery note: template PR #4 was merged and its remote branch removed while liv
 
 ## Hosted runtime extension (T05–T08)
 
-**Spec:** [Managed Codex Harness and OpenAI-hosted Runtime Extension](../agents_api_managed_runtime_spec.md). Status: specified, not implemented. This section refines the baseline workflow for T05–T08; it does not reopen T01–T04 or treat their acceptance as hosted evidence.
+**Spec:** [Managed Codex Harness and OpenAI-hosted Runtime Extension](../agents_api_managed_runtime_spec.md). Status: T05 offline module ready for integration; T06–T08 pending. This section refines the baseline workflow for T05–T08; it does not reopen T01–T04 or treat their acceptance as hosted evidence.
 
 ### Scope and starting point
 
@@ -271,13 +271,13 @@ Prefer native worktree tools; no new task worktrees are created by this document
 
 ### T05 runtime foundation gate
 
-- [ ] Record baseline SHA, actual T05 worktree, foundation SHA and verification commands in T05's handoff. **Published runtime foundation SHA: not published.**
-- [ ] Freeze runtime/bundle/environment/artifact types and repository/provider signatures in `app/contracts/runtime.py` and `contracts/managed-runtime.md`; make fakes and existing consumers import them.
-- [ ] Define legacy `none` normalization and new immutable hosted profiles; prove old records/config revisions remain usable.
-- [ ] Publish root/child/environment event correlation, artifact finalization, cleanup/recovery records and source-validation rules.
-- [ ] Verify SDK 3.42.0 hosted/plugin/environment/artifact surfaces offline; coordinate any required pin change. Do not call OpenAI merely to publish contracts.
-- [ ] Publish stubs/test doubles for bundle building, hosted environment building and artifacts so T06/T07/T08 can work without shared implementation edits.
-- [ ] Run foundation contract/migration tests and lint. Consumer owners record the exact imported SHA; do not claim agreement for absent owners.
+- [x] Record baseline SHA, actual T05 worktree, foundation SHA and verification commands in T05's handoff. **Published runtime foundation SHA: `1e45865`; required shared amendment: `ebd7537`. Consumers start from `ebd7537`.**
+- [x] Freeze runtime/bundle/environment/artifact types and repository/provider signatures in `app/contracts/runtime.py` and `contracts/managed-runtime.md`; make fakes and existing consumers import them.
+- [x] Define legacy `none` normalization and new immutable hosted profiles; prove old records/config revisions remain usable.
+- [x] Publish root/child/environment event correlation, artifact finalization, cleanup/recovery records and source-validation rules.
+- [x] Verify SDK 3.42.0 hosted/plugin/environment/artifact surfaces offline; coordinate any required pin change. Do not call OpenAI merely to publish contracts.
+- [x] Publish stubs/test doubles for bundle building, hosted environment building and artifacts so T06/T07/T08 can work without shared implementation edits.
+- [x] Run foundation contract/migration tests and lint. Consumer owners record the exact imported SHA; do not claim agreement for absent owners.
 
 ### Parallel work and difficulty
 
@@ -312,3 +312,12 @@ T05/T07 need no OpenAI key for normal work. T06/T08 need `OPENAI_API_KEY` and `O
 No hosted code, migration, bundle, API route or live call is delivered by this spec update. No baseline completion flag is reused for this extension.
 
 Documentation checkpoint: the English runtime spec, baseline cross-references and four task descriptions were reviewed and validated as documentation only. Local link/anchor, code-fence, acceptance coverage, task ownership/status and service-scope checks pass; a builder review found no remaining plan-changing gap after report-mode compatibility was clarified. No runtime implementation or hosted live call was performed, and the T05 foundation is still unpublished.
+
+## T05 offline handoff
+
+T05 implementation `ebd7537` is ready for module integration on its assigned branch/worktree.
+Foundation `1e45865` plus the shared-contract/lifecycle amendment are both required; consumers
+start from `ebd7537`. Final Python 3.14 CI: 242 passed, 1 live skipped; Ruff, Docker build and
+network-isolated runtime/artifact volume recreation pass. See T05's handoff for exact verification,
+review corrections and pending gates. T06/T07 builder stubs deliberately fail closed. No consumer
+handoff, hosted live acceptance, integration merge, remote push or deployment is claimed.

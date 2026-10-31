@@ -62,3 +62,7 @@ state. No failed download rewrites completed history. `enqueue_message` adds key
 Hosted execution passes an application output-format directive on each provider input; baseline
 provider inputs remain unchanged. Source validation requires the cited data reference to identify
 the ToolResult whose metrics match, not another result within the same root turn.
+
+`Run.runtime_setup_started_at` is persisted when marking session creation before provider I/O;
+setup uses that timestamp with the remaining application deadline, so queue delay does not
+consume the setup budget. Unknown mutation outcomes retain the existing reconciliation policy.
